@@ -50,13 +50,12 @@ async function addProduct() {
   if (
     !name.value ||
     !price.value ||
-    !category.value ||
-    !image.value
+    !category.value
   ) {
 
     toastRef.value
       .showToastMessage(
-        'Please fill all fields',
+        'Please fill all required fields',
         'error'
       )
 
@@ -65,42 +64,53 @@ async function addProduct() {
 
   const newProduct = {
 
-    name: name.value,
+    id: Date.now().toString(36) +
+        Math.random().toString(36).slice(2, 7),
 
-    price: Number(price.value),
+    name:        name.value,
 
-    stock: Number(stock.value || 0),
+    price:       Number(price.value),
 
-    category: category.value,
+    stock:       Number(stock.value || 0),
 
-    image: image.value,
+    category:    category.value,
 
-    details: details.value
+    image:       image.value,
+
+    description: details.value
   }
 
-  // Generate a unique id for the product
-  newProduct.id =
-    Date.now().toString(36) +
-    Math.random().toString(36).slice(2, 7)
+  try {
 
-  const { create } = await import('../lib/api.js')
+    const { create } = await import('../lib/api.js')
 
-  await create('products', newProduct)
+    await create('products', newProduct)
 
-  toastRef.value
-    .showToastMessage(
-      'Product added successfully!',
-      'success'
-    )
+    toastRef.value
+      .showToastMessage(
+        'Product added successfully!',
+        'success'
+      )
 
-  name.value = ''
-  price.value = ''
-  stock.value = ''
-  category.value = ''
-  image.value = ''
-  details.value = ''
+    name.value = ''
+    price.value = ''
+    stock.value = ''
+    category.value = ''
+    image.value = ''
+    details.value = ''
 
-  loadProducts()
+    loadProducts()
+
+  } catch (err) {
+
+    console.error('Add product error:', err)
+
+    toastRef.value
+      .showToastMessage(
+        'Failed to add product: ' + err.message,
+        'error'
+      )
+  }
 }
 
 // REMOVE PRODUCT
@@ -159,40 +169,47 @@ async function updateProduct(id) {
 
   const updatedProduct = {
 
-    name: editName.value,
+    name:        editName.value,
 
-    price: Number(
-      editPrice.value
-    ),
+    price:       Number(editPrice.value),
 
-    stock: Number(
-      editStock.value
-    ),
+    stock:       Number(editStock.value),
 
-    category:
-      editCategory.value,
+    category:    editCategory.value,
 
-    image: editImage.value,
+    image:       editImage.value,
 
-    details:
-      editDetails.value
+    description: editDetails.value
   }
 
-  const { update } = await import('../lib/api.js')
+  try {
 
-  await update('products', id, updatedProduct)
+    const { update } = await import('../lib/api.js')
 
-  editingId.value = null
+    await update('products', id, updatedProduct)
 
-  showEditModal.value = false
+    editingId.value = null
 
-  loadProducts()
+    showEditModal.value = false
 
-  toastRef.value
-    .showToastMessage(
-      'Product updated successfully!',
-      'success'
-    )
+    loadProducts()
+
+    toastRef.value
+      .showToastMessage(
+        'Product updated successfully!',
+        'success'
+      )
+
+  } catch (err) {
+
+    console.error('Update product error:', err)
+
+    toastRef.value
+      .showToastMessage(
+        'Failed to update product: ' + err.message,
+        'error'
+      )
+  }
 }
 
 // IMAGE UPLOAD — uploads to Supabase Storage, stores public URL
