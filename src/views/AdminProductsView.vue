@@ -195,46 +195,61 @@ async function updateProduct(id) {
     )
 }
 
-// IMAGE UPLOAD
-function handleImageUpload(event) {
+// IMAGE UPLOAD — uploads to Supabase Storage, stores public URL
+const uploadingImage = ref(false)
+const uploadingEditImage = ref(false)
 
-  const file =
-    event.target.files[0]
+async function handleImageUpload(event) {
+
+  const file = event.target.files[0]
 
   if (!file) return
 
-  const reader =
-    new FileReader()
+  try {
 
-  reader.onload = () => {
+    uploadingImage.value = true
 
-    image.value =
-      reader.result
+    const { uploadImage } = await import('../lib/api.js')
+
+    image.value = await uploadImage('images', file, 'products')
+
+  } catch (err) {
+
+    console.error(err)
+
+    toastRef.value.showToastMessage('Image upload failed', 'error')
+
+  } finally {
+
+    uploadingImage.value = false
   }
-
-  reader.readAsDataURL(file)
 }
 
-// EDIT IMAGE
-function handleEditImageUpload(
-  event
-) {
+// EDIT IMAGE UPLOAD
+async function handleEditImageUpload(event) {
 
-  const file =
-    event.target.files[0]
+  const file = event.target.files[0]
 
   if (!file) return
 
-  const reader =
-    new FileReader()
+  try {
 
-  reader.onload = () => {
+    uploadingEditImage.value = true
 
-    editImage.value =
-      reader.result
+    const { uploadImage } = await import('../lib/api.js')
+
+    editImage.value = await uploadImage('images', file, 'products')
+
+  } catch (err) {
+
+    console.error(err)
+
+    toastRef.value.showToastMessage('Image upload failed', 'error')
+
+  } finally {
+
+    uploadingEditImage.value = false
   }
-
-  reader.readAsDataURL(file)
 }
 
 // FILTER

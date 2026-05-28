@@ -103,73 +103,74 @@ async function saveHomepage() {
   }
 }
 
-// BANNER IMAGE
-function handleBannerUpload(event) {
+// BANNER IMAGE — uploads each file to Supabase Storage
+async function handleBannerUpload(event) {
 
-  const files = event.target.files
+  const files = [...event.target.files]
 
   if (!files.length) return
 
-  for (let file of files) {
+  const { uploadImage } = await import('../lib/api.js')
 
-    const reader =
-      new FileReader()
+  for (const file of files) {
 
-    reader.onload = () => {
+    try {
 
-      bannerImages.value.push(
-        reader.result
-      )
+      const url = await uploadImage('images', file, 'banners')
+
+      bannerImages.value.push(url)
+
+    } catch (err) {
+
+      console.error(err)
+
+      errorMessage.value = 'Banner upload failed: ' + err.message
     }
-
-    reader.readAsDataURL(file)
   }
 }
 
 // HOT SELLING IMAGE
-function handleHotSellingUpload(
-  event,
-  index
-) {
+async function handleHotSellingUpload(event, index) {
 
-  const file =
-    event.target.files[0]
+  const file = event.target.files[0]
 
   if (!file) return
 
-  const reader =
-    new FileReader()
+  try {
 
-  reader.onload = () => {
+    const { uploadImage } = await import('../lib/api.js')
 
     hotSelling.value[index].image =
-      reader.result
-  }
+      await uploadImage('images', file, 'hot-selling')
 
-  reader.readAsDataURL(file)
+  } catch (err) {
+
+    console.error(err)
+
+    errorMessage.value = 'Image upload failed: ' + err.message
+  }
 }
 
 // LATEST PRODUCT IMAGE
-function handleLatestUpload(
-  event,
-  index
-) {
+async function handleLatestUpload(event, index) {
 
-  const file =
-    event.target.files[0]
+  const file = event.target.files[0]
 
   if (!file) return
 
-  const reader =
-    new FileReader()
+  try {
 
-  reader.onload = () => {
+    const { uploadImage } = await import('../lib/api.js')
 
     latestProducts.value[index].image =
-      reader.result
-  }
+      await uploadImage('images', file, 'latest-products')
 
-  reader.readAsDataURL(file)
+  } catch (err) {
+
+    console.error(err)
+
+    errorMessage.value = 'Image upload failed: ' + err.message
+  }
 }
 
 // REMOVE BANNER

@@ -2,7 +2,9 @@
 // Supabase REST API helper
 // ─────────────────────────────────────────────
 
-const BASE_URL = 'https://qmrhibrvgswkeheinlxd.supabase.co/rest/v1'
+const BASE_URL    = 'https://qmrhibrvgswkeheinlxd.supabase.co/rest/v1'
+const STORAGE_URL = 'https://qmrhibrvgswkeheinlxd.supabase.co/storage/v1'
+const PUBLIC_URL  = 'https://qmrhibrvgswkeheinlxd.supabase.co/storage/v1/object/public'
 
 const API_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
@@ -113,6 +115,49 @@ export async function remove(table, id) {
     const text = await res.text()
     throw new Error(`Supabase error ${res.status}: ${text}`)
   }
+}
+
+// ── Storage ───────────────────────────────────
+
+/**
+ * Upload a File object to Supabase Storage.
+ * Returns the public URL of the uploaded image.
+ *
+ * @param {string} bucket  - Storage bucket name (e.g. 'images')
+ * @param {File}   file    - The File object from an <input type="file">
+ * @param {string} [folder] - Optional subfolder (e.g. 'products', 'banners')
+ *
+ * Usage:
+ *   const url = await uploadImage('images', file, 'products')
+ */
+export async function uploadImage(bucket, file, folder = '') {
+
+  // Build a unique filename to avoid collisions
+  const ext      = file.name.split('.').pop()
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const path     = folder ? `${folder}/${filename}` : filename
+
+  const res = await fetch(
+    `${STORAGE_URL}/object/${bucket}/${path}`,
+    {
+      method:  'POST',
+      headers: {
+        'apikey':        API_KEY,
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type':  file.type || 'application/octet-stream',
+        'x-upsert':      'true'
+      },
+      body: file
+    }
+  )
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Storage upload failed ${res.status}: ${text}`)
+  }
+
+  // Return the public URL
+  return `${PUBLIC_URL}/${bucket}/${path}`
 }
 
 /**
