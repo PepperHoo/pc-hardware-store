@@ -898,15 +898,17 @@ body {
   border:
     1px solid rgba(148,163,184,0.10);
 
-  padding: 28px;
+  padding: 24px 28px;
 
   border-radius: 24px;
 
   display: grid;
 
-  gap: 16px;
+  gap: 14px;
 
   margin-bottom: 35px;
+
+  max-width: 560px;
 
   box-shadow:
     0 8px 24px rgba(0,0,0,0.22);
