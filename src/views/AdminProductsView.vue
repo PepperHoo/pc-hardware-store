@@ -362,6 +362,9 @@ const lowStockCount =
 
       </div>
 
+      <!-- TWO-COLUMN LAYOUT -->
+      <div class="admin-products-layout">
+
       <!-- ADD PRODUCT -->
       <div class="admin-products-form">
 
@@ -453,6 +456,9 @@ const lowStockCount =
         </button>
 
       </div>
+
+      <!-- RIGHT COLUMN: filter + table -->
+      <div class="admin-products-right">
 
       <!-- FILTER -->
       <div
@@ -744,6 +750,10 @@ const lowStockCount =
 
       </div>
 
+      </div> <!-- end admin-products-right -->
+
+      </div> <!-- end admin-products-layout -->
+
     </div>
 
     <Toast ref="toastRef" />
@@ -886,6 +896,23 @@ body {
 .admin-products-red p  { color: #fecaca; }
 
 /* FORM */
+/* TWO-COLUMN LAYOUT */
+.admin-products-layout {
+
+  display: grid;
+
+  grid-template-columns: 360px 1fr;
+
+  gap: 32px;
+
+  align-items: start;
+}
+
+.admin-products-right {
+
+  min-width: 0;
+}
+
 .admin-products-form {
 
   background:
@@ -898,7 +925,7 @@ body {
   border:
     1px solid rgba(148,163,184,0.10);
 
-  padding: 24px 28px;
+  padding: 24px 24px;
 
   border-radius: 24px;
 
@@ -906,9 +933,9 @@ body {
 
   gap: 14px;
 
-  margin-bottom: 35px;
+  position: sticky;
 
-  max-width: 560px;
+  top: 24px;
 
   box-shadow:
     0 8px 24px rgba(0,0,0,0.22);
@@ -1309,6 +1336,19 @@ body {
 }
 
 /* MOBILE */
+@media (max-width: 1100px) {
+
+  .admin-products-layout {
+
+    grid-template-columns: 1fr;
+  }
+
+  .admin-products-form {
+
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
 
   .admin-products-container {
