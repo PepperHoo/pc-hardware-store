@@ -2,6 +2,7 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
+import PcViewer3D from '../components/PcViewer3D.vue'
 
 import {
   ref,
@@ -320,7 +321,10 @@ onMounted(async () => {
       </section>
 
       <section class="builder-layout">
-        <aside class="builder-panel">
+        <aside class="builder-sidebar">
+          <PcViewer3D :selected-parts="selectedParts" />
+
+          <div class="builder-panel">
           <h2>
             Selected Build
           </h2>
@@ -356,6 +360,7 @@ onMounted(async () => {
                 x
               </button>
             </div>
+          </div>
           </div>
         </aside>
 
@@ -561,17 +566,22 @@ onMounted(async () => {
 
 .builder-layout {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 28px;
   align-items: start;
 }
 
-.builder-panel {
+.builder-sidebar {
   position: sticky;
   top: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.builder-panel {
   padding: 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 14px;
   background:
     linear-gradient(
       145deg,
@@ -750,18 +760,20 @@ onMounted(async () => {
   padding: 13px 22px;
 }
 
-@media (max-width: 1100px) {
-  .builder-header,
+@media (max-width: 1200px) {
   .builder-layout {
     grid-template-columns: 1fr;
   }
 
+  .builder-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 1100px) {
   .builder-header {
     display: grid;
-  }
-
-  .builder-panel {
-    position: static;
+    grid-template-columns: 1fr;
   }
 
   .recommendation-grid {
