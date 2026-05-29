@@ -1,840 +1,383 @@
 <script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
-import Toast from '../components/Toast.vue'
+import Toast  from '../components/Toast.vue'
+import { useCartStore } from '../stores/cart'
+import { useCardTilt } from '../composables/useCardTilt'
 
-import {
-  ref,
-  onMounted
-} from 'vue'
-
-import {
-  useRoute
-} from 'vue-router'
-
-import {
-  useCartStore
-} from '../stores/cart'
-
-const route = useRoute()
-
-const cart = useCartStore()
-
+const route  = useRoute()
+const router = useRouter()
+const cart   = useCartStore()
+const tilt   = useCardTilt(6)
 const toastRef = ref(null)
 
-const product = ref(null)
-
-const loading = ref(true)
-
+const product      = ref(null)
+const loading      = ref(true)
 const errorMessage = ref('')
+const quantity     = ref(1)
+const imgZoomed    = ref(false)
 
-const quantity = ref(1)
-
-// LOAD PRODUCT
 async function loadProduct() {
-
   try {
-
-    loading.value = true
-
     const { getWhere } = await import('../lib/api.js')
-
     const rows = await getWhere('products', 'id', route.params.id)
-
-    if (!rows.length) {
-
-      throw new Error('Product not found')
-    }
-
+    if (!rows.length) throw new Error('Not found')
     product.value = rows[0]
-
-  } catch (error) {
-
-    console.log(error)
-
-    errorMessage.value =
-      'Failed to load product.'
-
+  } catch (e) {
+    errorMessage.value = 'Product not found.'
   } finally {
-
     loading.value = false
   }
 }
 
-onMounted(() => {
-
-  loadProduct()
-})
-
-// ADD TO CART
 function addToCart() {
-
-  if (!product.value) {
-
-    return
-  }
-
-  for (
-
-    let i = 0;
-
-    i < quantity.value;
-
-    i++
-
-  ) {
-
-    cart.addToCart(
-      product.value
-    )
-  }
-
-  toastRef.value
-    .showToastMessage(
-      `${quantity.value} item(s) added to cart!`,
-      'success'
-    )
+  if (!product.value) return
+  for (let i = 0; i < quantity.value; i++) cart.addToCart(product.value)
+  toastRef.value.showToastMessage(`${quantity.value} × ${product.value.name} added to cart!`, 'success')
 }
+
+onMounted(loadProduct)
 </script>
 
 <template>
-  <div>
-
+  <div class="page">
     <Navbar />
 
-    <!-- LOADING -->
-    <div
-      v-if="loading"
-      class="product-status-box"
-    >
-
-      Loading product...
-
+    <!-- Loading -->
+    <div v-if="loading" class="state-box">
+      <div class="spinner" /><p>Loading product…</p>
     </div>
 
-    <!-- ERROR -->
-    <div
-      v-else-if="errorMessage"
-      class="product-error-box"
-    >
-
-      {{ errorMessage }}
-
+    <!-- Error -->
+    <div v-else-if="errorMessage" class="state-box state-box--error">
+      <p>{{ errorMessage }}</p>
+      <button class="btn-back" @click="router.back()">← Go back</button>
     </div>
 
-    <!-- PRODUCT -->
-    <div
-      v-else-if="product"
-      class="
-        product-detail-container
-      "
-    >
+    <!-- Product -->
+    <div v-else-if="product" class="detail-wrap section-inner">
 
-      <div
-        class="
-          product-detail-card
-        "
-      >
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <button @click="router.push('/')">Home</button>
+        <span>›</span>
+        <button @click="router.push('/products')">Products</button>
+        <span>›</span>
+        <button @click="router.push(`/products/${product.category}`)">{{ product.category }}</button>
+        <span>›</span>
+        <span class="bc-current">{{ product.name }}</span>
+      </nav>
 
-        <!-- IMAGE -->
+      <!-- Main layout -->
+      <div class="detail-grid">
+
+        <!-- ── IMAGE PANEL ─────────────────────────────────────────── -->
         <div
-          class="
-            product-image-section
-          "
+          class="img-panel tilt-card"
+          @mousemove="tilt.onMove"
+          @mouseleave="tilt.onLeave"
+          @click="imgZoomed = !imgZoomed"
         >
-
+          <div class="card-shine" />
+          <div class="img-bg" />
           <img
-            :src="
-              product.image ||
-              'https://via.placeholder.com/500'
-            "
-            alt="Product Image"
-            class="
-              product-image
-            "
+            :src="product.image"
+            :alt="product.name"
+            class="detail-img"
+            :class="{ zoomed: imgZoomed }"
           />
+          <div class="img-hint">{{ imgZoomed ? 'Click to shrink' : 'Click to zoom' }}</div>
 
+          <!-- Floating badges -->
+          <div class="img-badge img-badge--stock" v-if="product.stock > 0">
+            <span class="badge-dot" />
+            In Stock ({{ product.stock }})
+          </div>
+          <div class="img-badge img-badge--cat">{{ product.category }}</div>
         </div>
 
-        <!-- INFO -->
-        <div
-          class="
-            product-info-section
-          "
-        >
+        <!-- ── INFO PANEL ──────────────────────────────────────────── -->
+        <div class="info-panel">
 
-          <!-- NAME -->
-          <h2
-            class="
-              product-name
-            "
-          >
-
-            {{ product.name }}
-
-          </h2>
-
-          <!-- PRICE -->
-          <p
-            class="
-              product-price
-            "
-          >
-
-            RM
-
-            {{
-              Number(
-                product.price
-              ).toFixed(2)
-            }}
-
-          </p>
-
-          <!-- CATEGORY -->
-          <div
-            class="
-              product-category
-            "
-          >
-
-            {{ product.category }}
-
+          <!-- Category + stock -->
+          <div class="info-tags">
+            <span class="tag-cat">{{ product.category }}</span>
+            <span class="tag-stock" :class="product.stock > 0 ? 'in' : 'out'">
+              {{ product.stock > 0 ? `${product.stock} in stock` : 'Out of stock' }}
+            </span>
           </div>
 
-          <!-- FEATURES -->
-          <div
-            class="
-              product-features
-            "
-          >
+          <!-- Name -->
+          <h1 class="detail-name">{{ product.name }}</h1>
 
-            <div
-              class="
-                product-feature-item
-              "
-            >
-
-              Stock:
-              {{ product.stock }}
-
-            </div>
-
-            <div
-              class="
-                product-feature-item
-              "
-            >
-
-              PC Hardware
-
-            </div>
-
-            <div
-              class="
-                product-feature-item
-              "
-            >
-
-              High Performance
-
-            </div>
-
+          <!-- Price -->
+          <div class="price-row">
+            <span class="detail-price">RM {{ Number(product.price).toFixed(2) }}</span>
+            <span class="price-note">Inclusive of SST</span>
           </div>
 
-          <!-- DETAILS -->
-          <div
-            class="
-              product-details-box
-            "
-          >
-
-            <h3
-              class="
-                product-details-title
-              "
-            >
-
-              Product Details
-
-            </h3>
-
-            <p
-              class="
-                product-details-text
-              "
-            >
-
-              {{
-                product.details
-              }}
-
-            </p>
-
+          <!-- Feature chips -->
+          <div class="feature-chips">
+            <span class="chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Official Warranty
+            </span>
+            <span class="chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Genuine Product
+            </span>
+            <span class="chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Fast Shipping
+            </span>
           </div>
 
-          <!-- QUANTITY -->
-          <div
-            class="
-              product-quantity-section
-            "
-          >
+          <!-- Description -->
+          <div v-if="product.description || product.details" class="detail-desc">
+            <h3 class="desc-heading">Product Details</h3>
+            <p class="desc-text">{{ product.description || product.details }}</p>
+          </div>
 
-            <p
-              class="
-                product-quantity-label
-              "
-            >
-
-              Quantity
-
-            </p>
-
-            <div
-              class="
-                product-quantity-box
-              "
-            >
-
-              <button
-                @click="
-                  quantity > 1
-                  ? quantity--
-                  : 1
-                "
-              >
-
-                −
-
+          <!-- Quantity -->
+          <div class="qty-section">
+            <label class="qty-label">Quantity</label>
+            <div class="qty-row">
+              <button class="qty-btn" @click="quantity > 1 ? quantity-- : null">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
               </button>
-
-              <span>
-
-                {{ quantity }}
-
-              </span>
-
-              <button
-                @click="
-                  quantity++
-                "
-              >
-
-                +
-
+              <span class="qty-val">{{ quantity }}</span>
+              <button class="qty-btn" @click="quantity++">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
               </button>
-
             </div>
-
           </div>
 
-          <!-- BUTTON -->
-          <button
-            class="
-              product-add-btn
-            "
-            @click="addToCart"
-          >
+          <!-- Total -->
+          <div class="total-row">
+            <span class="total-label">Total</span>
+            <span class="total-val">RM {{ (Number(product.price) * quantity).toFixed(2) }}</span>
+          </div>
 
-            🛒 Add
-            {{ quantity }}
-            to Cart
-
-          </button>
+          <!-- Actions -->
+          <div class="detail-actions">
+            <button
+              class="btn-cart"
+              :disabled="product.stock === 0"
+              @click="addToCart"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              Add {{ quantity }} to Cart
+            </button>
+            <button class="btn-back-ghost" @click="router.back()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back
+            </button>
+          </div>
 
         </div>
-
       </div>
-
     </div>
-
-    <!-- NOT FOUND -->
-    <p
-      v-else
-      class="
-        product-not-found
-      "
-    >
-
-      Product not found
-
-    </p>
 
     <Toast ref="toastRef" />
-
     <Footer />
-
   </div>
 </template>
 
 <style scoped>
-body {
+.page { background: #030712; min-height: 100vh; color: #f1f5f9; }
 
-  margin: 0;
+/* State */
+.state-box {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px; min-height: 60vh; color: #475569;
+}
+.state-box--error { color: #ef4444; }
+.spinner {
+  width: 42px; height: 42px;
+  border: 3px solid rgba(59,130,246,0.15); border-top-color: #3b82f6;
+  border-radius: 50%; animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
 
-  font-family: Arial, sans-serif;
+/* Wrapper */
+.detail-wrap { padding-top: 40px; padding-bottom: 80px; }
 
-  background:
-    linear-gradient(
-      135deg,
-      #0f172a,
-      #111827 50%,
-      #172554
-    );
+/* Breadcrumb */
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 36px; font-size: 13px;
+}
+.breadcrumb button {
+  background: none; border: none; color: #334155; cursor: pointer;
+  font-size: 13px; padding: 0; transition: color 0.2s;
+}
+.breadcrumb button:hover { color: #60a5fa; }
+.breadcrumb span { color: #1e293b; }
+.bc-current { color: #94a3b8; font-weight: 600; }
 
-  overflow-x: hidden;
+/* Grid */
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 52px; align-items: start;
 }
 
-/* STATUS */
-.product-status-box,
-.product-error-box {
+/* ── Image Panel ────────────────────────────────────────────────────── */
+.img-panel {
+  position: relative; border-radius: 24px; overflow: hidden;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  cursor: zoom-in; transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.img-panel:hover { border-color: rgba(59,130,246,0.2); box-shadow: 0 32px 72px rgba(0,0,0,0.5); }
+.img-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 55%, rgba(59,130,246,0.1), transparent 70%);
+  pointer-events: none;
+}
+.detail-img {
+  position: relative; z-index: 1;
+  max-width: 80%; max-height: 80%;
+  object-fit: contain; transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+.detail-img.zoomed { transform: scale(1.3); cursor: zoom-out; }
+.img-panel:not(.zoomed):hover .detail-img:not(.zoomed) { transform: scale(1.06); }
 
-  margin: 40px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.96),
-      rgba(15,23,42,0.96)
-    );
-
-  padding: 30px;
-
-  border-radius: 20px;
-
-  border:
-    1px solid rgba(255,255,255,0.06);
-
-  box-shadow:
-    0 10px 24px rgba(0,0,0,0.18);
-
-  font-size: 18px;
-
-  color: white;
+.img-hint {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: #1e293b; letter-spacing: 0.06em;
+  background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 20px;
+  pointer-events: none; white-space: nowrap;
 }
 
-.product-error-box {
-
-  color: #f87171;
+.img-badge {
+  position: absolute; display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
 }
-
-/* PAGE */
-.product-detail-container {
-
-  width: 100%;
-
-  max-width: 1450px;
-
-  margin: 0 auto;
-
-  padding: 45px 30px;
-
-  box-sizing: border-box;
+.img-badge--stock {
+  top: 16px; left: 16px;
+  background: rgba(34,197,94,0.12); color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.2);
 }
-
-/* CARD */
-.product-detail-card {
-
-  display: flex;
-
-  gap: 50px;
-
-  align-items: flex-start;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.96),
-      rgba(15,23,42,0.96)
-    );
-
-  border-radius: 24px;
-
-  padding: 40px;
-
-  border:
-    1px solid rgba(255,255,255,0.06);
-
-  box-shadow:
-    0 12px 28px rgba(0,0,0,0.22);
-
-  overflow: hidden;
-}
-
-/* IMAGE */
-.product-image-section {
-
-  flex: 1;
-
-  display: flex;
-
-  justify-content: center;
-
-  align-items: center;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(59,130,246,0.10),
-      rgba(15,23,42,0.85)
-    );
-
-  border-radius: 20px;
-
-  padding: 30px;
-
-  min-height: 520px;
-}
-
-.product-image {
-
-  width: 100%;
-
-  max-width: 500px;
-
-  height: 500px;
-
-  object-fit: contain;
-
-  transition: 0.35s;
-}
-
-.product-image:hover {
-
-  transform: scale(1.03);
-}
-
-/* INFO */
-.product-info-section {
-
-  flex: 1.2;
-
-  display: flex;
-
-  flex-direction: column;
-}
-
-/* NAME */
-.product-name {
-
-  font-size: 50px;
-
-  font-weight: 800;
-
-  color: #f8fafc;
-
-  margin-bottom: 20px;
-
-  line-height: 1.2;
-}
-
-/* PRICE */
-.product-price {
-
-  font-size: 38px;
-
-  font-weight: 800;
-
-  color: #93c5fd;
-
-  margin-bottom: 25px;
-}
-
-/* CATEGORY */
-.product-category {
-
-  display: inline-block;
-
-  width: fit-content;
-
-  padding: 10px 18px;
-
-  border-radius: 999px;
-
-  background:
-    rgba(59,130,246,0.12);
-
-  border:
-    1px solid rgba(59,130,246,0.16);
-
-  color: #bfdbfe;
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  margin-bottom: 35px;
-
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 1.8s ease infinite; }
+@keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.4); } }
+.img-badge--cat {
+  top: 16px; right: 16px;
+  background: rgba(59,130,246,0.12); color: #60a5fa;
+  border: 1px solid rgba(59,130,246,0.2);
   text-transform: capitalize;
 }
 
-/* FEATURES */
-.product-features {
+/* ── Info Panel ─────────────────────────────────────────────────────── */
+.info-panel { display: flex; flex-direction: column; gap: 0; }
 
-  display: flex;
+.info-tags { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.tag-cat {
+  padding: 5px 14px; border-radius: 20px;
+  background: rgba(59,130,246,0.1); color: #60a5fa;
+  font-size: 11px; font-weight: 700; text-transform: capitalize;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.tag-stock {
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.tag-stock.in  { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+.tag-stock.out { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
 
-  flex-wrap: wrap;
-
-  gap: 15px;
-
-  margin-bottom: 35px;
+.detail-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(22px, 3.5vw, 38px);
+  font-weight: 900; line-height: 1.2;
+  color: #f1f5f9; margin: 0 0 24px;
 }
 
-.product-feature-item {
+.price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+.detail-price {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 900; color: #60a5fa;
+}
+.price-note { font-size: 12px; color: #334155; }
 
-  padding: 10px 16px;
+.feature-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #64748b; font-size: 12px; font-weight: 600;
+}
+.chip svg { color: #22c55e; flex-shrink: 0; }
 
-  background:
-    rgba(255,255,255,0.06);
+.detail-desc {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 24px; margin-bottom: 28px;
+}
+.desc-heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #334155; margin: 0 0 14px;
+}
+.desc-text { font-size: 14px; color: #64748b; line-height: 1.8; margin: 0; white-space: pre-line; }
 
-  color: #cbd5e1;
-
-  border-radius: 12px;
-
-  border:
-    1px solid rgba(255,255,255,0.06);
-
-  font-size: 14px;
-
-  font-weight: 700;
+.qty-section { margin-bottom: 20px; }
+.qty-label { display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.qty-row { display: flex; align-items: center; gap: 0; width: fit-content; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+.qty-btn {
+  width: 44px; height: 44px; background: rgba(255,255,255,0.04); border: none;
+  color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.qty-btn:hover { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.qty-val {
+  min-width: 52px; text-align: center; font-size: 16px; font-weight: 800; color: #f1f5f9;
+  border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 0 4px;
 }
 
-/* DETAILS */
-.product-details-box {
-
-  background:
-    rgba(255,255,255,0.04);
-
-  border-radius: 18px;
-
-  padding: 28px;
-
-  margin-bottom: 35px;
-
-  border:
-    1px solid rgba(255,255,255,0.06);
+.total-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-radius: 14px;
+  background: rgba(59,130,246,0.05);
+  border: 1px solid rgba(59,130,246,0.12); margin-bottom: 28px;
 }
+.total-label { font-size: 13px; font-weight: 700; color: #475569; }
+.total-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #60a5fa; }
 
-.product-details-title {
-
-  font-size: 28px;
-
-  margin-bottom: 18px;
-
-  color: #f8fafc;
+.detail-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-cart {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 16px 28px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; font-family: 'Orbitron', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  cursor: pointer; transition: all 0.3s;
+  box-shadow: 0 10px 28px rgba(59,130,246,0.3);
 }
+.btn-cart:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(59,130,246,0.45); }
+.btn-cart:disabled { opacity: 0.35; cursor: not-allowed; }
 
-.product-details-text {
-
-  font-size: 16px;
-
-  line-height: 1.9;
-
-  color: #cbd5e1;
-
-  white-space: pre-line;
+.btn-back-ghost, .btn-back {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 22px; border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #64748b; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
 }
+.btn-back-ghost:hover, .btn-back:hover { background: rgba(255,255,255,0.08); color: #cbd5e1; }
 
-/* QUANTITY */
-.product-quantity-section {
-
-  margin-bottom: 30px;
+/* Responsive */
+@media (max-width: 900px) {
+  .detail-grid { grid-template-columns: 1fr; gap: 32px; }
+  .img-panel { aspect-ratio: auto; min-height: 320px; }
 }
-
-.product-quantity-label {
-
-  font-size: 18px;
-
-  font-weight: 700;
-
-  color: #f8fafc;
-
-  margin-bottom: 16px;
-}
-
-.product-quantity-box {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 18px;
-}
-
-.product-quantity-box button {
-
-  width: 52px;
-
-  height: 52px;
-
-  border: none;
-
-  border-radius: 14px;
-
-  background:
-    rgba(255,255,255,0.06);
-
-  color: #93c5fd;
-
-  font-size: 26px;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-  transition: 0.3s;
-}
-
-.product-quantity-box button:hover {
-
-  background: #2563eb;
-
-  color: white;
-
-  transform: translateY(-2px);
-}
-
-.product-quantity-box span {
-
-  min-width: 40px;
-
-  text-align: center;
-
-  font-size: 22px;
-
-  font-weight: bold;
-
-  color: white;
-}
-
-/* BUTTON */
-.product-add-btn {
-
-  width: fit-content;
-
-  padding: 16px 36px;
-
-  border: none;
-
-  border-radius: 14px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #3b82f6
-    );
-
-  color: white;
-
-  font-size: 17px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition: 0.3s;
-
-  box-shadow:
-    0 10px 20px rgba(37,99,235,0.20);
-}
-
-.product-add-btn:hover {
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 14px 28px rgba(37,99,235,0.28);
-}
-
-/* NOT FOUND */
-.product-not-found {
-
-  text-align: center;
-
-  margin-top: 100px;
-
-  font-size: 28px;
-
-  color: #94a3b8;
-}
-
-/* TABLET */
-@media (max-width: 992px) {
-
-  .product-detail-card {
-
-    flex-direction: column;
-
-    padding: 28px;
-  }
-
-  .product-image-section {
-
-    width: 100%;
-
-    min-height: auto;
-  }
-
-  .product-image {
-
-    height: 350px;
-  }
-
-  .product-name {
-
-    font-size: 40px;
-  }
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-
-  .product-detail-container {
-
-    padding: 20px;
-  }
-
-  .product-detail-card {
-
-    border-radius: 20px;
-
-    gap: 30px;
-  }
-
-  .product-image {
-
-    height: 260px;
-  }
-
-  .product-name {
-
-    font-size: 30px;
-  }
-
-  .product-price {
-
-    font-size: 28px;
-  }
-
-  .product-details-title {
-
-    font-size: 24px;
-  }
-
-  .product-details-text {
-
-    font-size: 15px;
-  }
-
-  .product-add-btn {
-
-    width: 100%;
-  }
-
-  .product-quantity-box {
-
-    justify-content: center;
-  }
+@media (max-width: 640px) {
+  .detail-name { font-size: 24px; }
+  .detail-price { font-size: 28px; }
+  .btn-cart { font-size: 12px; padding: 14px 20px; }
 }
 </style>

@@ -1,831 +1,462 @@
 <script setup>
-import {
-  ref,
-  computed,
-  onMounted
-} from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
 
-import {
-  useRouter
-} from 'vue-router'
-
-const router = useRouter()
-
+const router   = useRouter()
+const cart     = useCartStore()
 const showMenu = ref(false)
-
-const searchQuery = ref('')
-
+const searchQuery  = ref('')
+const showDropdown = ref(false)
+const selectedIndex = ref(-1)
+const scrolled = ref(false)
 const products = ref([])
 
-const showDropdown = ref(false)
+const user = ref(JSON.parse(localStorage.getItem('user')))
 
-const selectedIndex = ref(-1)
+const profilePath = computed(() => user.value ? '/profile' : '/login')
 
-/* USER */
-const user = ref(
-  JSON.parse(
-    localStorage.getItem('user')
-  )
-)
+const cartCount = computed(() => cart.items.reduce((n, i) => n + i.quantity, 0))
 
-/* PROFILE PATH */
-const profilePath = computed(() => {
-
-  if (!user.value) {
-
-    return '/login'
-  }
-
-  return '/profile'
+const filteredResults = computed(() => {
+  if (!searchQuery.value.trim()) return []
+  return products.value
+    .filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+    .slice(0, 6)
 })
 
-/* FILTERED RESULTS */
-const filteredResults =
-  computed(() => {
+function toggleMenu()  { showMenu.value = !showMenu.value }
+function closeMenu()   { showMenu.value = false }
 
-    if (
-      !searchQuery.value.trim()
-    ) {
-
-      return []
-    }
-
-    return products.value
-      .filter(product =>
-
-        product.name
-          .toLowerCase()
-          .includes(
-            searchQuery.value
-              .toLowerCase()
-          )
-      )
-      .slice(0, 5)
-})
-
-/* TOGGLE MENU */
-function toggleMenu() {
-
-  showMenu.value =
-    !showMenu.value
-}
-
-/* CLOSE MENU */
-function closeMenu() {
-
-  showMenu.value = false
-}
-
-/* SEARCH */
 function searchProduct() {
-
-  if (
-    !searchQuery.value.trim()
-  ) {
-
-    return
-  }
-
-  showDropdown.value = false
-
+  if (!searchQuery.value.trim()) return
+  showDropdown.value  = false
   selectedIndex.value = -1
-
-  router.push({
-
-    path: '/products',
-
-    query: {
-
-      search:
-        searchQuery.value
-    }
-  })
+  router.push({ path: '/products', query: { search: searchQuery.value } })
 }
 
-/* SELECT PRODUCT */
 function selectProduct(name) {
-
-  searchQuery.value = name
-
-  showDropdown.value = false
-
+  searchQuery.value   = name
+  showDropdown.value  = false
   selectedIndex.value = -1
-
   searchProduct()
 }
 
-/* KEYBOARD NAVIGATION */
-function handleKeydown(event) {
-
-  if (
-    event.key === 'ArrowDown'
-  ) {
-
-    event.preventDefault()
-
-    if (
-      selectedIndex.value <
-      filteredResults.value.length - 1
-    ) {
-
-      selectedIndex.value++
-    }
-  }
-
-  else if (
-    event.key === 'ArrowUp'
-  ) {
-
-    event.preventDefault()
-
-    if (
-      selectedIndex.value > 0
-    ) {
-
-      selectedIndex.value--
-    }
-  }
-
-  else if (
-    event.key === 'Enter'
-  ) {
-
-    event.preventDefault()
-
-    if (
-      selectedIndex.value >= 0
-    ) {
-
-      selectProduct(
-
-        filteredResults.value[
-          selectedIndex.value
-        ].name
-      )
-    }
-
-    else {
-
-      searchProduct()
-    }
+function handleKeydown(e) {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    if (selectedIndex.value < filteredResults.value.length - 1) selectedIndex.value++
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    if (selectedIndex.value > 0) selectedIndex.value--
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    if (selectedIndex.value >= 0) selectProduct(filteredResults.value[selectedIndex.value].name)
+    else searchProduct()
+  } else if (e.key === 'Escape') {
+    showDropdown.value = false
   }
 }
 
-/* LOAD PRODUCTS */
+function onScroll() { scrolled.value = window.scrollY > 20 }
+
 onMounted(async () => {
-
+  window.addEventListener('scroll', onScroll)
   try {
-
     const { getAll } = await import('../lib/api.js')
-
     products.value = await getAll('products')
-
-  } catch (error) {
-
-    console.log(error)
-  }
+  } catch (e) { console.error(e) }
 })
+
+onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 </script>
 
 <template>
   <div>
+    <!-- ── NAVBAR ─────────────────────────────────────────────────── -->
+    <nav class="nav" :class="{ 'nav--scrolled': scrolled }">
+      <div class="nav-inner">
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-
-      <!-- LEFT -->
-      <div class="navbar-left">
-
-        <!-- MENU -->
-        <button
-          class="menu-btn"
-          @click="toggleMenu"
-        >
-          ☰
-        </button>
-
-        <!-- LOGO -->
-        <router-link
-          to="/"
-          class="logo"
-        >
-
-          💻 PC Hardware
-
-        </router-link>
-
-      </div>
-
-      <!-- SEARCH -->
-      <div class="search-wrapper">
-
-        <div class="search-box">
-
-          <input
-            v-model="searchQuery"
-            class="search"
-            placeholder="
-              Search components...
-            "
-            @keydown="
-              handleKeydown
-            "
-            @focus="
-              showDropdown = true
-            "
-          />
-
-          <button
-            class="search-btn"
-            @click="
-              searchProduct
-            "
-          >
-            🔍
+        <!-- Left: Hamburger + Logo -->
+        <div class="nav-left">
+          <button class="hamburger" @click="toggleMenu" aria-label="Menu">
+            <span /><span /><span />
           </button>
 
+          <router-link to="/" class="nav-logo">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect x="2" y="6" width="24" height="16" rx="3" stroke="#3b82f6" stroke-width="2"/>
+              <rect x="6" y="10" width="6" height="4" rx="1" fill="#3b82f6" opacity=".6"/>
+              <rect x="14" y="10" width="8" height="4" rx="1" fill="#8b5cf6" opacity=".6"/>
+              <line x1="9" y1="22" x2="9" y2="26" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+              <line x1="19" y1="22" x2="19" y2="26" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>PC<span class="logo-accent">Hardware</span></span>
+          </router-link>
         </div>
 
-        <!-- SEARCH DROPDOWN -->
-        <div
-          v-if="
-            showDropdown &&
-            filteredResults.length > 0
-          "
-          class="search-dropdown"
-        >
+        <!-- Center: Nav links (desktop) -->
+        <div class="nav-links">
+          <router-link to="/products" class="nav-link">Products</router-link>
+          <router-link to="/pc-builder" class="nav-link nav-link--special">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            PC Builder
+          </router-link>
+        </div>
 
-          <div
-            class="search-item"
-            :class="{
-              active:
-                selectedIndex === index
-            }"
-            v-for="
-              (
-                product,
-                index
-              ) in filteredResults
-            "
-            :key="product.id"
-            @click="
-              selectProduct(
-                product.name
-              )
-            "
-          >
+        <!-- Right: Search + Icons -->
+        <div class="nav-right">
+          <!-- Search -->
+          <div class="search-wrap" @click.outside="showDropdown = false">
+            <div class="search-box" :class="{ focused: showDropdown }">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                v-model="searchQuery"
+                class="search-input"
+                placeholder="Search components…"
+                @keydown="handleKeydown"
+                @focus="showDropdown = true"
+                @blur="setTimeout(() => showDropdown = false, 150)"
+              />
+            </div>
 
-            {{ product.name }}
-
+            <!-- Dropdown -->
+            <transition name="dropdown">
+              <div v-if="showDropdown && filteredResults.length" class="search-dropdown">
+                <button
+                  v-for="(product, i) in filteredResults"
+                  :key="product.id"
+                  class="dropdown-item"
+                  :class="{ active: selectedIndex === i }"
+                  @mousedown.prevent="selectProduct(product.name)"
+                >
+                  <img :src="product.image" :alt="product.name" class="dropdown-img" />
+                  <div>
+                    <div class="dropdown-name">{{ product.name }}</div>
+                    <div class="dropdown-price">RM {{ Number(product.price).toFixed(2) }}</div>
+                  </div>
+                </button>
+              </div>
+            </transition>
           </div>
 
+          <!-- Cart -->
+          <router-link to="/cart" class="nav-icon-btn" aria-label="Cart">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
+          </router-link>
+
+          <!-- Profile -->
+          <router-link :to="profilePath" class="nav-icon-btn" aria-label="Profile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </router-link>
         </div>
 
       </div>
-
-      <!-- ICONS -->
-      <div class="icons">
-
-        <router-link to="/cart">
-          🛒
-        </router-link>
-
-        <router-link
-          :to="profilePath"
-        >
-          👤
-        </router-link>
-
-      </div>
-
     </nav>
 
-    <!-- OVERLAY -->
-    <div
-      v-if="showMenu"
-      class="overlay"
-      @click="closeMenu"
-    ></div>
+    <!-- ── OVERLAY ─────────────────────────────────────────────────── -->
+    <transition name="fade">
+      <div v-if="showMenu" class="overlay" @click="closeMenu" />
+    </transition>
 
-    <!-- SIDEBAR -->
-    <div
-      class="sidebar"
-      :class="{ open: showMenu }"
-    >
-
-      <!-- TITLE -->
-      <h2 class="sidebar-title">
-
-        🖥 Categories
-
-      </h2>
-
-      <!-- LINKS -->
-      <div class="sidebar-menu">
-
-        <router-link
-          to="/products"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🛍️ All Products
-        </router-link>
-
-        <router-link
-          to="/pc-builder"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🔧 Build PC
-        </router-link>
-
-        <router-link
-          to="/products/processor"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🧠 Processor
-        </router-link>
-
-        <router-link
-          to="/products/motherboard"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🧩 Motherboard
-        </router-link>
-
-        <router-link
-          to="/products/gpu"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🎮 Graphics Card
-        </router-link>
-
-        <router-link
-          to="/products/ram"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          💾 RAM
-        </router-link>
-
-        <router-link
-          to="/products/storage"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🗄️ Storage
-        </router-link>
-
-        <router-link
-          to="/products/psu"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🔌 PSU
-        </router-link>
-
-        <router-link
-          to="/products/cooler"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          ❄️ Cooler
-        </router-link>
-
-        <router-link
-          to="/products/casing"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🖥️ PC Casing
-        </router-link>
-
-        <router-link
-          to="/products/rgb"
-          @click="closeMenu"
-          class="sidebar-item"
-        >
-          🌈 RGB Lighting
-        </router-link>
-
+    <!-- ── SIDEBAR ─────────────────────────────────────────────────── -->
+    <aside class="sidebar" :class="{ open: showMenu }">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Categories</span>
+        <button class="sidebar-close" @click="closeMenu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
 
-    </div>
-
+      <nav class="sidebar-nav">
+        <router-link to="/products"            @click="closeMenu" class="s-link">
+          <span class="s-icon">⬡</span> All Products
+        </router-link>
+        <router-link to="/pc-builder"          @click="closeMenu" class="s-link s-link--special">
+          <span class="s-icon">⚙</span> PC Builder
+        </router-link>
+        <div class="s-divider" />
+        <router-link to="/products/processor"  @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--blue">●</span> Processor
+        </router-link>
+        <router-link to="/products/motherboard" @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--purple">●</span> Motherboard
+        </router-link>
+        <router-link to="/products/gpu"        @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--amber">●</span> Graphics Card
+        </router-link>
+        <router-link to="/products/ram"        @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--violet">●</span> RAM
+        </router-link>
+        <router-link to="/products/storage"    @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--cyan">●</span> Storage
+        </router-link>
+        <router-link to="/products/psu"        @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--red">●</span> Power Supply
+        </router-link>
+        <router-link to="/products/cooler"     @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--sky">●</span> CPU Cooler
+        </router-link>
+        <router-link to="/products/casing"     @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--slate">●</span> PC Case
+        </router-link>
+        <router-link to="/products/rgb"        @click="closeMenu" class="s-link">
+          <span class="s-icon s-icon--pink">●</span> RGB / Fans
+        </router-link>
+      </nav>
+    </aside>
   </div>
 </template>
 
 <style scoped>
-
-/* NAVBAR */
-.navbar {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  background:
-    linear-gradient(
-      180deg,
-      #111827,
-      #0f172a
-    );
-
-  padding: 14px 24px;
-
+/* ── Navbar ─────────────────────────────────────────────────────────── */
+.nav {
   position: sticky;
-
   top: 0;
-
   z-index: 3000;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.06);
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.18);
+  transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+  background: rgba(3, 7, 18, 0.5);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
-/* LEFT */
-.navbar-left {
+.nav--scrolled {
+  background: rgba(3, 7, 18, 0.88);
+  border-bottom-color: rgba(59,130,246,0.14);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
 
+.nav-inner {
   display: flex;
-
   align-items: center;
-
-  gap: 16px;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 64px;
 }
 
-/* MENU BUTTON */
-.menu-btn {
+/* ── Left ───────────────────────────────────────────────────────────── */
+.nav-left { display: flex; align-items: center; gap: 16px; }
 
-  width: 42px;
-
-  height: 42px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  background:
-    rgba(255,255,255,0.08);
-
-  color: white;
-
-  font-size: 20px;
-
-  cursor: pointer;
-
+.hamburger {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 8px; border-radius: 10px;
+  background: transparent; border: none; cursor: pointer;
+  transition: background 0.2s;
+}
+.hamburger:hover { background: rgba(255,255,255,0.06); }
+.hamburger span {
+  display: block; width: 20px; height: 2px;
+  background: #94a3b8; border-radius: 2px;
   transition: 0.3s;
 }
 
-.menu-btn:hover {
-
-  background:
-    rgba(59,130,246,0.16);
-
-  transform: scale(1.04);
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: white;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px; font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
-/* LOGO */
-.logo {
+.logo-accent { color: #3b82f6; }
 
-  color: white;
+/* ── Center links ────────────────────────────────────────────────────── */
+.nav-links { display: flex; align-items: center; gap: 4px; margin-left: 16px; }
 
-  text-decoration: none;
-
-  font-size: 24px;
-
-  font-weight: 800;
+.nav-link {
+  padding: 8px 16px; border-radius: 10px;
+  color: #94a3b8; font-weight: 600; font-size: 14px;
+  text-decoration: none; transition: all 0.2s;
 }
+.nav-link:hover,
+.nav-link.router-link-active { color: #f1f5f9; background: rgba(255,255,255,0.06); }
 
-/* SEARCH WRAPPER */
-.search-wrapper {
-
-  flex: 1;
-
-  max-width: 650px;
-
-  margin: 0 30px;
-
-  position: relative;
-}
-
-/* SEARCH BOX */
-.search-box {
-
-  display: flex;
-
-  align-items: center;
-
-  background:
-    rgba(255,255,255,0.06);
-
-  border-radius: 14px;
-
-  border:
-    1px solid rgba(148,163,184,0.16);
-
-  overflow: hidden;
-}
-
-/* SEARCH INPUT */
-.search {
-
-  flex: 1;
-
-  padding: 13px 18px;
-
-  border: none;
-
-  background: transparent;
-
-  color: white;
-
-  font-size: 15px;
-
-  outline: none;
-}
-
-.search::placeholder {
-
-  color:
-    rgba(203,213,225,0.70);
-}
-
-/* SEARCH BUTTON */
-.search-btn {
-
-  border: none;
-
-  background: transparent;
-
-  color: white;
-
-  padding: 0 18px;
-
-  cursor: pointer;
-
-  font-size: 18px;
-
-  transition: 0.3s;
-}
-
-.search-btn:hover {
-
+.nav-link--special {
+  display: flex; align-items: center; gap: 6px;
   color: #60a5fa;
-
-  transform: scale(1.08);
+  border: 1px solid rgba(59,130,246,0.25);
+  background: rgba(59,130,246,0.08);
 }
-
-/* SEARCH DROPDOWN */
-.search-dropdown {
-
-  position: absolute;
-
-  top: 62px;
-
-  left: 0;
-
-  width: 100%;
-
-  background:
-    linear-gradient(
-      180deg,
-      #111827,
-      #0f172a
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.14);
-
-  border-radius: 14px;
-
-  overflow: hidden;
-
-  box-shadow:
-    0 12px 24px rgba(0,0,0,0.22);
-
-  z-index: 5000;
-}
-
-/* SEARCH ITEM */
-.search-item {
-
-  padding: 14px 18px;
-
-  cursor: pointer;
-
-  transition: 0.3s;
-
-  color: #e2e8f0;
-
-  font-weight: 500;
-}
-
-/* HOVER */
-.search-item:hover {
-
-  background:
-    rgba(59,130,246,0.12);
-
+.nav-link--special:hover {
+  background: rgba(59,130,246,0.16);
+  border-color: rgba(59,130,246,0.45);
   color: #93c5fd;
 }
 
-/* ACTIVE SEARCH ITEM */
-.search-item.active {
-
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #3b82f6
-    );
-
-  color: white;
+/* ── Right ───────────────────────────────────────────────────────────── */
+.nav-right {
+  display: flex; align-items: center; gap: 8px; margin-left: auto;
 }
 
-/* ICONS */
-.icons {
+/* Search */
+.search-wrap { position: relative; }
 
-  display: flex;
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 14px; height: 40px; width: 260px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; transition: all 0.25s;
+}
+.search-box.focused {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(59,130,246,0.4);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  width: 320px;
+}
+.search-icon { color: #475569; flex-shrink: 0; }
+.search-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: #f1f5f9; font-size: 14px;
+}
+.search-input::placeholder { color: #475569; }
 
-  align-items: center;
-
-  gap: 18px;
+.search-dropdown {
+  position: absolute; top: 48px; left: 0; right: 0;
+  background: #0d1526;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.5);
+  z-index: 9999;
 }
 
-.icons a {
+.dropdown-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px 16px;
+  background: none; border: none; cursor: pointer;
+  text-align: left; transition: background 0.15s;
+}
+.dropdown-item:hover, .dropdown-item.active {
+  background: rgba(59,130,246,0.1);
+}
+.dropdown-img {
+  width: 40px; height: 40px; object-fit: contain;
+  border-radius: 8px; background: rgba(255,255,255,0.04);
+  flex-shrink: 0;
+}
+.dropdown-name  { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+.dropdown-price { font-size: 12px; color: #60a5fa; margin-top: 2px; }
 
-  color: white;
-
-  text-decoration: none;
-
-  font-size: 22px;
-
-  transition: 0.3s;
+/* Icon buttons */
+.nav-icon-btn {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 12px;
+  color: #94a3b8; text-decoration: none; transition: all 0.2s;
+}
+.nav-icon-btn:hover {
+  background: rgba(255,255,255,0.06); color: #f1f5f9;
 }
 
-.icons a:hover {
-
-  color: #60a5fa;
-
-  transform: scale(1.08);
+.cart-badge {
+  position: absolute; top: 2px; right: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #3b82f6; color: white;
+  font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
 }
 
-/* OVERLAY */
+/* ── Overlay ─────────────────────────────────────────────────────────── */
 .overlay {
-
-  position: fixed;
-
-  inset: 0;
-
-  background:
-    rgba(0,0,0,0.45);
-
-  backdrop-filter: blur(2px);
-
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
   z-index: 2500;
 }
 
-/* SIDEBAR */
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
 .sidebar {
-
-  position: fixed;
-
-  top: 0;
-
-  left: -300px;
-
-  width: 280px;
-
-  height: 100vh;
-
-  background:
-    linear-gradient(
-      180deg,
-      #111827,
-      #0f172a
-    );
-
-  padding: 28px 22px;
-
-  transition: 0.35s ease;
-
-  z-index: 2800;
-
-  overflow-y: auto;
-
-  border-right:
-    1px solid rgba(148,163,184,0.12);
-
-  box-shadow:
-    10px 0 30px rgba(0,0,0,0.22);
+  position: fixed; top: 0; left: -320px;
+  width: 300px; height: 100vh;
+  background: #080d1a;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 20px 0 60px rgba(0,0,0,0.5);
+  z-index: 2800; transition: left 0.35s cubic-bezier(0.16,1,0.3,1);
+  display: flex; flex-direction: column; overflow-y: auto;
 }
+.sidebar.open { left: 0; }
 
-.sidebar.open {
-
-  left: 0;
+.sidebar-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
 }
-
-/* TITLE */
 .sidebar-title {
-
-  font-size: 28px;
-
-  font-weight: 800;
-
-  margin-bottom: 28px;
-
-  color: white;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; color: #475569;
 }
-
-/* MENU */
-.sidebar-menu {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 10px;
+.sidebar-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.04); border: none; cursor: pointer;
+  color: #64748b; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
 }
+.sidebar-close:hover { background: rgba(255,255,255,0.08); color: white; }
 
-/* ITEM */
-.sidebar-item {
+.sidebar-nav { padding: 12px; display: flex; flex-direction: column; gap: 2px; }
 
-  display: flex;
-
-  align-items: center;
-
-  gap: 14px;
-
-  padding: 14px 18px;
-
-  border-radius: 14px;
-
-  text-decoration: none;
-
-  color: #cbd5e1;
-
-  font-weight: 600;
-
-  transition: 0.3s;
+.s-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 12px;
+  color: #64748b; font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: all 0.2s;
 }
-
-/* HOVER */
-.sidebar-item:hover {
-
-  background:
-    rgba(59,130,246,0.12);
-
+.s-link:hover { background: rgba(255,255,255,0.04); color: #cbd5e1; }
+.s-link.router-link-active {
+  background: rgba(59,130,246,0.12);
   color: #93c5fd;
+}
+.s-link--special { color: #60a5fa; }
+.s-link--special:hover { background: rgba(59,130,246,0.1); color: #93c5fd; }
 
-  transform: translateX(4px);
+.s-icon { font-size: 10px; width: 20px; text-align: center; }
+.s-icon--blue   { color: #3b82f6; }
+.s-icon--purple { color: #a855f7; }
+.s-icon--amber  { color: #f59e0b; }
+.s-icon--violet { color: #8b5cf6; }
+.s-icon--cyan   { color: #06b6d4; }
+.s-icon--red    { color: #ef4444; }
+.s-icon--sky    { color: #38bdf8; }
+.s-icon--slate  { color: #94a3b8; }
+.s-icon--pink   { color: #ec4899; }
+
+.s-divider {
+  height: 1px; background: rgba(255,255,255,0.05);
+  margin: 8px 0;
 }
 
-/* ACTIVE */
-.router-link-active.sidebar-item {
+/* Transitions */
+.dropdown-enter-active, .dropdown-leave-active { transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
+.dropdown-enter-from, .dropdown-leave-to { opacity: 0; transform: translateY(-8px) scale(0.97); }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #3b82f6
-    );
-
-  color: white;
-
-  box-shadow:
-    0 8px 18px rgba(37,99,235,0.22);
+/* ── Mobile ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .nav-links { display: none; }
 }
 
-/* MOBILE */
-@media (max-width: 768px) {
-
-  .navbar {
-
-    padding: 12px 16px;
-  }
-
-  .search-wrapper {
-
-    display: none;
-  }
-
-  .logo {
-
-    font-size: 20px;
-  }
-
-  .sidebar {
-
-    width: 240px;
-  }
+@media (max-width: 640px) {
+  .nav-inner { padding: 0 16px; }
+  .search-box { width: 160px; }
+  .search-box.focused { width: 200px; }
 }
-
 </style>

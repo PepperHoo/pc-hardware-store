@@ -1,441 +1,152 @@
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-const user = computed(() => {
+const router = useRouter()
+const user   = computed(() => JSON.parse(localStorage.getItem('user')))
+const year   = new Date().getFullYear()
 
-  return JSON.parse(
-    localStorage.getItem('user')
-  )
-})
+const categories = [
+  { label: 'Processors',    path: '/products/processor' },
+  { label: 'Graphics Cards',path: '/products/gpu' },
+  { label: 'Motherboards',  path: '/products/motherboard' },
+  { label: 'RAM',           path: '/products/ram' },
+  { label: 'Storage',       path: '/products/storage' },
+  { label: 'PC Cases',      path: '/products/casing' },
+]
 
-const year = new Date().getFullYear()
+const links = [
+  { label: 'All Products', path: '/products' },
+  { label: 'PC Builder',   path: '/pc-builder' },
+  { label: user.value ? 'My Profile' : 'Login', path: user.value ? '/profile' : '/login' },
+  { label: 'My Orders',    path: '/orders' },
+  { label: 'Cart',         path: '/cart' },
+]
 </script>
 
 <template>
-
   <footer class="footer">
-
-    <!-- TOP -->
-    <div class="footer-container">
-
-      <!-- BRAND -->
-      <div class="footer-section brand-section">
-
-        <router-link
-          to="/"
-          class="footer-logo"
-        >
-
-          🖥 PC Hardware Store
-
-        </router-link>
-
-        <p class="footer-description">
-
-          Your trusted destination
-          for premium PC components,
-          gaming hardware, and
-          custom computer accessories.
-
-        </p>
-
-      </div>
-
-      <!-- CATEGORIES -->
-      <div class="footer-section">
-
-        <h3>
-          Categories
-        </h3>
-
-        <ul>
-
-          <li>
-
-            <router-link
-              to="/products/processor"
-            >
-              Processors
-            </router-link>
-
-          </li>
-
-          <li>
-
-            <router-link
-              to="/products/gpu"
-            >
-              Graphics Cards
-            </router-link>
-
-          </li>
-
-          <li>
-
-            <router-link
-              to="/products/motherboard"
-            >
-              Motherboards
-            </router-link>
-
-          </li>
-
-          <li>
-
-            <router-link
-              to="/products/ram"
-            >
-              RAM
-            </router-link>
-
-          </li>
-
-          <li>
-
-            <router-link
-              to="/products/storage"
-            >
-              Storage
-            </router-link>
-
-          </li>
-
-          <li>
-
-            <router-link
-              to="/products/casing"
-            >
-              PC Cases
-            </router-link>
-
-          </li>
-
-        </ul>
-
-      </div>
-
-      <!-- ACCOUNT -->
-      <div class="footer-section">
-
-        <h3>
-          Account
-        </h3>
-
-        <ul>
-
-          <!-- NOT LOGIN -->
-          <template v-if="!user">
-
-            <li>
-
-              <router-link to="/login">
-                Login
-              </router-link>
-
-            </li>
-
-            <li>
-
-              <router-link to="/register">
-                Register
-              </router-link>
-
-            </li>
-
-          </template>
-
-          <!-- LOGIN -->
-          <template v-else>
-
-            <li>
-
-              <router-link to="/profile">
-                My Profile
-              </router-link>
-
-            </li>
-
-            <li>
-
-              <router-link to="/cart">
-                Shopping Cart
-              </router-link>
-
-            </li>
-
-            <li>
-
-              <router-link to="/orders">
-                Order History
-              </router-link>
-
-            </li>
-
-          </template>
-
-        </ul>
-
-      </div>
-
-      <!-- CONTACT -->
-      <div class="footer-section">
-
-        <h3>
-          Contact
-        </h3>
-
-        <div class="footer-contact">
-
-          <a
-            href="
-              mailto:support@pchardware.com
-            "
-          >
-
-            📧 support@pchardware.com
-
-          </a>
-
-          <a
-            href="
-              tel:+60123456789
-            "
-          >
-
-            📞 +60 12-345 6789
-
-          </a>
-
-          <p>
-            📍 Kuching, Sarawak
+    <!-- Grid line decoration -->
+    <div class="footer-grid" />
+
+    <div class="footer-inner section-inner">
+      <div class="footer-cols">
+
+        <!-- Brand -->
+        <div class="footer-brand">
+          <div class="brand-logo" @click="router.push('/')">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect x="2" y="6" width="24" height="16" rx="3" stroke="#3b82f6" stroke-width="2"/>
+              <rect x="6" y="10" width="6" height="4" rx="1" fill="#3b82f6" opacity=".6"/>
+              <rect x="14" y="10" width="8" height="4" rx="1" fill="#8b5cf6" opacity=".6"/>
+            </svg>
+            <span>PC<span class="brand-accent">Hardware</span></span>
+          </div>
+          <p class="brand-desc">
+            Your one-stop shop for premium PC components. We source only the best hardware from the world's top manufacturers.
           </p>
+          <div class="brand-badges">
+            <span class="badge">🔒 Secure Checkout</span>
+            <span class="badge">⚡ Fast Delivery</span>
+          </div>
+        </div>
 
+        <!-- Categories -->
+        <div class="footer-col">
+          <h4 class="col-heading">Shop</h4>
+          <nav class="col-links">
+            <button v-for="cat in categories" :key="cat.path" @click="router.push(cat.path)" class="col-link">
+              {{ cat.label }}
+            </button>
+          </nav>
+        </div>
+
+        <!-- Account -->
+        <div class="footer-col">
+          <h4 class="col-heading">Account</h4>
+          <nav class="col-links">
+            <button v-for="link in links" :key="link.path" @click="router.push(link.path)" class="col-link">
+              {{ link.label }}
+            </button>
+          </nav>
         </div>
 
       </div>
 
+      <!-- Bottom bar -->
+      <div class="footer-bottom">
+        <p class="copyright">© {{ year }} PCHardware. All rights reserved.</p>
+        <p class="built-with">Built with Vue 3 + Supabase</p>
+      </div>
     </div>
-
-    <!-- BOTTOM -->
-    <div class="footer-bottom">
-
-      © {{ year }}
-      PC Hardware Store —
-      Built for Gamers &
-      PC Enthusiasts
-
-    </div>
-
   </footer>
-
 </template>
 
 <style scoped>
-
-/* FOOTER */
 .footer {
+  position: relative; overflow: hidden;
+  background: #030712;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: 0;
+}
+.footer-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 40%, transparent);
+  pointer-events: none;
+}
+.footer-inner { position: relative; z-index: 1; padding-top: 64px; padding-bottom: 32px; }
 
-  background:
-    linear-gradient(
-      135deg,
-      #020617,
-      #0f172a
-    );
-
-  color: white;
-
-  margin-top: 80px;
-
-  overflow: hidden;
+.footer-cols {
+  display: grid; grid-template-columns: 2fr 1fr 1fr;
+  gap: 52px; margin-bottom: 52px;
 }
 
-/* CONTAINER */
-.footer-container {
-
-  max-width: 1450px;
-
-  margin: 0 auto;
-
-  padding: 70px 40px 50px;
-
-  display: grid;
-
-  grid-template-columns:
-    1.4fr
-    1fr
-    1fr
-    1fr;
-
-  gap: 60px;
+/* Brand */
+.footer-brand {}
+.brand-logo {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800;
+  color: white; margin-bottom: 18px; width: fit-content;
+}
+.brand-accent { color: #3b82f6; }
+.brand-desc { font-size: 14px; color: #334155; line-height: 1.75; margin: 0 0 20px; max-width: 320px; }
+.brand-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); color: #334155;
 }
 
-/* SECTION */
-.footer-section h3 {
-
-  font-size: 28px;
-
-  margin-bottom: 24px;
-
-  color: white;
+/* Columns */
+.footer-col {}
+.col-heading {
+  font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b; margin: 0 0 18px;
 }
-
-/* LOGO */
-.footer-logo {
-
-  display: inline-block;
-
-  font-size: 44px;
-
-  font-weight: 800;
-
-  color: white;
-
-  text-decoration: none;
-
-  line-height: 1.2;
-
-  margin-bottom: 24px;
-
-  transition: 0.3s;
+.col-links { display: flex; flex-direction: column; gap: 4px; }
+.col-link {
+  background: none; border: none; text-align: left; cursor: pointer;
+  color: #334155; font-size: 14px; font-weight: 500; padding: 6px 0;
+  transition: color 0.2s; width: fit-content;
 }
+.col-link:hover { color: #60a5fa; }
 
-.footer-logo:hover {
-
-  color: #60a5fa;
-}
-
-/* DESCRIPTION */
-.footer-description {
-
-  color: #cbd5e1;
-
-  line-height: 1.9;
-
-  font-size: 17px;
-
-  max-width: 340px;
-}
-
-/* LIST */
-.footer-section ul {
-
-  list-style: none;
-
-  padding: 0;
-
-  margin: 0;
-}
-
-/* LIST ITEM */
-.footer-section ul li {
-
-  margin-bottom: 18px;
-}
-
-/* LINKS */
-.footer-section a {
-
-  color: #cbd5e1;
-
-  text-decoration: none;
-
-  font-size: 17px;
-
-  transition: 0.3s;
-
-  position: relative;
-}
-
-.footer-section a:hover {
-
-  color: #60a5fa;
-
-  padding-left: 6px;
-}
-
-/* CONTACT */
-.footer-contact {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 18px;
-}
-
-.footer-contact a,
-.footer-contact p {
-
-  color: #cbd5e1;
-
-  font-size: 17px;
-
-  margin: 0;
-
-  line-height: 1.6;
-}
-
-/* BOTTOM */
+/* Bottom */
 .footer-bottom {
-
-  border-top:
-    1px solid
-    rgba(255,255,255,0.08);
-
-  text-align: center;
-
-  padding: 24px;
-
-  color: #94a3b8;
-
-  font-size: 15px;
-
-  background:
-    rgba(255,255,255,0.02);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 12px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.04);
 }
-
-/* MOBILE */
-@media (max-width: 1100px) {
-
-  .footer-container {
-
-    grid-template-columns:
-      repeat(2,1fr);
-
-    gap: 40px;
-  }
-}
+.copyright   { font-size: 12px; color: #1e293b; margin: 0; }
+.built-with  { font-size: 12px; color: #1e293b; margin: 0; }
 
 @media (max-width: 768px) {
-
-  .footer-container {
-
-    grid-template-columns: 1fr;
-
-    padding: 50px 24px;
-  }
-
-  .footer-logo {
-
-    font-size: 34px;
-  }
-
-  .footer-section h3 {
-
-    font-size: 24px;
-  }
-
-  .footer-description {
-
-    max-width: 100%;
-  }
-
-  .footer-bottom {
-
-    padding: 20px;
-
-    font-size: 14px;
-  }
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+  .footer-brand { grid-column: 1 / -1; }
 }
-
+@media (max-width: 480px) {
+  .footer-cols { grid-template-columns: 1fr; }
+}
 </style>
