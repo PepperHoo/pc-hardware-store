@@ -2,7 +2,7 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-import PcViewer3D from '../components/PcViewer3D.vue'
+import SketchfabViewer from '../components/SketchfabViewer.vue'
 
 import {
   ref,
@@ -322,7 +322,7 @@ onMounted(async () => {
 
       <section class="builder-layout">
         <aside class="builder-sidebar">
-          <PcViewer3D :selected-parts="selectedParts" />
+          <SketchfabViewer :selected-parts="selectedParts" />
 
           <div class="builder-panel">
           <h2>
