@@ -1,297 +1,218 @@
 <script setup>
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute()
+const route  = useRoute()
+const router = useRouter()
+
+const navItems = [
+  {
+    to: '/admin', label: 'Dashboard', exact: true,
+    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="1" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="10" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="10" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>`
+  },
+  {
+    to: '/admin/products', label: 'Products', exact: false,
+    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="7" width="3" height="2" rx="0.5" fill="currentColor" opacity=".6"/><rect x="10" y="7" width="4" height="2" rx="0.5" fill="currentColor" opacity=".6"/></svg>`
+  },
+  {
+    to: '/admin/orders', label: 'Orders', exact: false,
+    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h8M5 10h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+  },
+  {
+    to: '/admin/users', label: 'Users', exact: false,
+    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 16c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+  },
+  {
+    to: '/admin/homepage', label: 'Homepage', exact: false,
+    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 8l7-6 7 6v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 17V10h6v7" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`
+  },
+]
+
+function isActive(item) {
+  return item.exact ? route.path === item.to : route.path.startsWith(item.to)
+}
 </script>
 
 <template>
+  <aside class="admin-sidebar">
+    <!-- Top gradient bar -->
+    <div class="sidebar-bar" />
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-
-    <!-- LOGO -->
-    <div class="logo">
-
-      <h2>
-        PC Admin
-      </h2>
-
-      <p>
-        Hardware Dashboard
-      </p>
-
+    <!-- Logo -->
+    <div class="sidebar-logo" @click="router.push('/')">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="6" width="24" height="16" rx="3" stroke="#3b82f6" stroke-width="2"/>
+          <rect x="6" y="10" width="6" height="4" rx="1" fill="#3b82f6" opacity=".7"/>
+          <rect x="14" y="10" width="8" height="4" rx="1" fill="#8b5cf6" opacity=".7"/>
+        </svg>
+      </div>
+      <div>
+        <p class="logo-name">PC<span class="logo-accent">Admin</span></p>
+        <p class="logo-sub">Hardware Dashboard</p>
+      </div>
     </div>
 
-    <!-- MENU -->
-    <div class="menu">
+    <!-- Divider -->
+    <div class="sidebar-divider" />
 
-      <!-- DASHBOARD -->
+    <!-- Nav label -->
+    <p class="nav-label">Navigation</p>
+
+    <!-- Menu -->
+    <nav class="sidebar-menu">
       <router-link
-        to="/admin"
-        class="menu-item"
-        :class="{ active: route.path === '/admin' }"
+        v-for="item in navItems"
+        :key="item.to"
+        :to="item.to"
+        class="menu-link"
+        :class="{ active: isActive(item) }"
       >
-        <span>📊</span>
-        Dashboard
+        <span class="link-icon" v-html="item.icon" />
+        <span class="link-text">{{ item.label }}</span>
+        <span v-if="isActive(item)" class="active-dot" />
+      </router-link>
+    </nav>
+
+    <!-- Spacer -->
+    <div class="sidebar-spacer" />
+
+    <!-- Bottom -->
+    <div class="sidebar-bottom">
+      <router-link to="/admin/profile" class="profile-link">
+        <div class="profile-avatar">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="5" r="3" stroke="#93c5fd" stroke-width="1.5"/>
+            <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="profile-name">Admin Profile</p>
+          <p class="profile-role">Administrator</p>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="profile-arrow">
+          <path d="M5 3l4 4-4 4" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </router-link>
 
-      <!-- PRODUCTS -->
-      <router-link
-        to="/admin/products"
-        class="menu-item"
-        :class="{ active: route.path.includes('/admin/products') }"
-      >
-        <span>🖥️</span>
-        Products
+      <router-link to="/" class="back-site-link">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M6 3L2 7l4 4M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to Store
       </router-link>
-
-      <!-- ORDERS -->
-      <router-link
-        to="/admin/orders"
-        class="menu-item"
-        :class="{ active: route.path.includes('/admin/orders') }"
-      >
-        <span>🛒</span>
-        Orders
-      </router-link>
-
-      <!-- USERS -->
-      <router-link
-        to="/admin/users"
-        class="menu-item"
-        :class="{ active: route.path.includes('/admin/users') }"
-      >
-        <span>👥</span>
-        Users
-      </router-link>
-
-      <!-- HOMEPAGE -->
-      <router-link
-        to="/admin/homepage"
-        class="menu-item"
-        :class="{ active: route.path.includes('/admin/homepage') }"
-      >
-        <span>🖼️</span>
-        Homepage
-      </router-link>
-
     </div>
-
-    <!-- BOTTOM -->
-    <div class="bottom-section">
-
-      <router-link
-        to="/admin/profile"
-        class="profile-btn"
-      >
-        👤 Admin Profile
-      </router-link>
-
-    </div>
-
-  </div>
-
+  </aside>
 </template>
 
 <style scoped>
-
-/* SIDEBAR */
-.sidebar {
-
-  width: 260px;
-
+.admin-sidebar {
+  width: 256px;
   height: 100vh;
-
-  background:
-    linear-gradient(
-      180deg,
-      #111827,
-      #0f172a
-    );
-
+  background: #020817;
   position: fixed;
-
-  left: 0;
-
-  top: 0;
-
+  left: 0; top: 0;
   display: flex;
-
   flex-direction: column;
-
-  justify-content: space-between;
-
-  padding: 25px 20px;
-
+  padding: 0 0 24px;
   box-sizing: border-box;
-
-  border-right:
-    1px solid rgba(255,255,255,0.06);
-
-  box-shadow:
-    4px 0 18px rgba(0,0,0,0.18);
-
+  border-right: 1px solid rgba(255,255,255,0.06);
   z-index: 9999;
+  overflow-y: auto;
 }
 
-/* LOGO */
-.logo {
-
-  margin-bottom: 40px;
+.sidebar-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #8b5cf6, #34d399);
+  flex-shrink: 0;
 }
 
-.logo h2 {
+/* Logo */
+.sidebar-logo {
+  display: flex; align-items: center; gap: 12px;
+  padding: 22px 20px 18px;
+  cursor: pointer;
+}
+.logo-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.logo-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px; font-weight: 900; color: white; margin: 0 0 2px;
+}
+.logo-accent { color: #3b82f6; }
+.logo-sub { font-size: 11px; color: #334155; margin: 0; }
 
-  color: white;
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 0 20px 16px; }
 
-  font-size: 30px;
-
-  margin: 0 0 8px;
+.nav-label {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #1e293b; margin: 0 0 8px; padding: 0 20px;
 }
 
-.logo p {
+/* Menu */
+.sidebar-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; }
 
-  color: #94a3b8;
-
-  margin: 0;
-
-  font-size: 14px;
+.menu-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; border-radius: 12px;
+  text-decoration: none; color: #475569;
+  font-size: 14px; font-weight: 600;
+  transition: all 0.2s;
+  position: relative;
 }
-
-/* MENU */
-.menu {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 12px;
-
-  flex: 1;
-}
-
-/* MENU ITEM */
-.menu-item {
-
-  text-decoration: none;
-
-  color: #cbd5e1;
-
-  padding: 15px 18px;
-
-  border-radius: 14px;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 14px;
-
-  font-size: 16px;
-
-  font-weight: 600;
-
-  transition: 0.3s;
-}
-
-/* ICON */
-.menu-item span {
-
-  font-size: 20px;
-}
-
-/* HOVER */
-.menu-item:hover {
-
-  background:
-    rgba(59,130,246,0.10);
-
+.menu-link:hover { background: rgba(59,130,246,0.08); color: #93c5fd; }
+.menu-link.active {
+  background: linear-gradient(135deg, rgba(37,99,235,0.2), rgba(59,130,246,0.12));
   color: #93c5fd;
-
-  transform: translateX(4px);
+  border: 1px solid rgba(59,130,246,0.2);
 }
 
-/* ACTIVE */
-.active {
-
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #3b82f6
-    );
-
-  color: white;
-
-  box-shadow:
-    0 8px 18px rgba(37,99,235,0.20);
+.link-icon { display: flex; align-items: center; flex-shrink: 0; }
+.link-text { flex: 1; }
+.active-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59,130,246,0.6);
 }
 
-/* BOTTOM */
-.bottom-section {
+.sidebar-spacer { flex: 1; }
 
-  display: flex;
+/* Bottom */
+.sidebar-bottom { padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
 
-  flex-direction: column;
-
-  gap: 12px;
+.profile-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px; border-radius: 14px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  text-decoration: none; transition: all 0.2s;
 }
-
-/* PROFILE BUTTON */
-.profile-btn {
-
-  text-decoration: none;
-
-  text-align: center;
-
-  padding: 14px;
-
-  border-radius: 12px;
-
-  font-weight: 600;
-
-  transition: 0.3s;
-
-  background:
-    rgba(255,255,255,0.06);
-
-  color: white;
-
-  border:
-    1px solid rgba(255,255,255,0.06);
+.profile-link:hover { background: rgba(59,130,246,0.07); border-color: rgba(59,130,246,0.2); }
+.profile-avatar {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.profile-name { font-size: 13px; font-weight: 700; color: #cbd5e1; margin: 0 0 1px; }
+.profile-role { font-size: 11px; color: #334155; margin: 0; }
+.profile-arrow { margin-left: auto; flex-shrink: 0; }
 
-.profile-btn:hover {
-
-  background:
-    rgba(59,130,246,0.12);
-
-  color: #bfdbfe;
+.back-site-link {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px; border-radius: 12px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+  text-decoration: none; color: #334155; font-size: 12px; font-weight: 600;
+  transition: all 0.2s;
 }
+.back-site-link:hover { color: #475569; background: rgba(255,255,255,0.05); }
 
-/* MOBILE */
+/* Mobile */
 @media (max-width: 768px) {
-
-  .sidebar {
-
+  .admin-sidebar {
     width: 100%;
-
     height: auto;
-
     position: relative;
-
-    padding: 20px;
-  }
-
-  .menu {
-
-    margin-top: 20px;
-  }
-
-  .bottom-section {
-
-    margin-top: 25px;
   }
 }
-
 </style>
