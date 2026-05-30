@@ -1,1377 +1,349 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
-
-import {
-  ref,
-  onMounted,
-  computed
-} from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const products = ref([])
-
-const name = ref('')
-const price = ref('')
-const stock = ref('')
-const category = ref('')
-const image = ref('')
-const details = ref('')
-
-const editingId = ref(null)
-
-const showEditModal = ref(false)
-
-const editName = ref('')
-const editPrice = ref('')
-const editStock = ref('')
-const editCategory = ref('')
-const editImage = ref('')
-const editDetails = ref('')
-
+const name = ref(''); const price = ref(''); const stock = ref('')
+const category = ref(''); const image = ref(''); const details = ref('')
+const editingId = ref(null); const showEditModal = ref(false)
+const editName = ref(''); const editPrice = ref(''); const editStock = ref('')
+const editCategory = ref(''); const editImage = ref(''); const editDetails = ref('')
 const selectedCategory = ref('all')
-
 const toastRef = ref(null)
+const uploadingImage = ref(false); const uploadingEditImage = ref(false)
 
-// FETCH PRODUCTS
+useScrollAnimation()
+
+const categories = ['processor','motherboard','gpu','ram','storage','psu','cooler','casing']
+
 async function loadProducts() {
-
   const { getAll } = await import('../lib/api.js')
-
   products.value = await getAll('products')
 }
+onMounted(loadProducts)
 
-onMounted(() => {
-  loadProducts()
-})
-
-// ADD PRODUCT
 async function addProduct() {
-
-  if (
-    !name.value ||
-    !price.value ||
-    !category.value
-  ) {
-
-    toastRef.value
-      .showToastMessage(
-        'Please fill all required fields',
-        'error'
-      )
-
-    return
+  if (!name.value || !price.value || !category.value) {
+    toastRef.value.showToastMessage('Please fill all required fields', 'error'); return
   }
-
-  const newProduct = {
-
-    id: Date.now().toString(36) +
-        Math.random().toString(36).slice(2, 7),
-
-    name:        name.value,
-
-    price:       Number(price.value),
-
-    stock:       Number(stock.value || 0),
-
-    category:    category.value,
-
-    image:       image.value,
-
-    description: details.value
-  }
-
   try {
-
     const { create } = await import('../lib/api.js')
-
-    await create('products', newProduct)
-
-    toastRef.value
-      .showToastMessage(
-        'Product added successfully!',
-        'success'
-      )
-
-    name.value = ''
-    price.value = ''
-    stock.value = ''
-    category.value = ''
-    image.value = ''
-    details.value = ''
-
+    await create('products', {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+      name: name.value, price: Number(price.value), stock: Number(stock.value||0),
+      category: category.value, image: image.value, description: details.value
+    })
+    toastRef.value.showToastMessage('Product added!', 'success')
+    name.value=''; price.value=''; stock.value=''; category.value=''; image.value=''; details.value=''
     loadProducts()
-
   } catch (err) {
-
-    console.error('Add product error:', err)
-
-    toastRef.value
-      .showToastMessage(
-        'Failed to add product: ' + err.message,
-        'error'
-      )
+    toastRef.value.showToastMessage('Failed to add product: '+err.message, 'error')
   }
 }
 
-// REMOVE PRODUCT
 async function removeProduct(id) {
-
   const { remove } = await import('../lib/api.js')
-
   await remove('products', id)
-
-  toastRef.value
-    .showToastMessage(
-      'Product removed successfully!',
-      'success'
-    )
-
+  toastRef.value.showToastMessage('Product removed!', 'success')
   loadProducts()
 }
 
-// START EDIT
-function startEdit(product) {
-
-  editingId.value =
-    product.id
-
-  editName.value =
-    product.name
-
-  editPrice.value =
-    product.price
-
-  editStock.value =
-    product.stock
-
-  editCategory.value =
-    product.category
-
-  editImage.value =
-    product.image
-
-  editDetails.value =
-    product.details
-
-  showEditModal.value = true
+function startEdit(p) {
+  editingId.value=p.id; editName.value=p.name; editPrice.value=p.price
+  editStock.value=p.stock; editCategory.value=p.category; editImage.value=p.image
+  editDetails.value=p.details||p.description||''; showEditModal.value=true
 }
+function closeModal() { showEditModal.value=false; editingId.value=null }
 
-// CLOSE MODAL
-function closeModal() {
-
-  showEditModal.value = false
-
-  editingId.value = null
-}
-
-// UPDATE PRODUCT
 async function updateProduct(id) {
-
-  const updatedProduct = {
-
-    name:        editName.value,
-
-    price:       Number(editPrice.value),
-
-    stock:       Number(editStock.value),
-
-    category:    editCategory.value,
-
-    image:       editImage.value,
-
-    description: editDetails.value
-  }
-
   try {
-
     const { update } = await import('../lib/api.js')
-
-    await update('products', id, updatedProduct)
-
-    editingId.value = null
-
-    showEditModal.value = false
-
-    loadProducts()
-
-    toastRef.value
-      .showToastMessage(
-        'Product updated successfully!',
-        'success'
-      )
-
-  } catch (err) {
-
-    console.error('Update product error:', err)
-
-    toastRef.value
-      .showToastMessage(
-        'Failed to update product: ' + err.message,
-        'error'
-      )
-  }
+    await update('products', id, { name: editName.value, price: Number(editPrice.value), stock: Number(editStock.value), category: editCategory.value, image: editImage.value, description: editDetails.value })
+    editingId.value=null; showEditModal.value=false; loadProducts()
+    toastRef.value.showToastMessage('Product updated!', 'success')
+  } catch (err) { toastRef.value.showToastMessage('Failed to update: '+err.message, 'error') }
 }
 
-// IMAGE UPLOAD — uploads to Supabase Storage, stores public URL
-const uploadingImage = ref(false)
-const uploadingEditImage = ref(false)
-
-async function handleImageUpload(event) {
-
-  const file = event.target.files[0]
-
-  if (!file) return
-
-  try {
-
-    uploadingImage.value = true
-
-    const { uploadImage } = await import('../lib/api.js')
-
-    image.value = await uploadImage('images', file, 'products')
-
-  } catch (err) {
-
-    console.error(err)
-
-    toastRef.value.showToastMessage('Image upload failed', 'error')
-
-  } finally {
-
-    uploadingImage.value = false
-  }
+async function handleImageUpload(e) {
+  const file = e.target.files[0]; if (!file) return
+  try { uploadingImage.value=true; const { uploadImage } = await import('../lib/api.js'); image.value = await uploadImage('images', file, 'products') }
+  catch (err) { toastRef.value.showToastMessage('Upload failed', 'error') }
+  finally { uploadingImage.value=false }
+}
+async function handleEditImageUpload(e) {
+  const file = e.target.files[0]; if (!file) return
+  try { uploadingEditImage.value=true; const { uploadImage } = await import('../lib/api.js'); editImage.value = await uploadImage('images', file, 'products') }
+  catch (err) { toastRef.value.showToastMessage('Upload failed', 'error') }
+  finally { uploadingEditImage.value=false }
 }
 
-// EDIT IMAGE UPLOAD
-async function handleEditImageUpload(event) {
-
-  const file = event.target.files[0]
-
-  if (!file) return
-
-  try {
-
-    uploadingEditImage.value = true
-
-    const { uploadImage } = await import('../lib/api.js')
-
-    editImage.value = await uploadImage('images', file, 'products')
-
-  } catch (err) {
-
-    console.error(err)
-
-    toastRef.value.showToastMessage('Image upload failed', 'error')
-
-  } finally {
-
-    uploadingEditImage.value = false
-  }
-}
-
-// FILTER
-const filteredProducts =
-  computed(() => {
-
-    if (
-      selectedCategory.value
-      === 'all'
-    ) {
-
-      return products.value
-    }
-
-    return products.value
-      .filter(product =>
-
-        product.category ===
-        selectedCategory.value
-      )
-  })
-
-// LOW STOCK COUNT
-const lowStockCount =
-  computed(() => {
-
-    return products.value
-      .filter(product =>
-
-        product.stock <= 5
-
-      ).length
-  })
+const filteredProducts = computed(() =>
+  selectedCategory.value === 'all' ? products.value : products.value.filter(p => p.category === selectedCategory.value)
+)
+const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).length)
 </script>
 
 <template>
-  <div>
-
+  <div class="admin-page">
     <AdminNavbar />
 
-    <!-- CONTAINER -->
-    <div class="admin-products-container">
-
-      <!-- HEADER -->
-      <div class="admin-products-header">
-
-        <h1>
-          Product Inventory
-        </h1>
-
-        <p>
-          Manage PC hardware components
-        </p>
-
+    <main class="admin-main">
+      <!-- Header -->
+      <div class="page-header reveal">
+        <span class="kicker">Admin</span>
+        <h1 class="page-title">Product <span class="grad-text">Inventory</span></h1>
+        <p class="page-sub">Add, edit, and manage PC hardware components.</p>
       </div>
 
-      <!-- SUMMARY -->
-      <div class="admin-products-summary-grid">
+      <!-- Stats -->
+      <div class="stats-row reveal stagger-1">
+        <div class="stat-pill glass">
+          <div class="sp-icon" style="color:#60a5fa">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="8" width="4" height="2" rx=".5" fill="currentColor" opacity=".6"/><rect x="10" y="8" width="5" height="2" rx=".5" fill="currentColor" opacity=".6"/></svg>
+          </div>
+          <div><p class="sp-label">Total Products</p><p class="sp-val" style="color:#93c5fd">{{ products.length }}</p></div>
+        </div>
+        <div class="stat-pill glass">
+          <div class="sp-icon" style="color:#fca5a5">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v6M9 13v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="9" r="7.5" stroke="currentColor" stroke-width="1.5"/></svg>
+          </div>
+          <div><p class="sp-label">Low Stock</p><p class="sp-val" style="color:#fca5a5">{{ lowStockCount }}</p></div>
+        </div>
+      </div>
 
-        <div
-          class="
-            admin-products-summary-card
-            admin-products-blue
-          "
-        >
+      <!-- Two-col layout -->
+      <div class="products-layout">
 
-          <h2>
-            📦 Products
+        <!-- Add form -->
+        <div class="add-form glass reveal stagger-2">
+          <h2 class="form-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/></svg>
+            Add New Product
           </h2>
 
-          <p>
-            {{ products.length }}
-          </p>
-
+          <div class="field-group">
+            <label class="field-label">Product Name *</label>
+            <input v-model="name" placeholder="e.g. NVIDIA RTX 5090" class="field-input" />
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Price (RM) *</label>
+              <input v-model="price" type="number" placeholder="0.00" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Stock Qty</label>
+              <input v-model="stock" type="number" placeholder="0" class="field-input" />
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Category *</label>
+            <select v-model="category" class="field-input">
+              <option value="">Select category</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat.charAt(0).toUpperCase()+cat.slice(1) }}</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Product Image</label>
+            <label class="upload-label">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              {{ uploadingImage ? 'Uploading…' : 'Upload Image' }}
+              <input type="file" accept="image/*" @change="handleImageUpload" hidden />
+            </label>
+            <img v-if="image" :src="image" class="preview-img" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Description</label>
+            <textarea v-model="details" placeholder="Product details…" class="field-input field-textarea" rows="3" />
+          </div>
+          <button class="btn-add" @click="addProduct">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Add Product
+          </button>
         </div>
 
-        <div
-          class="
-            admin-products-summary-card
-            admin-products-red
-          "
-        >
+        <!-- Right: filter + grid -->
+        <div class="products-right">
+          <!-- Filter -->
+          <div class="filter-bar glass reveal stagger-2">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M1 3h13M3 7h9M5 11h5" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <select v-model="selectedCategory" class="filter-select">
+              <option value="all">All Categories</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat.charAt(0).toUpperCase()+cat.slice(1) }}</option>
+            </select>
+            <span class="filter-count">{{ filteredProducts.length }} products</span>
+          </div>
 
-          <h2>
-            ⚠ Low Stock
-          </h2>
-
-          <p>
-            {{ lowStockCount }}
-          </p>
-
+          <!-- Product cards -->
+          <div class="product-grid">
+            <div v-for="(product, i) in filteredProducts" :key="product.id" class="product-card glass reveal" :class="`stagger-${Math.min(i+1,6)}`">
+              <div class="prod-img-wrap">
+                <img :src="product.image" :alt="product.name" class="prod-img" />
+              </div>
+              <div class="prod-info">
+                <span class="prod-cat">{{ product.category }}</span>
+                <p class="prod-name">{{ product.name }}</p>
+                <p class="prod-price">RM {{ Number(product.price).toFixed(2) }}</p>
+                <div class="prod-stock" :class="product.stock <= 5 ? 'low' : 'ok'">
+                  <span class="stock-dot" />
+                  Stock: {{ product.stock }}
+                </div>
+              </div>
+              <div class="prod-actions">
+                <button class="btn-edit" @click="startEdit(product)">Edit</button>
+                <button class="btn-del"  @click="removeProduct(product.id)">Delete</button>
+              </div>
+            </div>
+          </div>
         </div>
-
       </div>
+    </main>
 
-      <!-- TWO-COLUMN LAYOUT -->
-      <div class="admin-products-layout">
-
-      <!-- ADD PRODUCT -->
-      <div class="admin-products-form">
-
-        <h2>
-          ➕ Add New Product
-        </h2>
-
-        <input
-          v-model="name"
-          placeholder="Product Name"
-        />
-
-        <input
-          v-model="price"
-          type="number"
-          placeholder="Price"
-        />
-
-        <input
-          v-model="stock"
-          type="number"
-          placeholder="Stock Quantity"
-        />
-
-        <select v-model="category">
-
-          <option value="">
-            Select Category
-          </option>
-
-          <option value="processor">
-            Processor
-          </option>
-
-          <option value="motherboard">
-            Motherboard
-          </option>
-
-          <option value="gpu">
-            GPU
-          </option>
-
-          <option value="ram">
-            RAM
-          </option>
-
-          <option value="storage">
-            Storage
-          </option>
-
-          <option value="psu">
-            PSU
-          </option>
-
-          <option value="cooler">
-            Cooler
-          </option>
-
-        </select>
-
-        <input
-          type="file"
-          accept="image/*"
-          @change="
-            handleImageUpload
-          "
-        />
-
-        <!-- IMAGE PREVIEW -->
-        <img
-          v-if="image"
-          :src="image"
-          class="
-            admin-products-preview-image
-          "
-        />
-
-        <textarea
-          v-model="details"
-          placeholder="
-            Product Details
-          "
-        ></textarea>
-
-        <button
-          @click="addProduct"
-        >
-          Add Product
-        </button>
-
-      </div>
-
-      <!-- RIGHT COLUMN: filter + table -->
-      <div class="admin-products-right">
-
-      <!-- FILTER -->
-      <div
-        class="
-          admin-products-filter-box
-        "
-      >
-
-        <select
-          v-model="
-            selectedCategory
-          "
-        >
-
-          <option value="all">
-            All Categories
-          </option>
-
-          <option value="processor">
-            Processor
-          </option>
-
-          <option value="motherboard">
-            Motherboard
-          </option>
-
-          <option value="gpu">
-            GPU
-          </option>
-
-          <option value="ram">
-            RAM
-          </option>
-
-          <option value="storage">
-            Storage
-          </option>
-
-          <option value="psu">
-            PSU
-          </option>
-
-          <option value="cooler">
-            Cooler
-          </option>
-
-        </select>
-
-      </div>
-
-      <!-- PRODUCTS -->
-      <div
-        class="
-          admin-products-grid
-        "
-      >
-
-        <div
-          class="
-            admin-products-card
-          "
-          v-for="
-            product in
-            filteredProducts
-          "
-          :key="product.id"
-        >
-
-          <!-- IMAGE -->
-          <img
-            :src="product.image"
-            class="
-              admin-products-image
-            "
-          />
-
-          <!-- NAME -->
-          <h2>
-            {{ product.name }}
-          </h2>
-
-          <!-- PRICE -->
-          <p
-            class="
-              admin-products-price
-            "
-          >
-            RM {{ product.price }}
-          </p>
-
-          <!-- STOCK -->
-          <div
-            class="
-              admin-products-stock
-            "
-          >
-
-            Stock:
-            {{ product.stock }}
-
-            <span
-              v-if="
-                product.stock <= 5
-              "
-              class="
-                admin-products-low-stock
-              "
-            >
-              LOW
-            </span>
-
+    <!-- Edit modal -->
+    <Teleport to="body">
+      <div v-if="showEditModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-card glass">
+          <div class="modal-header">
+            <h2 class="modal-title">Edit Product</h2>
+            <button class="modal-close" @click="closeModal">✕</button>
           </div>
-
-          <!-- CATEGORY -->
-          <div
-            class="
-              admin-products-category
-            "
-          >
-            {{ product.category }}
+          <div class="field-group">
+            <label class="field-label">Name</label>
+            <input v-model="editName" class="field-input" />
           </div>
-
-          <!-- DETAILS -->
-          <div
-            class="
-              admin-products-details
-            "
-          >
-            {{ product.details }}
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Price (RM)</label>
+              <input v-model="editPrice" type="number" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Stock</label>
+              <input v-model="editStock" type="number" class="field-input" />
+            </div>
           </div>
-
-          <!-- ACTIONS -->
-          <div
-            class="
-              admin-products-actions
-            "
-          >
-
-            <!-- EDIT -->
-            <button
-              class="
-                admin-products-edit-btn
-              "
-              @click="
-                startEdit(product)
-              "
-            >
-              Edit
-            </button>
-
-            <!-- DELETE -->
-            <button
-              class="
-                admin-products-delete-btn
-              "
-              @click="
-                removeProduct(
-                  product.id
-                )
-              "
-            >
-              Remove
-            </button>
-
+          <div class="field-group">
+            <label class="field-label">Category</label>
+            <select v-model="editCategory" class="field-input">
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat.charAt(0).toUpperCase()+cat.slice(1) }}</option>
+            </select>
           </div>
-
-        </div>
-
-      </div>
-
-      <!-- EDIT MODAL -->
-      <div
-        v-if="showEditModal"
-        class="
-          edit-modal-overlay
-        "
-      >
-
-        <div class="edit-modal">
-
-          <h2>
-            Edit Product
-          </h2>
-
-          <img
-            :src="editImage"
-            class="
-              admin-products-image
-            "
-          />
-
-          <input
-            type="file"
-            accept="image/*"
-            @change="
-              handleEditImageUpload
-            "
-          />
-
-          <input
-            v-model="editName"
-            placeholder="
-              Product Name
-            "
-          />
-
-          <input
-            type="number"
-            v-model="editPrice"
-            placeholder="Price"
-          />
-
-          <input
-            type="number"
-            v-model="editStock"
-            placeholder="Stock"
-          />
-
-          <select
-            v-model="
-              editCategory
-            "
-          >
-
-            <option value="processor">
-              Processor
-            </option>
-
-            <option value="motherboard">
-              Motherboard
-            </option>
-
-            <option value="gpu">
-              GPU
-            </option>
-
-            <option value="ram">
-              RAM
-            </option>
-
-            <option value="storage">
-              Storage
-            </option>
-
-            <option value="psu">
-              PSU
-            </option>
-
-            <option value="cooler">
-              Cooler
-            </option>
-
-          </select>
-
-          <textarea
-            v-model="editDetails"
-            placeholder="
-              Product Details
-            "
-          ></textarea>
-
+          <div class="field-group">
+            <label class="field-label">Image</label>
+            <label class="upload-label">
+              {{ uploadingEditImage ? 'Uploading…' : 'Upload New Image' }}
+              <input type="file" accept="image/*" @change="handleEditImageUpload" hidden />
+            </label>
+            <img v-if="editImage" :src="editImage" class="preview-img" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Description</label>
+            <textarea v-model="editDetails" class="field-input field-textarea" rows="3" />
+          </div>
           <div class="modal-actions">
-
-            <button
-              class="
-                admin-products-save-btn
-              "
-              @click="
-                updateProduct(
-                  editingId
-                )
-              "
-            >
-              Save
-            </button>
-
-            <button
-              class="
-                admin-products-delete-btn
-              "
-              @click="closeModal"
-            >
-              Cancel
-            </button>
-
+            <button class="btn-ghost" @click="closeModal">Cancel</button>
+            <button class="btn-add" @click="updateProduct(editingId)">Save Changes</button>
           </div>
-
         </div>
-
       </div>
-
-      </div> <!-- end admin-products-right -->
-
-      </div> <!-- end admin-products-layout -->
-
-    </div>
+    </Teleport>
 
     <Toast ref="toastRef" />
-
   </div>
 </template>
 
 <style scoped>
-body {
+.admin-page { display: flex; background: #030712; min-height: 100vh; }
+.admin-main { margin-left: 256px; flex: 1; padding: 48px 40px; box-sizing: border-box; }
 
-  margin: 0;
+.page-header { margin-bottom: 36px; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(26px,4vw,48px); font-weight: 900; color: #f1f5f9; margin: 12px 0 8px; line-height: 1.1; }
+.page-sub { color: #475569; font-size: 15px; margin: 0; }
 
-  font-family: Arial, sans-serif;
+.stats-row { display: flex; gap: 16px; margin-bottom: 28px; }
+.stat-pill { display: flex; align-items: center; gap: 14px; padding: 18px 22px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.07); }
+.sp-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
+.sp-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; margin: 0; }
 
-  background: #0f172a;
+/* Layout */
+.products-layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
+.products-right { display: flex; flex-direction: column; gap: 16px; }
+
+/* Form */
+.add-form { padding: 28px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); position: sticky; top: 20px; }
+.form-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #f1f5f9; margin: 0 0 24px; letter-spacing: 0.05em; }
+.field-group { margin-bottom: 14px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.field-input {
+  width: 100%; padding: 11px 14px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 11px; color: #f1f5f9; font-size: 14px; outline: none;
+  transition: all 0.2s; box-sizing: border-box; font-family: inherit;
 }
+.field-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.field-input::placeholder { color: #334155; }
+.field-textarea { resize: vertical; min-height: 80px; }
 
-/* CONTAINER */
-.admin-products-container {
-
-  margin-left: 260px;
-
-  padding: 40px;
-
-  min-height: 100vh;
-
-  background:
-    linear-gradient(
-      to bottom,
-      #0f172a,
-      #111827
-    );
-
-  box-sizing: border-box;
+.upload-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 10px;
+  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+  color: #60a5fa; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; margin-bottom: 10px;
 }
+.upload-label:hover { background: rgba(59,130,246,0.18); }
+.preview-img { width: 100%; max-height: 120px; object-fit: contain; border-radius: 10px; background: rgba(255,255,255,0.03); padding: 8px; box-sizing: border-box; }
 
-/* HEADER */
-.admin-products-header {
-
-  margin-bottom: 35px;
+.btn-add {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 13px 20px; border-radius: 13px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s;
 }
+.btn-add:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,99,235,0.35); }
 
-.admin-products-header h1 {
-
-  font-size: 52px;
-
-  margin-bottom: 10px;
-
-  color: #f8fafc;
-
-  font-weight: 800;
-
-  letter-spacing: -0.5px;
+/* Filter bar */
+.filter-bar {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  border-radius: 16px; border: 1px solid rgba(255,255,255,0.07);
 }
-
-.admin-products-header p {
-
-  color: #94a3b8;
-
-  font-size: 18px;
-}
-
-/* SUMMARY */
-.admin-products-summary-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(240px,1fr));
-
-  gap: 24px;
-
-  margin-bottom: 35px;
-}
-
-/* CARD */
-.admin-products-summary-card {
-
-  padding: 28px;
-
-  border-radius: 22px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-
-  transition: 0.30s cubic-bezier(0.4,0,0.2,1);
-}
-
-.admin-products-summary-card:hover {
-
-  transform: translateY(-4px);
-
-  box-shadow:
-    0 14px 34px rgba(0,0,0,0.30);
-}
-
-.admin-products-summary-card h2 {
-
-  margin-bottom: 10px;
-
-  font-size: 18px;
-
-  font-weight: 600;
-}
-
-.admin-products-summary-card p {
-
-  font-size: 44px;
-
-  font-weight: 800;
-
-  margin: 0;
-}
-
-/* COLORS */
-.admin-products-blue {
-
-  border-left: 4px solid #3b82f6;
-}
-
-.admin-products-blue h2 { color: #93c5fd; }
-.admin-products-blue p  { color: #bfdbfe; }
-
-.admin-products-red {
-
-  border-left: 4px solid #ef4444;
-}
-
-.admin-products-red h2 { color: #fca5a5; }
-.admin-products-red p  { color: #fecaca; }
-
-/* FORM */
-/* TWO-COLUMN LAYOUT */
-.admin-products-layout {
-
-  display: grid;
-
-  grid-template-columns: 360px 1fr;
-
-  gap: 32px;
-
-  align-items: start;
-}
-
-.admin-products-right {
-
-  min-width: 0;
-}
-
-.admin-products-form {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  padding: 24px 24px;
-
-  border-radius: 24px;
-
-  display: grid;
-
-  gap: 14px;
-
-  position: sticky;
-
-  top: 24px;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-}
-
-/* INPUT */
-.admin-products-form input,
-.admin-products-form select,
-.admin-products-form textarea,
-.edit-modal input,
-.edit-modal select,
-.edit-modal textarea {
-
-  width: 100%;
-
-  padding: 14px;
-
-  border-radius: 12px;
-
-  border:
-    1px solid rgba(148,163,184,0.18);
-
-  background:
-    rgba(255,255,255,0.06);
-
-  color: #f1f5f9;
-
-  font-size: 15px;
-
-  box-sizing: border-box;
-
-  outline: none;
-
-  transition: 0.3s;
-}
-
-.admin-products-form input:focus,
-.admin-products-form select:focus,
-.admin-products-form textarea:focus,
-.edit-modal input:focus,
-.edit-modal select:focus,
-.edit-modal textarea:focus {
-
-  border-color: #3b82f6;
-
-  box-shadow:
-    0 0 0 3px rgba(59,130,246,0.14);
-}
-
-/* BUTTON */
-.admin-products-form button {
-
-  padding: 15px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  background:
-    linear-gradient(135deg, #2563eb, #3b82f6);
-
-  color: white;
-
-  font-size: 16px;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-  transition: 0.25s;
-}
-
-.admin-products-form button:hover {
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 10px 22px rgba(59,130,246,0.32);
-}
-
-/* FILTER */
-.admin-products-filter-box {
-
-  margin-bottom: 30px;
-}
-
-.admin-products-filter-box select {
-
-  padding: 14px;
-
-  border-radius: 12px;
-
-  border:
-    1px solid rgba(148,163,184,0.18);
-
-  background:
-    rgba(255,255,255,0.06);
-
-  color: #f1f5f9;
-
-  font-size: 15px;
-
-  min-width: 240px;
-
-  transition: 0.3s;
-}
-
-.admin-products-filter-box select:focus {
-
-  border-color: #3b82f6;
-
-  box-shadow:
-    0 0 0 3px rgba(59,130,246,0.14);
-}
-
-/* GRID */
-.admin-products-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(340px,1fr));
-
-  gap: 28px;
-}
-
-/* CARD */
-.admin-products-card {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  border-radius: 24px;
-
-  padding: 24px;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 18px;
-
-  transition: 0.30s cubic-bezier(0.4,0,0.2,1);
-}
-
-.admin-products-card:hover {
-
-  transform: translateY(-4px);
-
-  border-color: rgba(59,130,246,0.22);
-
-  box-shadow:
-    0 16px 38px rgba(0,0,0,0.30);
-}
-
-/* IMAGE */
-.admin-products-image {
-
-  width: 100%;
-
-  height: 240px;
-
-  object-fit: contain;
-
-  border-radius: 18px;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(59,130,246,0.07),
-      rgba(15,23,42,0.70) 70%
-    );
-
-  padding: 15px;
-}
-
-/* PREVIEW */
-.admin-products-preview-image {
-
-  width: 200px;
-
-  border-radius: 14px;
-}
-
-/* PRICE */
-.admin-products-price {
-
-  font-size: 24px;
-
-  font-weight: bold;
-
-  color: #93c5fd;
-}
-
-/* STOCK */
-.admin-products-stock {
-
-  font-weight: bold;
-
-  color: #cbd5e1;
-
-  display: flex;
-
-  gap: 10px;
-}
-
-/* LOW STOCK */
-.admin-products-low-stock {
-
-  background: rgba(239,68,68,0.14);
-
-  color: #fca5a5;
-
-  border: 1px solid rgba(239,68,68,0.28);
-
-  padding: 5px 12px;
-
-  border-radius: 999px;
-
-  font-size: 12px;
-
-  font-weight: bold;
-}
-
-/* CATEGORY */
-.admin-products-category {
-
-  width: fit-content;
-
-  background: rgba(59,130,246,0.13);
-
-  color: #93c5fd;
-
-  border: 1px solid rgba(59,130,246,0.24);
-
-  padding: 7px 14px;
-
-  border-radius: 999px;
-
-  font-size: 13px;
-
-  font-weight: bold;
-}
-
-/* DETAILS */
-.admin-products-details {
-
-  color: #94a3b8;
-
-  line-height: 1.7;
-}
-
-/* ACTIONS */
-.admin-products-actions {
-
-  display: flex;
-
-  gap: 12px;
-
-  margin-top: auto;
-}
-
-/* BUTTONS */
-.admin-products-edit-btn,
-.admin-products-save-btn,
-.admin-products-delete-btn {
-
-  flex: 1;
-
-  padding: 13px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  color: white;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-  transition: 0.25s;
-}
-
-.admin-products-edit-btn:hover,
-.admin-products-save-btn:hover,
-.admin-products-delete-btn:hover {
-
-  transform: translateY(-2px);
-}
-
-/* COLORS */
-.admin-products-edit-btn {
-
-  background:
-    linear-gradient(135deg, #d97706, #f59e0b);
-}
-
-.admin-products-edit-btn:hover {
-
-  box-shadow:
-    0 8px 18px rgba(245,158,11,0.30);
-}
-
-.admin-products-save-btn {
-
-  background:
-    linear-gradient(135deg, #059669, #10b981);
-}
-
-.admin-products-save-btn:hover {
-
-  box-shadow:
-    0 8px 18px rgba(16,185,129,0.30);
-}
-
-.admin-products-delete-btn {
-
-  background:
-    linear-gradient(135deg, #dc2626, #ef4444);
-}
-
-.admin-products-delete-btn:hover {
-
-  box-shadow:
-    0 8px 18px rgba(239,68,68,0.28);
-}
-
-/* MODAL OVERLAY */
-.edit-modal-overlay {
-
-  position: fixed;
-
-  inset: 0;
-
-  background: rgba(0,0,0,0.65);
-
-  display: flex;
-
-  justify-content: center;
-
-  align-items: center;
-
-  z-index: 9999;
-
-  padding: 20px;
-}
-
-/* MODAL */
-.edit-modal {
-
-  width: 100%;
-
-  max-width: 650px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.99),
-      rgba(15,23,42,0.99)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.14);
-
-  border-radius: 28px;
-
-  padding: 30px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 18px;
-
-  box-shadow:
-    0 24px 56px rgba(0,0,0,0.50);
-
-  animation: modalPop 0.22s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* MODAL ACTIONS */
-.modal-actions {
-
-  display: flex;
-
-  gap: 14px;
-}
-
-/* MOBILE */
-@media (max-width: 1100px) {
-
-  .admin-products-layout {
-
-    grid-template-columns: 1fr;
-  }
-
-  .admin-products-form {
-
-    position: static;
-  }
-}
-
-@media (max-width: 768px) {
-
-  .admin-products-container {
-
-    margin-left: 0;
-
-    padding: 20px;
-  }
-
-  .admin-products-grid {
-
-    grid-template-columns: 1fr;
-  }
-
-  .admin-products-actions,
-  .modal-actions {
-
-    flex-direction: column;
-  }
-
-  .admin-products-filter-box select {
-
-    width: 100%;
-  }
-}
+.filter-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #f1f5f9; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; flex: 1; }
+.filter-count { font-size: 12px; color: #334155; flex-shrink: 0; }
+
+/* Product grid */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; }
+.product-card { border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; transition: border-color 0.3s; }
+.product-card:hover { border-color: rgba(59,130,246,0.25); }
+.prod-img-wrap { height: 130px; background: radial-gradient(circle, rgba(59,130,246,0.07), rgba(3,7,18,0.5) 70%); display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+.prod-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.prod-info { padding: 14px 16px; }
+.prod-cat { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3b82f6; }
+.prod-name { font-size: 13px; font-weight: 700; color: #f1f5f9; margin: 4px 0 6px; line-height: 1.4; }
+.prod-price { font-size: 16px; font-weight: 800; color: #60a5fa; margin: 0 0 8px; }
+.prod-stock { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.prod-stock.ok  { color: #6ee7b7; }
+.prod-stock.low { color: #fca5a5; }
+.stock-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.prod-actions { display: flex; gap: 8px; padding: 0 16px 14px; }
+.btn-edit { flex: 1; padding: 8px; border-radius: 9px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-edit:hover { background: rgba(59,130,246,0.2); }
+.btn-del  { flex: 1; padding: 8px; border-radius: 9px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.15); color: #fca5a5; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-del:hover  { background: rgba(239,68,68,0.18); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+.modal-card { width: 100%; max-width: 560px; padding: 36px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); animation: pop 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes pop { from { opacity:0; transform: scale(0.92) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.modal-title { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800; color: #f1f5f9; margin: 0; }
+.modal-close { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); border: none; color: #64748b; cursor: pointer; font-size: 15px; transition: all 0.2s; }
+.modal-close:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn-ghost { padding: 11px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #64748b; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-ghost:hover { background: rgba(255,255,255,0.09); color: #94a3b8; }
+
+@media (max-width: 1100px) { .products-layout { grid-template-columns: 1fr; } .add-form { position: relative; top: 0; } }
+@media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; } }
 </style>

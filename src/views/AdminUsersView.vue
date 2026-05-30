@@ -1,988 +1,202 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
-
-import {
-  ref,
-  onMounted,
-  computed
-} from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const users = ref([])
-
 const search = ref('')
-
 const loading = ref(true)
-
 const errorMessage = ref('')
-
 const deletingId = ref(null)
-
 const toastRef = ref(null)
 
-// LOAD USERS
+useScrollAnimation()
+
 async function loadUsers() {
-
   try {
-
     loading.value = true
-
     const { getAll } = await import('../lib/api.js')
-
     users.value = await getAll('users')
-
-  } catch (error) {
-
-    console.log(error)
-
-    errorMessage.value =
-      'Failed to load users.'
-
-  } finally {
-
-    loading.value = false
-  }
+  } catch (e) {
+    console.log(e); errorMessage.value = 'Failed to load users.'
+  } finally { loading.value = false }
 }
 
-onMounted(() => {
-  loadUsers()
-})
+onMounted(loadUsers)
 
-// SEARCH FILTER
-const filteredUsers =
-  computed(() => {
+const filteredUsers = computed(() =>
+  users.value.filter(u => u.role !== 'admin' &&
+    ((u.username||'').toLowerCase().includes(search.value.toLowerCase()) ||
+     (u.email||'').toLowerCase().includes(search.value.toLowerCase())))
+)
 
-    return users.value.filter(
+const totalUsers    = computed(() => users.value.length)
+const adminCount    = computed(() => users.value.filter(u => u.role==='admin').length)
+const customerCount = computed(() => users.value.filter(u => u.role!=='admin').length)
 
-      user => {
-
-        // HIDE ADMIN USERS
-        if (
-          user.role === 'admin'
-        ) {
-          return false
-        }
-
-        // SEARCH FILTER
-        return (
-
-          (
-            user.username || ''
-          )
-            .toLowerCase()
-            .includes(
-              search.value.toLowerCase()
-            )
-
-          ||
-
-          (
-            user.email || ''
-          )
-            .toLowerCase()
-            .includes(
-              search.value.toLowerCase()
-            )
-
-        )
-      }
-    )
-  })
-
-// TOTAL USERS
-const totalUsers =
-  computed(() => {
-
-    return users.value.length
-  })
-
-// ADMIN COUNT
-const adminCount =
-  computed(() => {
-
-    return users.value.filter(
-
-      user =>
-
-        user.role === 'admin'
-
-    ).length
-  })
-
-// CUSTOMER COUNT
-const customerCount =
-  computed(() => {
-
-    return users.value.filter(
-
-      user =>
-
-        user.role !== 'admin'
-
-    ).length
-  })
-
-// DELETE USER
 async function deleteUser(id) {
-
   try {
-
     deletingId.value = id
-
     const { remove } = await import('../lib/api.js')
-
     await remove('users', id)
-
-    users.value =
-      users.value.filter(
-
-        user =>
-          user.id !== id
-
-      )
-
-    toastRef.value
-      .showToastMessage(
-        'User removed successfully!',
-        'success'
-      )
-
-  } catch (error) {
-
-    console.log(error)
-
-    toastRef.value
-      .showToastMessage(
-        'Failed to remove user',
-        'error'
-      )
-
-  } finally {
-
-    deletingId.value = null
-  }
+    users.value = users.value.filter(u => u.id !== id)
+    toastRef.value.showToastMessage('User removed!', 'success')
+  } catch (e) {
+    toastRef.value.showToastMessage('Failed to remove user', 'error')
+  } finally { deletingId.value = null }
 }
 
-// AVATAR INITIAL
-function getInitial(name) {
-
-  return name
-
-    ? name
-        .charAt(0)
-        .toUpperCase()
-
-    : '?'
-}
+function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
 </script>
 
 <template>
-  <div>
-
+  <div class="admin-page">
     <AdminNavbar />
 
-    <div
-      class="
-        admin-users-container
-      "
-    >
+    <main class="admin-main">
+      <div v-if="loading" class="state-screen"><div class="loader" /><p>Loading users…</p></div>
+      <div v-else-if="errorMessage" class="state-screen"><p class="err">{{ errorMessage }}</p></div>
 
-      <!-- LOADING -->
-      <div
-        v-if="loading"
-        class="status-box"
-      >
-        Loading users...
-      </div>
-
-      <!-- ERROR -->
-      <div
-        v-else-if="errorMessage"
-        class="error-box"
-      >
-        {{ errorMessage }}
-      </div>
-
-      <!-- MAIN -->
       <div v-else>
-
-        <!-- HEADER -->
-        <div
-          class="
-            admin-users-header
-          "
-        >
-
-          <h1>
-            Users Management
-          </h1>
-
-          <p>
-            Manage customer accounts
-          </p>
-
+        <!-- Header -->
+        <div class="page-header reveal">
+          <span class="kicker">Admin</span>
+          <h1 class="page-title">User <span class="grad-text">Management</span></h1>
+          <p class="page-sub">View and manage all registered customer accounts.</p>
         </div>
 
-        <!-- SUMMARY -->
-        <div
-          class="
-            admin-users-summary-grid
-          "
-        >
-
-          <!-- TOTAL -->
-          <div
-            class="
-              admin-users-summary-card
-              admin-users-blue
-            "
-          >
-
-            <h2>
-              👥 Total Users
-            </h2>
-
-            <p>
-              {{ totalUsers }}
-            </p>
-
+        <!-- Stats -->
+        <div class="stats-row reveal stagger-1">
+          <div class="stat-pill glass">
+            <div class="sp-icon" style="color:#60a5fa">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 17c0-4.142 3.358-7.5 7.5-7.5s7.5 3.358 7.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div><p class="sp-label">Total Users</p><p class="sp-val" style="color:#93c5fd">{{ totalUsers }}</p></div>
           </div>
-
-          <!-- ADMINS -->
-          <div
-            class="
-              admin-users-summary-card
-              admin-users-purple
-            "
-          >
-
-            <h2>
-              🛡 Admins
-            </h2>
-
-            <p>
-              {{ adminCount }}
-            </p>
-
+          <div class="stat-pill glass">
+            <div class="sp-icon" style="color:#c4b5fd">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5l2 4.5h4.5L12 9l1.5 4.5L9 11l-4.5 2.5L6 9 2.5 6H7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </div>
+            <div><p class="sp-label">Admins</p><p class="sp-val" style="color:#c4b5fd">{{ adminCount }}</p></div>
           </div>
-
-          <!-- CUSTOMERS -->
-          <div
-            class="
-              admin-users-summary-card
-              admin-users-green
-            "
-          >
-
-            <h2>
-              👤 Customers
-            </h2>
-
-            <p>
-              {{ customerCount }}
-            </p>
-
+          <div class="stat-pill glass">
+            <div class="sp-icon" style="color:#6ee7b7">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 17c0-4.142 3.358-7.5 7.5-7.5s7.5 3.358 7.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div><p class="sp-label">Customers</p><p class="sp-val" style="color:#6ee7b7">{{ customerCount }}</p></div>
           </div>
-
         </div>
 
-        <!-- SEARCH -->
-        <div
-          class="
-            admin-users-search-box
-          "
-        >
-
-          <input
-            v-model="search"
-            placeholder="
-              Search username or email...
-            "
-          />
-
+        <!-- Search -->
+        <div class="search-bar reveal stagger-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#475569" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input v-model="search" placeholder="Search by username or email…" class="search-input" />
         </div>
 
-        <!-- TABLE -->
-        <div
-          class="
-            admin-users-table-wrapper
-          "
-        >
-
-          <table
-            class="
-              admin-users-table
-            "
-          >
-
-            <thead>
-
-              <tr>
-
-                <th>
-                  User
-                </th>
-
-                <th>
-                  Email
-                </th>
-
-                <th>
-                  Role
-                </th>
-
-                <th>
-                  Actions
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              <!-- EMPTY -->
-              <tr
-                v-if="
-                  filteredUsers.length === 0
-                "
-              >
-
-                <td
-                  colspan="4"
-                  class="empty-row"
-                >
-                  No users found.
-                </td>
-
-              </tr>
-
-              <!-- USERS -->
-              <tr
-                v-for="
-                  user in filteredUsers
-                "
-                :key="user.id"
-              >
-
-                <!-- USER -->
-                <td>
-
-                  <div
-                    class="
-                      admin-users-user-info
-                    "
-                  >
-
-                    <div
-                      class="
-                        admin-users-avatar
-                      "
-                    >
-
-                      {{
-                        getInitial(
-                          user.username
-                        )
-                      }}
-
-                    </div>
-
-                    <div>
-
-                      <div
-                        class="
-                          admin-users-username
-                        "
-                      >
-
-                        {{
-                          user.username
-                        }}
-
+        <!-- Table -->
+        <div class="table-card glass reveal stagger-3">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="filteredUsers.length === 0">
+                  <td colspan="4" class="empty-row">No users found.</td>
+                </tr>
+                <tr v-for="user in filteredUsers" :key="user.id">
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">{{ getInitial(user.username) }}</div>
+                      <div>
+                        <p class="user-name">{{ user.username }}</p>
+                        <p class="user-id">ID: {{ user.id }}</p>
                       </div>
-
-                      <div
-                        class="
-                          admin-users-userid
-                        "
-                      >
-
-                        ID:
-                        {{ user.id }}
-
-                      </div>
-
                     </div>
-
-                  </div>
-
-                </td>
-
-                <!-- EMAIL -->
-                <td
-                  class="
-                    admin-users-email
-                  "
-                >
-
-                  {{ user.email }}
-
-                </td>
-
-                <!-- ROLE -->
-                <td>
-
-                  <span
-                    class="
-                      admin-users-role
-                    "
-                    :class="
-                      user.role
-                    "
-                  >
-
-                    {{ user.role }}
-
-                  </span>
-
-                </td>
-
-                <!-- ACTION -->
-                <td>
-
-                  <button
-                    class="
-                      admin-users-delete-btn
-                    "
-                    @click="
-                      deleteUser(user.id)
-                    "
-                    :disabled="
-                      deletingId ===
-                      user.id
-                    "
-                  >
-
-                    {{
-
-                      deletingId ===
-                      user.id
-
-                        ? 'Removing...'
-
-                        : 'Remove'
-
-                    }}
-
-                  </button>
-
-                </td>
-
-              </tr>
-
-            </tbody>
-
-          </table>
-
+                  </td>
+                  <td><span class="user-email">{{ user.email }}</span></td>
+                  <td>
+                    <span :class="['role-badge', user.role]">{{ user.role }}</span>
+                  </td>
+                  <td>
+                    <button class="btn-del" @click="deleteUser(user.id)" :disabled="deletingId===user.id">
+                      {{ deletingId===user.id ? 'Removing…' : 'Remove' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-
       </div>
-
-    </div>
+    </main>
 
     <Toast ref="toastRef" />
-
   </div>
 </template>
 
 <style scoped>
+.admin-page { display: flex; background: #030712; min-height: 100vh; }
+.admin-main { margin-left: 256px; flex: 1; padding: 48px 40px; box-sizing: border-box; }
 
-/* CONTAINER */
-.admin-users-container {
+.state-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; color: #475569; }
+.loader { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(59,130,246,0.2); border-top-color: #3b82f6; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.err { color: #f87171; }
 
-  margin-left: 260px;
+.page-header { margin-bottom: 36px; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(26px,4vw,48px); font-weight: 900; color: #f1f5f9; margin: 12px 0 8px; line-height: 1.1; }
+.page-sub { color: #475569; font-size: 15px; margin: 0; }
 
-  min-height: 100vh;
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+.stat-pill { display: flex; align-items: center; gap: 14px; padding: 20px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.07); }
+.sp-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
+.sp-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; margin: 0; }
 
-  padding: 40px;
-
-  background:
-    linear-gradient(
-      to bottom,
-      #0f172a,
-      #111827
-    );
-
-  box-sizing: border-box;
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 12px 16px; margin-bottom: 20px; max-width: 480px;
 }
+.search-input { flex: 1; background: none; border: none; outline: none; color: #f1f5f9; font-size: 14px; }
+.search-input::placeholder { color: #334155; }
 
-/* HEADER */
-.admin-users-header {
+.table-card { border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead tr { background: rgba(59,130,246,0.06); border-bottom: 1px solid rgba(255,255,255,0.07); }
+.data-table thead th { padding: 16px 20px; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
+.data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+.data-table tbody tr:hover { background: rgba(59,130,246,0.04); }
+.data-table td { padding: 16px 20px; vertical-align: middle; }
+.empty-row { text-align: center; color: #334155; padding: 48px !important; }
 
-  margin-bottom: 32px;
+.user-cell { display: flex; align-items: center; gap: 14px; }
+.user-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #2563eb, #8b5cf6);
+  color: white; font-size: 16px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
 }
-
-.admin-users-header h1 {
-
-  font-size: 48px;
-
-  font-weight: 800;
-
-  margin-bottom: 10px;
-
-  color: #f8fafc;
-
-  letter-spacing: -0.5px;
-}
-
-.admin-users-header p {
-
-  color: #94a3b8;
-
-  font-size: 17px;
-}
-
-/* SUMMARY */
-.admin-users-summary-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(220px,1fr)
-    );
-
-  gap: 20px;
-
-  margin-bottom: 32px;
-}
-
-/* CARD */
-.admin-users-summary-card {
-
-  padding: 26px 28px;
-
-  border-radius: 18px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-
-  transition: 0.30s cubic-bezier(0.4,0,0.2,1);
-}
-
-.admin-users-summary-card:hover {
-
-  transform: translateY(-4px);
-
-  box-shadow:
-    0 14px 34px rgba(0,0,0,0.30);
-}
-
-.admin-users-summary-card h2 {
-
-  margin-bottom: 10px;
-
-  font-size: 18px;
-
-  font-weight: 600;
-}
-
-.admin-users-summary-card p {
-
-  font-size: 44px;
-
-  font-weight: 800;
-
-  margin: 0;
-}
-
-/* ACCENT COLORS */
-.admin-users-blue {
-
-  border-left: 4px solid #3b82f6;
-}
-
-.admin-users-blue h2 { color: #93c5fd; }
-.admin-users-blue p  { color: #bfdbfe; }
-
-.admin-users-purple {
-
-  border-left: 4px solid #8b5cf6;
-}
-
-.admin-users-purple h2 { color: #c4b5fd; }
-.admin-users-purple p  { color: #ddd6fe; }
-
-.admin-users-green {
-
-  border-left: 4px solid #10b981;
-}
-
-.admin-users-green h2 { color: #6ee7b7; }
-.admin-users-green p  { color: #a7f3d0; }
-
-/* SEARCH */
-.admin-users-search-box {
-
-  margin-bottom: 28px;
-}
-
-.admin-users-search-box input {
-
-  width: 100%;
-
-  max-width: 450px;
-
-  padding: 14px 18px;
-
-  border-radius: 14px;
-
-  border:
-    1px solid rgba(148,163,184,0.18);
-
-  background:
-    rgba(255,255,255,0.06);
-
-  color: #f1f5f9;
-
-  font-size: 15px;
-
-  outline: none;
-
-  transition: 0.3s;
-}
-
-.admin-users-search-box input::placeholder {
-
-  color: rgba(203,213,225,0.55);
-}
-
-.admin-users-search-box input:focus {
-
-  border-color: #3b82f6;
-
-  box-shadow:
-    0 0 0 3px rgba(59,130,246,0.14);
-}
-
-/* TABLE WRAPPER */
-.admin-users-table-wrapper {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  border-radius: 20px;
-
-  overflow-x: auto;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-}
-
-/* TABLE */
-.admin-users-table {
-
-  width: 100%;
-
-  border-collapse: separate;
-
-  border-spacing: 0;
-}
-
-/* HEADER */
-.admin-users-table thead tr {
-
-  background:
-    rgba(59,130,246,0.10);
-}
-
-.admin-users-table thead th {
-
-  padding: 18px 20px;
-
-  text-align: center;
-
-  color: #93c5fd;
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.06em;
-}
-
-/* ROW */
-.admin-users-table tbody tr {
-
-  border-bottom:
-    1px solid rgba(148,163,184,0.08);
-
-  transition: 0.2s;
-}
-
-.admin-users-table tbody tr:hover {
-
-  background:
-    rgba(59,130,246,0.05);
-}
-
-/* CELL */
-.admin-users-table td {
-
-  padding: 20px 18px;
-
-  text-align: center;
-
-  vertical-align: middle;
-
-  color: #cbd5e1;
-}
-
-/* EMPTY */
-.empty-row {
-
-  padding: 50px;
-
-  color: #94a3b8;
-
-  font-size: 17px;
-}
-
-/* USER INFO */
-.admin-users-user-info {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 16px;
-}
-
-/* AVATAR */
-.admin-users-avatar {
-
-  width: 50px;
-
-  height: 50px;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #3b82f6
-    );
-
-  color: white;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  font-size: 20px;
-
-  font-weight: 800;
-
-  flex-shrink: 0;
-
-  box-shadow:
-    0 4px 12px rgba(37,99,235,0.28);
-}
-
-/* USERNAME */
-.admin-users-username {
-
-  font-weight: 700;
-
-  font-size: 15px;
-
-  color: #f1f5f9;
-
-  text-align: left;
-}
-
-/* USER ID */
-.admin-users-userid {
-
-  font-size: 12px;
-
-  color: #94a3b8;
-
-  margin-top: 4px;
-
-  text-align: left;
-}
-
-/* EMAIL */
-.admin-users-email {
-
-  font-weight: 500;
-
-  color: #cbd5e1;
-}
-
-/* ROLE */
-.admin-users-role {
-
-  display: inline-block;
-
-  padding: 7px 14px;
-
-  border-radius: 999px;
-
-  font-size: 11px;
-
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.06em;
-}
-
-/* ROLE COLORS — dark variants */
-.admin-users-role.admin {
-
-  background: rgba(239,68,68,0.14);
-
-  color: #fca5a5;
-
-  border: 1px solid rgba(239,68,68,0.28);
-}
-
-.admin-users-role.user {
-
-  background: rgba(59,130,246,0.13);
-
-  color: #93c5fd;
-
-  border: 1px solid rgba(59,130,246,0.24);
-}
-
-/* DELETE BUTTON */
-.admin-users-delete-btn {
-
-  background:
-    linear-gradient(
-      135deg,
-      #dc2626,
-      #ef4444
-    );
-
-  color: white;
-
-  border: none;
-
-  padding: 10px 18px;
-
-  border-radius: 10px;
-
-  cursor: pointer;
-
-  font-weight: 700;
-
-  font-size: 13px;
-
-  transition: 0.25s;
-}
-
-.admin-users-delete-btn:hover {
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 8px 18px rgba(239,68,68,0.28);
-}
-
-/* DISABLED */
-button:disabled {
-
-  opacity: 0.5;
-
-  cursor: not-allowed;
-
-  transform: none !important;
-}
-
-/* STATUS / ERROR BOX */
-.status-box,
-.error-box {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  padding: 28px;
-
-  border-radius: 20px;
-
-  font-size: 18px;
-
-  color: #94a3b8;
-}
-
-.error-box {
-
-  color: #f87171;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-
-  .admin-users-container {
-
-    margin-left: 0;
-
-    padding: 20px;
-  }
-
-  .admin-users-header h1 {
-
-    font-size: 34px;
-  }
-
-  .admin-users-summary-grid {
-
-    grid-template-columns: 1fr;
-  }
-
-  .admin-users-table {
-
-    min-width: 720px;
-  }
-
-  .admin-users-search-box input {
-
-    max-width: 100%;
-  }
-}
+.user-name { font-size: 14px; font-weight: 700; color: #f1f5f9; margin: 0 0 2px; }
+.user-id   { font-size: 11px; color: #334155; margin: 0; }
+.user-email { font-size: 13px; color: #94a3b8; }
+
+.role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.role-badge.admin { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+.role-badge.user  { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+
+.btn-del { padding: 8px 16px; border-radius: 10px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-del:hover { background: rgba(239,68,68,0.22); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 900px)  { .stats-row { grid-template-columns: 1fr; } }
+@media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; } }
 </style>

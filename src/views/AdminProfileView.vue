@@ -1,309 +1,135 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
-
-import {
-  ref,
-  onMounted
-} from 'vue'
-
-import {
-  useRouter
-} from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
-
 const toastRef = ref(null)
-
-const user = ref(
-  JSON.parse(
-    localStorage.getItem('user')
-  )
-)
-
-const profileImage = ref(
-  localStorage.getItem('adminProfileImage') || ''
-)
-
-const editName = ref('')
+const user = ref(JSON.parse(localStorage.getItem('user')))
+const profileImage = ref(localStorage.getItem('adminProfileImage') || '')
+const editName  = ref('')
 const editEmail = ref('')
 const editPhone = ref('')
 const editTitle = ref('')
 const saving = ref(false)
 
+useScrollAnimation()
+
 function syncForm() {
-
-  editName.value =
-    user.value?.username ||
-    user.value?.name ||
-    'Admin User'
-
-  editEmail.value =
-    user.value?.email || ''
-
-  editPhone.value =
-    localStorage.getItem('adminPhone') || ''
-
-  editTitle.value =
-    localStorage.getItem('adminTitle') ||
-    'Hardware Store Administrator'
+  editName.value  = user.value?.username || user.value?.name || 'Admin User'
+  editEmail.value = user.value?.email || ''
+  editPhone.value = localStorage.getItem('adminPhone') || ''
+  editTitle.value = localStorage.getItem('adminTitle') || 'Hardware Store Administrator'
 }
 
-function handleProfileUpload(event) {
-
-  const file = event.target.files[0]
-
-  if (!file) return
-
+function handleProfileUpload(e) {
+  const file = e.target.files[0]; if (!file) return
   const reader = new FileReader()
-
-  reader.onload = () => {
-
-    profileImage.value =
-      reader.result
-
-    localStorage.setItem(
-      'adminProfileImage',
-      reader.result
-    )
-
-    toastRef.value.showToastMessage(
-      'Profile photo updated',
-      'success'
-    )
-  }
-
+  reader.onload = () => { profileImage.value = reader.result; localStorage.setItem('adminProfileImage', reader.result); toastRef.value.showToastMessage('Profile photo updated', 'success') }
   reader.readAsDataURL(file)
 }
 
 async function saveProfile() {
-
-  if (
-    !editName.value.trim() ||
-    !editEmail.value.trim()
-  ) {
-
-    toastRef.value.showToastMessage(
-      'Name and email are required',
-      'error'
-    )
-
-    return
+  if (!editName.value.trim() || !editEmail.value.trim()) {
+    toastRef.value.showToastMessage('Name and email are required', 'error'); return
   }
-
-  const updatedUser = {
-    ...user.value,
-    username: editName.value,
-    email: editEmail.value
-  }
-
+  const updatedUser = { ...user.value, username: editName.value, email: editEmail.value }
   try {
-
     saving.value = true
-
     if (updatedUser.id) {
-
       const { update } = await import('../lib/api.js')
-
       await update('users', updatedUser.id, updatedUser)
     }
-
     user.value = updatedUser
-
-    localStorage.setItem(
-      'user',
-      JSON.stringify(updatedUser)
-    )
-
-    localStorage.setItem(
-      'adminPhone',
-      editPhone.value
-    )
-
-    localStorage.setItem(
-      'adminTitle',
-      editTitle.value
-    )
-
-    toastRef.value.showToastMessage(
-      'Admin profile saved',
-      'success'
-    )
-
-  } catch (error) {
-
-    console.log(error)
-
-    toastRef.value.showToastMessage(
-      'Failed to save profile',
-      'error'
-    )
-
-  } finally {
-
-    saving.value = false
-  }
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+    localStorage.setItem('adminPhone', editPhone.value)
+    localStorage.setItem('adminTitle', editTitle.value)
+    toastRef.value.showToastMessage('Profile saved!', 'success')
+  } catch (e) {
+    toastRef.value.showToastMessage('Failed to save profile', 'error')
+  } finally { saving.value = false }
 }
 
-function logout() {
-
-  localStorage.removeItem('user')
-
-  router.push('/login')
-}
+function logout() { localStorage.removeItem('user'); router.push('/login') }
 
 onMounted(() => {
-
-  if (
-    !user.value ||
-    String(user.value.role).toLowerCase() !== 'admin'
-  ) {
-
-    router.push(
-      user.value
-        ? '/profile'
-        : '/login'
-    )
-
-    return
+  if (!user.value || String(user.value.role).toLowerCase() !== 'admin') {
+    router.push(user.value ? '/profile' : '/login'); return
   }
-
   syncForm()
 })
 </script>
 
 <template>
-  <div>
+  <div class="admin-page">
     <AdminNavbar />
 
-    <main class="admin-profile-page">
-      <section class="admin-profile-hero">
+    <main class="admin-main">
+      <!-- Header -->
+      <div class="page-header reveal">
         <div>
-          <p class="admin-profile-label">
-            Admin Profile
-          </p>
-
-          <h1>
-            Control center settings
-          </h1>
-
-          <p>
-            Manage your administrator identity, account details, and profile image.
-          </p>
+          <span class="kicker">Admin</span>
+          <h1 class="page-title">Admin <span class="grad-text">Profile</span></h1>
+          <p class="page-sub">Manage your administrator identity and account details.</p>
         </div>
-
-        <button
-          class="logout-btn"
-          @click="logout"
-        >
+        <button class="logout-btn" @click="logout">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 12H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h3M9 10l3-3-3-3M12 7H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Logout
         </button>
-      </section>
+      </div>
 
-      <section class="admin-profile-grid">
-        <aside class="admin-profile-card profile-preview">
-          <div class="avatar-frame">
-            <img
-              v-if="profileImage"
-              :src="profileImage"
-              alt="Admin profile"
-            />
-
-            <span v-else>
-              {{
-                editName
-                  ? editName.charAt(0).toUpperCase()
-                  : 'A'
-              }}
-            </span>
+      <!-- Grid -->
+      <div class="profile-grid">
+        <!-- Avatar card -->
+        <div class="avatar-card glass reveal stagger-1">
+          <div class="avatar-ring">
+            <img v-if="profileImage" :src="profileImage" class="avatar-img" alt="admin" />
+            <span v-else class="avatar-initial">{{ editName ? editName.charAt(0).toUpperCase() : 'A' }}</span>
           </div>
-
-          <h2>
-            {{ editName || 'Admin User' }}
-          </h2>
-
-          <p>
-            {{ editTitle }}
-          </p>
-
-          <label class="upload-btn">
-            Upload Photo
-
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              @change="handleProfileUpload"
-            />
+          <h2 class="avatar-name">{{ editName || 'Admin User' }}</h2>
+          <p class="avatar-title">{{ editTitle }}</p>
+          <p class="avatar-email">{{ editEmail }}</p>
+          <span class="role-badge">Administrator</span>
+          <label class="upload-label">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v7M3 5l3.5-3.5L10 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 11.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Change Photo
+            <input type="file" accept="image/*" @change="handleProfileUpload" hidden />
           </label>
-        </aside>
+        </div>
 
-        <section class="admin-profile-card profile-form">
-          <div class="form-heading">
-            <h2>
-              Edit Profile
-            </h2>
-
-            <p>
-              Changes are saved to your active admin session.
-            </p>
-          </div>
+        <!-- Form card -->
+        <div class="form-card glass reveal stagger-2">
+          <h2 class="form-title">Edit Profile</h2>
+          <p class="form-sub">Changes are saved to your admin session and database.</p>
 
           <div class="form-grid">
-            <label>
-              Full Name
-
-              <input
-                v-model="editName"
-                type="text"
-                placeholder="Admin name"
-              />
-            </label>
-
-            <label>
-              Email
-
-              <input
-                v-model="editEmail"
-                type="email"
-                placeholder="admin@email.com"
-              />
-            </label>
-
-            <label>
-              Phone
-
-              <input
-                v-model="editPhone"
-                type="text"
-                placeholder="+60..."
-              />
-            </label>
-
-            <label>
-              Role Title
-
-              <input
-                v-model="editTitle"
-                type="text"
-                placeholder="Store administrator"
-              />
-            </label>
+            <div class="field-group">
+              <label class="field-label">Full Name</label>
+              <input v-model="editName" type="text" placeholder="Admin name" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Email Address</label>
+              <input v-model="editEmail" type="email" placeholder="admin@email.com" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Phone</label>
+              <input v-model="editPhone" type="text" placeholder="+60 12-345 6789" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Role Title</label>
+              <input v-model="editTitle" type="text" placeholder="Store Administrator" class="field-input" />
+            </div>
           </div>
 
-          <button
-            class="save-btn"
-            :disabled="saving"
-            @click="saveProfile"
-          >
-            {{
-              saving
-                ? 'Saving...'
-                : 'Save Profile'
-            }}
+          <button class="save-btn" @click="saveProfile" :disabled="saving">
+            <svg v-if="!saving" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 8l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div v-else class="mini-spin" />
+            {{ saving ? 'Saving…' : 'Save Profile' }}
           </button>
-        </section>
-      </section>
+        </div>
+      </div>
     </main>
 
     <Toast ref="toastRef" />
@@ -311,220 +137,52 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.admin-profile-page {
-  min-height: 100vh;
-  margin-left: 260px;
-  padding: 42px;
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(34,211,238,0.12),
-      transparent 34%
-    ),
-    linear-gradient(
-      135deg,
-      #070b14,
-      #101827 54%,
-      #121826
-    );
-  color: #f8fafc;
-}
+.admin-page { display: flex; background: #030712; min-height: 100vh; }
+.admin-main { margin-left: 256px; flex: 1; padding: 48px 40px; box-sizing: border-box; }
 
-.admin-profile-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 28px;
-  margin-bottom: 28px;
-}
-
-.admin-profile-label {
-  margin: 0 0 12px;
-  color: #7dd3fc;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.admin-profile-hero h1 {
-  margin: 0;
-  font-size: 44px;
-  line-height: 1.1;
-}
-
-.admin-profile-hero p {
-  max-width: 640px;
-  margin: 14px 0 0;
-  color: #cbd5e1;
-  line-height: 1.7;
-}
-
-.logout-btn,
-.save-btn,
-.upload-btn {
-  border: none;
-  border-radius: 8px;
-  font-weight: 900;
-  cursor: pointer;
-}
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; margin-bottom: 40px; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(26px,4vw,48px); font-weight: 900; color: #f1f5f9; margin: 12px 0 8px; line-height: 1.1; }
+.page-sub { color: #475569; font-size: 15px; margin: 0; }
 
 .logout-btn {
-  padding: 14px 22px;
-  background:
-    linear-gradient(
-      135deg,
-      #ef4444,
-      #b91c1c
-    );
-  color: white;
+  display: flex; align-items: center; gap: 8px; padding: 11px 18px;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: #fca5a5; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; margin-top: 18px;
 }
+.logout-btn:hover { background: rgba(239,68,68,0.2); }
 
-.admin-profile-grid {
-  display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
-  gap: 24px;
-  max-width: 1180px;
-}
+.profile-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
 
-.admin-profile-card {
-  border: 1px solid rgba(125,211,252,0.16);
-  border-radius: 10px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(15,23,42,0.98),
-      rgba(17,24,39,0.92)
-    );
-  box-shadow:
-    0 24px 56px rgba(0,0,0,0.34);
-}
+/* Avatar card */
+.avatar-card { padding: 32px 24px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.avatar-ring { width: 100px; height: 100px; border-radius: 50%; padding: 3px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+.avatar-img  { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+.avatar-initial { width: 100%; height: 100%; border-radius: 50%; background: #030712; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 40px; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+.avatar-name  { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800; color: #f1f5f9; margin: 0; }
+.avatar-title { font-size: 12px; color: #475569; margin: 0; }
+.avatar-email { font-size: 12px; color: #334155; margin: 0; }
+.role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.upload-label { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 12px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+.upload-label:hover { background: rgba(59,130,246,0.18); }
 
-.profile-preview {
-  padding: 28px;
-  text-align: center;
-}
+/* Form card */
+.form-card { padding: 32px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); }
+.form-title { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800; color: #f1f5f9; margin: 0 0 6px; }
+.form-sub { font-size: 13px; color: #475569; margin: 0 0 28px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; }
+.field-input { padding: 12px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: #f1f5f9; font-size: 14px; outline: none; transition: all 0.2s; }
+.field-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.field-input::placeholder { color: #334155; }
 
-.avatar-frame {
-  width: 160px;
-  height: 160px;
-  margin: 0 auto 22px;
-  border-radius: 50%;
-  border: 2px solid rgba(34,211,238,0.7);
-  background:
-    linear-gradient(
-      135deg,
-      #0f172a,
-      #164e63
-    );
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  box-shadow:
-    0 0 42px rgba(34,211,238,0.18);
-}
+.save-btn { display: flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 14px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.save-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,99,235,0.35); }
+.save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.mini-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.avatar-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-frame span {
-  color: #7dd3fc;
-  font-size: 64px;
-  font-weight: 900;
-}
-
-.profile-preview h2,
-.form-heading h2 {
-  margin: 0;
-  color: #f8fafc;
-}
-
-.profile-preview p,
-.form-heading p {
-  color: #94a3b8;
-  line-height: 1.6;
-}
-
-.upload-btn {
-  display: inline-flex;
-  margin-top: 18px;
-  padding: 13px 18px;
-  background:
-    rgba(34,211,238,0.12);
-  color: #7dd3fc;
-  border:
-    1px solid rgba(34,211,238,0.26);
-}
-
-.profile-form {
-  padding: 30px;
-}
-
-.form-heading {
-  margin-bottom: 24px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.form-grid label {
-  color: #cbd5e1;
-  font-weight: 800;
-}
-
-.form-grid input {
-  width: 100%;
-  height: 52px;
-  margin-top: 9px;
-  padding: 0 14px;
-  border: 1px solid rgba(125,211,252,0.18);
-  border-radius: 8px;
-  background: rgba(2,6,23,0.48);
-  color: #f8fafc;
-  font-size: 15px;
-}
-
-.form-grid input:focus {
-  border-color: #22d3ee;
-  box-shadow: 0 0 0 4px rgba(34,211,238,0.12);
-}
-
-.save-btn {
-  margin-top: 24px;
-  height: 52px;
-  padding: 0 24px;
-  background:
-    linear-gradient(
-      135deg,
-      #0284c7,
-      #22d3ee
-    );
-  color: #06121f;
-}
-
-.save-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-@media (max-width: 980px) {
-  .admin-profile-page {
-    margin-left: 0;
-    padding: 26px;
-  }
-
-  .admin-profile-hero {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .admin-profile-grid,
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
+@media (max-width: 900px)  { .profile-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; } .form-grid { grid-template-columns: 1fr; } }
 </style>

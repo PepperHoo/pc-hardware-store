@@ -1,689 +1,210 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, onMounted } from 'vue'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const totalProducts = ref(0)
-const totalOrders = ref(0)
-const totalUsers = ref(0)
-const totalIncome = ref(0)
-
+const totalOrders   = ref(0)
+const totalUsers    = ref(0)
+const totalIncome   = ref(0)
 const latestProducts = ref([])
-const latestOrders = ref([])
-
+const latestOrders   = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 
-// LOAD DASHBOARD DATA
+useScrollAnimation()
+
 async function loadDashboard() {
-
   try {
-
     loading.value = true
-
     const { getAll } = await import('../lib/api.js')
-
-    const [
-      products,
-      orders,
-      users
-    ] = await Promise.all([
-      getAll('products'),
-      getAll('orders'),
-      getAll('users')
-    ])
-
-    // TOTAL COUNTS
-    totalProducts.value =
-      products.length
-
-    totalOrders.value =
-      orders.length
-
-    totalUsers.value =
-      users.length
-
-    // LATEST ITEMS
-    latestProducts.value =
-      products.slice(-4).reverse()
-
-    latestOrders.value =
-      orders.slice(-4).reverse()
-
-    // TOTAL INCOME
-    totalIncome.value =
-      orders.reduce(
-
-        (sum, order) =>
-
-          sum + Number(order.total || 0),
-
-        0
-      )
-
-  } catch (error) {
-
-    console.log(error)
-
-    errorMessage.value =
-      'Failed to load dashboard data.'
-
+    const [products, orders, users] = await Promise.all([getAll('products'), getAll('orders'), getAll('users')])
+    totalProducts.value = products.length
+    totalOrders.value   = orders.length
+    totalUsers.value    = users.length
+    totalIncome.value   = orders.reduce((s, o) => s + Number(o.total || 0), 0)
+    latestProducts.value = products.slice(-5).reverse()
+    latestOrders.value   = orders.slice(-5).reverse()
+  } catch (e) {
+    console.log(e)
+    errorMessage.value = 'Failed to load dashboard data.'
   } finally {
-
     loading.value = false
   }
 }
 
-onMounted(() => {
-  loadDashboard()
-})
+onMounted(loadDashboard)
 </script>
 
 <template>
-  <div>
-
+  <div class="admin-page">
     <AdminNavbar />
 
-    <div class="admin-dashboard-container">
+    <main class="admin-main">
 
-      <div class="admin-dashboard-wrapper">
-
-        <!-- LOADING -->
-        <div
-          v-if="loading"
-          class="loading-box"
-        >
-          Loading dashboard...
-        </div>
-
-        <!-- ERROR -->
-        <div
-          v-else-if="errorMessage"
-          class="error-box"
-        >
-          {{ errorMessage }}
-        </div>
-
-        <!-- DASHBOARD -->
-        <div v-else>
-
-          <!-- HEADER -->
-          <div class="dashboard-header">
-
-            <h1>
-              Welcome back, Admin 👋
-            </h1>
-
-            <p>
-              Monitor your PC hardware store performance
-            </p>
-
-          </div>
-
-          <!-- QUICK ACTIONS -->
-          <div class="quick-actions">
-
-            <router-link
-              to="/admin/products"
-              class="action-btn"
-            >
-              ➕ Add Product
-            </router-link>
-
-            <router-link
-              to="/admin/orders"
-              class="action-btn"
-            >
-              🖨 Print Labels
-            </router-link>
-
-            <router-link
-              to="/admin/homepage"
-              class="action-btn"
-            >
-              🖼 Update Banner
-            </router-link>
-
-          </div>
-
-          <!-- STATS -->
-          <div class="stats-grid">
-
-            <!-- PRODUCTS -->
-            <div class="admin-dashboard-card">
-
-              <div class="dashboard-icon">
-                📦
-              </div>
-
-              <h2>
-                Products
-              </h2>
-
-              <p>
-                {{ totalProducts }} Items
-              </p>
-
-            </div>
-
-            <!-- ORDERS -->
-            <div class="admin-dashboard-card">
-
-              <div class="dashboard-icon">
-                🛒
-              </div>
-
-              <h2>
-                Orders
-              </h2>
-
-              <p>
-                {{ totalOrders }} Orders
-              </p>
-
-            </div>
-
-            <!-- USERS -->
-            <div class="admin-dashboard-card">
-
-              <div class="dashboard-icon">
-                👥
-              </div>
-
-              <h2>
-                Users
-              </h2>
-
-              <p>
-                {{ totalUsers }} Users
-              </p>
-
-            </div>
-
-            <!-- REVENUE -->
-            <div class="admin-dashboard-card">
-
-              <div class="dashboard-icon">
-                💰
-              </div>
-
-              <h2>
-                Revenue
-              </h2>
-
-              <p>
-                RM {{ totalIncome.toFixed(2) }}
-              </p>
-
-            </div>
-
-          </div>
-
-          <!-- LOWER SECTION -->
-          <div class="bottom-grid">
-
-            <!-- PRODUCTS -->
-            <div class="admin-activity-card">
-
-              <h2>
-                🖥 Latest Products
-              </h2>
-
-              <div
-                v-if="latestProducts.length === 0"
-                class="empty-state"
-              >
-                No products yet
-              </div>
-
-              <div
-                v-for="product in latestProducts"
-                :key="product.id"
-                class="activity-item"
-              >
-
-                {{ product.name }}
-
-              </div>
-
-            </div>
-
-            <!-- ORDERS -->
-            <div class="admin-activity-card">
-
-              <h2>
-                🛒 Latest Orders
-              </h2>
-
-              <div
-                v-if="latestOrders.length === 0"
-                class="empty-state"
-              >
-                No orders yet
-              </div>
-
-              <div
-                v-for="order in latestOrders"
-                :key="order.id"
-                class="activity-item"
-              >
-
-                <span>
-                  Order #{{ order.id }}
-                </span>
-
-                <span class="order-total">
-                  RM {{ Number(order.total).toFixed(2) }}
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
+      <div v-if="loading" class="state-screen">
+        <div class="loader" /><p>Loading dashboard…</p>
+      </div>
+      <div v-else-if="errorMessage" class="state-screen">
+        <p class="err">{{ errorMessage }}</p>
       </div>
 
-    </div>
+      <div v-else>
+        <!-- Header -->
+        <div class="page-header reveal">
+          <div>
+            <span class="kicker">Admin Panel</span>
+            <h1 class="page-title">Dashboard <span class="grad-text">Overview</span></h1>
+            <p class="page-sub">Monitor your PC hardware store performance in real time.</p>
+          </div>
+          <div class="quick-actions">
+            <router-link to="/admin/products" class="qa-btn">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v13M1 7.5h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Add Product
+            </router-link>
+            <router-link to="/admin/orders" class="qa-btn qa-secondary">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 6h7M4 9h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              View Orders
+            </router-link>
+            <router-link to="/admin/homepage" class="qa-btn qa-secondary">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M1 7L7.5 1 14 7v7H9V9H6v5H1V7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              Edit Homepage
+            </router-link>
+          </div>
+        </div>
 
+        <!-- Stat cards -->
+        <div class="stats-grid">
+          <div class="stat-card glass reveal stagger-1">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="5" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="5" y="9" width="5" height="3" rx="1" fill="currentColor" opacity=".6"/><rect x="12" y="9" width="6" height="3" rx="1" fill="currentColor" opacity=".6"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Products</p>
+              <p class="stat-val grad-text-blue">{{ totalProducts }}</p>
+              <p class="stat-hint">Total inventory items</p>
+            </div>
+          </div>
+          <div class="stat-card glass reveal stagger-2">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 2h3l2.5 9h9l2-6H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="16" cy="19" r="1.5" fill="currentColor"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Orders</p>
+              <p class="stat-val" style="color:#fcd34d">{{ totalOrders }}</p>
+              <p class="stat-hint">All time orders</p>
+            </div>
+          </div>
+          <div class="stat-card glass reveal stagger-3">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:#10b981">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M2 20c0-4.418 4.03-8 9-8s9 3.582 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Users</p>
+              <p class="stat-val" style="color:#6ee7b7">{{ totalUsers }}</p>
+              <p class="stat-hint">Registered accounts</p>
+            </div>
+          </div>
+          <div class="stat-card glass reveal stagger-4">
+            <div class="stat-icon" style="background:rgba(139,92,246,0.15);color:#8b5cf6">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M11 6v10M8 8.5C8 7.12 9.34 6 11 6s3 1.12 3 2.5c0 1.5-1.5 2-3 2.5-1.5.5-3 1-3 2.5C8 14.88 9.34 16 11 16s3-1.12 3-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Revenue</p>
+              <p class="stat-val grad-text">RM {{ totalIncome.toFixed(0) }}</p>
+              <p class="stat-hint">Total sales income</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom grid -->
+        <div class="bottom-grid">
+          <!-- Latest products -->
+          <div class="activity-card glass reveal stagger-2">
+            <h2 class="ac-title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="6" width="4" height="2" rx=".5" fill="#3b82f6" opacity=".6"/><rect x="9" y="6" width="5" height="2" rx=".5" fill="#8b5cf6" opacity=".6"/></svg>
+              Latest Products
+            </h2>
+            <div v-if="latestProducts.length === 0" class="ac-empty">No products yet.</div>
+            <div v-for="p in latestProducts" :key="p.id" class="ac-row">
+              <div class="ac-dot" style="background:#3b82f6" />
+              <span class="ac-name">{{ p.name }}</span>
+              <span class="ac-price">RM {{ Number(p.price).toFixed(0) }}</span>
+            </div>
+          </div>
+
+          <!-- Latest orders -->
+          <div class="activity-card glass reveal stagger-3">
+            <h2 class="ac-title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="#f59e0b" stroke-width="1.5"/><path d="M4 6h8M4 9h5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Latest Orders
+            </h2>
+            <div v-if="latestOrders.length === 0" class="ac-empty">No orders yet.</div>
+            <div v-for="o in latestOrders" :key="o.id" class="ac-row">
+              <div class="ac-dot" style="background:#f59e0b" />
+              <span class="ac-name">Order #{{ o.id }}</span>
+              <span class="ac-price" style="color:#fcd34d">RM {{ Number(o.total).toFixed(0) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
   </div>
 </template>
 
 <style scoped>
+.admin-page { display: flex; background: #030712; min-height: 100vh; }
+.admin-main { margin-left: 256px; flex: 1; padding: 48px 40px; box-sizing: border-box; max-width: calc(100vw - 256px); }
 
-/* CONTAINER */
-.admin-dashboard-container {
+.state-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; color: #475569; }
+.loader { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(59,130,246,0.2); border-top-color: #3b82f6; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.err { color: #f87171; }
 
-  margin-left: 260px;
-
-  padding: 40px;
-
-  min-height: 100vh;
-
-  background:
-    linear-gradient(
-      to bottom,
-      #0f172a,
-      #111827
-    );
-
-  box-sizing: border-box;
+/* Header */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px; margin-bottom: 48px; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(28px,4vw,52px); font-weight: 900; color: #f1f5f9; margin: 14px 0 8px; line-height: 1.1; }
+.page-sub { color: #475569; font-size: 15px; margin: 0; }
+.quick-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 20px; }
+.qa-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 18px; border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; font-size: 13px; font-weight: 700; text-decoration: none;
+  transition: all 0.3s;
 }
+.qa-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(37,99,235,0.35); }
+.qa-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #94a3b8; }
+.qa-secondary:hover { background: rgba(255,255,255,0.09); color: #f1f5f9; box-shadow: none; }
 
-/* WRAPPER */
-.admin-dashboard-wrapper {
-
-  width: 100%;
-
-  max-width: 1400px;
-
-  margin: 0 auto;
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-bottom: 24px; }
+.stat-card {
+  display: flex; align-items: center; gap: 18px;
+  padding: 24px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: transform 0.3s, border-color 0.3s;
 }
-
-/* HEADER */
-.dashboard-header {
-
-  margin-bottom: 28px;
-}
-
-.dashboard-header h1 {
-
-  font-size: 48px;
-
-  font-weight: 800;
-
-  margin-bottom: 10px;
-
-  color: #f8fafc;
-
-  letter-spacing: -0.5px;
-}
-
-.dashboard-header p {
-
-  font-size: 17px;
-
-  color: #94a3b8;
-}
-
-/* QUICK ACTIONS */
-.quick-actions {
-
-  display: flex;
-
-  gap: 14px;
-
-  flex-wrap: wrap;
-
-  margin-bottom: 36px;
-}
-
-/* BUTTON */
-.action-btn {
-
-  padding: 13px 22px;
-
-  border-radius: 12px;
-
-  background:
-    linear-gradient(135deg, #2563eb, #3b82f6);
-
-  color: white;
-
-  font-size: 15px;
-
-  font-weight: 700;
-
-  text-decoration: none;
-
-  transition: 0.25s;
-
-  display: inline-flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  box-shadow:
-    0 6px 16px rgba(37,99,235,0.22);
-}
-
-.action-btn:hover {
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 10px 22px rgba(37,99,235,0.32);
-}
-
-/* STATS GRID */
-.stats-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(4, 1fr);
-
-  gap: 22px;
-
-  margin-top: 30px;
-}
-
-/* DASHBOARD CARD */
-.admin-dashboard-card {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border-radius: 20px;
-
-  padding: 28px 24px;
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-
-  transition: 0.30s cubic-bezier(0.4,0,0.2,1);
-
-  position: relative;
-
-  overflow: hidden;
-
-  min-height: 200px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: center;
-
-  align-items: center;
-
-  text-align: center;
-}
-
-/* TOP ACCENT */
-.admin-dashboard-card::before {
-
-  content: '';
-
-  position: absolute;
-
-  top: 0;
-
-  left: 0;
-
-  width: 100%;
-
-  height: 3px;
-
-  background:
-    linear-gradient(
-      to right,
-      #2563eb,
-      #7c3aed
-    );
-}
-
-.admin-dashboard-card:hover {
-
-  transform: translateY(-5px);
-
-  border-color: rgba(59,130,246,0.22);
-
-  box-shadow:
-    0 16px 38px rgba(0,0,0,0.30);
-}
-
-/* ICON */
-.dashboard-icon {
-
-  font-size: 48px;
-
-  margin-bottom: 16px;
-}
-
-/* TITLE */
-.admin-dashboard-card h2 {
-
-  font-size: 26px;
-
-  font-weight: 700;
-
-  margin-bottom: 10px;
-
-  color: #94a3b8;
-}
-
-/* TEXT */
-.admin-dashboard-card p {
-
-  font-size: 32px;
-
-  font-weight: 800;
-
-  color: #93c5fd;
-
-  margin: 0;
-}
-
-/* LOWER GRID */
-.bottom-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, 1fr);
-
-  gap: 22px;
-
-  margin-top: 28px;
-}
-
-/* ACTIVITY CARD */
-.admin-activity-card {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border-radius: 20px;
-
-  padding: 26px;
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.20);
-}
-
-.admin-activity-card h2 {
-
-  margin-bottom: 20px;
-
-  font-size: 24px;
-
-  font-weight: 700;
-
-  color: #f1f5f9;
-}
-
-/* ITEM */
-.activity-item {
-
-  background:
-    rgba(59,130,246,0.08);
-
-  border:
-    1px solid rgba(59,130,246,0.14);
-
-  color: #93c5fd;
-
-  padding: 14px 18px;
-
-  border-radius: 12px;
-
-  margin-bottom: 10px;
-
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  font-weight: 600;
-
-  font-size: 15px;
-
-  transition: 0.2s;
-}
-
-.activity-item:hover {
-
-  background: rgba(59,130,246,0.13);
-}
-
-/* ORDER TOTAL */
-.order-total {
-
-  font-weight: 800;
-
-  color: #bfdbfe;
-}
-
-/* EMPTY */
-.empty-state {
-
-  color: #94a3b8;
-
-  padding: 14px 0;
-
-  font-size: 15px;
-}
-
-/* LOADING / ERROR */
-.loading-box,
-.error-box {
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(17,24,39,0.97),
-      rgba(15,23,42,0.97)
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  padding: 30px;
-
-  border-radius: 20px;
-
-  text-align: center;
-
-  font-size: 18px;
-
-  color: #94a3b8;
-}
-
-.error-box {
-
-  color: #f87171;
-
-  border-color: rgba(248,113,113,0.20);
-}
-
-/* RESPONSIVE */
-@media (max-width: 1200px) {
-
-  .stats-grid {
-
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-
-  .admin-dashboard-container {
-
-    margin-left: 0;
-
-    padding: 20px;
-  }
-
-  .dashboard-header h1 {
-
-    font-size: 34px;
-  }
-
-  .stats-grid,
-  .bottom-grid {
-
-    grid-template-columns: 1fr;
-  }
-
-  .quick-actions {
-
-    flex-direction: column;
-  }
-
-  .action-btn {
-
-    width: 100%;
-
-    justify-content: center;
-  }
-}
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); }
+.stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-body { flex: 1; }
+.stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #334155; margin: 0 0 4px; }
+.stat-val { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; margin: 0 0 4px; }
+.stat-hint { font-size: 11px; color: #334155; margin: 0; }
+
+/* Bottom grid */
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.activity-card { padding: 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); }
+.ac-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #f1f5f9; margin: 0 0 20px; letter-spacing: 0.05em; }
+.ac-empty { color: #334155; font-size: 14px; padding: 12px 0; }
+.ac-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px; transition: background 0.2s; }
+.ac-row:hover { background: rgba(255,255,255,0.05); }
+.ac-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ac-name { flex: 1; font-size: 13px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-price { font-size: 13px; font-weight: 700; color: #60a5fa; flex-shrink: 0; }
+
+@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 900px)  { .bottom-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; max-width: 100%; } .page-header { flex-direction: column; } }
 </style>
