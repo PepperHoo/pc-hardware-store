@@ -1,732 +1,229 @@
 <script setup>
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
-
-import {
-  ref,
-  onMounted
-} from 'vue'
-
-import {
-  useRouter
-} from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
-
-const user = ref(
-  JSON.parse(
-    localStorage.getItem('user')
-  )
-)
-
+const user   = ref(JSON.parse(localStorage.getItem('user')))
 const orders = ref([])
-
 const loading = ref(true)
 
-// LOAD ORDERS
+useScrollAnimation()
+
 async function loadOrders() {
-
-  // NOT LOGIN
-  if (!user.value) {
-
-    router.push('/login')
-
-    return
-  }
-
+  if (!user.value) { router.push('/login'); return }
   try {
-
     loading.value = true
-
     const { getWhere } = await import('../lib/api.js')
-
-    // FETCH USER ORDERS
-    orders.value = await getWhere(
-      'orders',
-      'userEmail',
-      user.value.email
-    )
-
-  } catch (error) {
-
-    console.log(error)
-  }
-
-  finally {
-
-    loading.value = false
-  }
+    orders.value = await getWhere('orders', 'userEmail', user.value.email)
+  } catch (e) { console.log(e) }
+  finally { loading.value = false }
 }
 
-onMounted(() => {
-
-  loadOrders()
-})
+onMounted(loadOrders)
 </script>
 
 <template>
-  <div>
-
+  <div class="orders-page">
     <Navbar />
 
-    <!-- PAGE -->
-    <div
-      class="
-        orders-page-container
-      "
-    >
+    <main class="orders-main section-inner">
 
-      <!-- TITLE -->
-      <div
-        class="
-          orders-header
-        "
-      >
-
-        <h1>
-          📦 Order History
-        </h1>
-
-        <p>
-          View all your previous orders
-        </p>
-
+      <!-- Header -->
+      <div class="orders-header reveal">
+        <span class="kicker">Account</span>
+        <h1 class="orders-title">Order <span class="grad-text">History</span></h1>
+        <p class="orders-sub">Track all your purchases in one place.</p>
       </div>
 
-      <!-- LOADING -->
-      <div
-        v-if="loading"
-        class="
-          orders-empty-box
-        "
-      >
-
-        Loading orders...
-
+      <!-- Loading -->
+      <div v-if="loading" class="state-box glass reveal">
+        <div class="loader" />
+        <p>Loading your orders…</p>
       </div>
 
-      <!-- EMPTY -->
-      <div
-        v-else-if="
-          orders.length === 0
-        "
-        class="
-          orders-empty-box
-        "
-      >
-
-        No orders found.
-
+      <!-- Empty -->
+      <div v-else-if="orders.length === 0" class="state-box glass reveal">
+        <div class="empty-icon">📦</div>
+        <h2 class="empty-title">No orders yet</h2>
+        <p class="empty-desc">You haven't placed any orders. Start building your dream PC!</p>
+        <button class="btn-primary" @click="router.push('/products')">Shop Now</button>
       </div>
 
-      <!-- ORDERS -->
-      <div
-        v-else
-        class="
-          orders-grid
-        "
-      >
-
+      <!-- Orders list -->
+      <div v-else class="orders-list">
         <div
-          class="
-            order-card
-          "
-          v-for="
-            order in orders
-          "
+          v-for="(order, i) in orders"
           :key="order.id"
+          class="order-card glass reveal"
+          :class="`stagger-${Math.min(i+1,6)}`"
         >
-
-          <!-- TOP -->
-          <div
-            class="
-              order-top
-            "
-          >
-
-            <div>
-
-              <h2>
-                Order
-                #{{ order.id }}
-              </h2>
-
-              <p>
-                {{
-                  order.userEmail
-                }}
-              </p>
-
+          <!-- Order header -->
+          <div class="order-top">
+            <div class="order-meta">
+              <p class="order-id">Order <span class="grad-text-blue">#{{ order.id }}</span></p>
+              <p class="order-email">{{ order.userEmail }}</p>
             </div>
-
-            <!-- STATUS -->
-            <div
-              :class="[
-                'order-status',
-                `status-${order.status?.toLowerCase()}`
-              ]"
-            >
-
-              {{
-                order.status
-              }}
-
-            </div>
-
+            <span :class="['status-badge', `s-${order.status?.toLowerCase()}`]">{{ order.status }}</span>
           </div>
 
-          <!-- ITEMS -->
-          <div
-            class="
-              order-items
-            "
-          >
-
-            <div
-              class="
-                order-item
-              "
-              v-for="
-                item in order.items
-              "
-              :key="item.id"
-            >
-
-              <img
-                :src="item.image"
-                class="
-                  order-item-image
-                "
-              />
-
-              <div
-                class="
-                  order-item-info
-                "
-              >
-
-                <h4>
-                  {{ item.name }}
-                </h4>
-
-                <p>
-
-                  Quantity:
-                  {{ item.quantity }}
-
-                </p>
-
+          <!-- Items -->
+          <div class="order-items">
+            <div v-for="item in order.items" :key="item.id" class="order-item">
+              <div class="item-img-wrap">
+                <img :src="item.image" :alt="item.name" class="item-img" />
               </div>
-
-              <div
-                class="
-                  order-item-price
-                "
-              >
-
-                RM
-
-                {{
-
-                  (
-                    item.price *
-                    item.quantity
-                  ).toFixed(2)
-
-                }}
-
+              <div class="item-info">
+                <p class="item-name">{{ item.name }}</p>
+                <p class="item-qty">Qty: {{ item.quantity }}</p>
               </div>
-
+              <p class="item-price">RM {{ (item.price * item.quantity).toFixed(2) }}</p>
             </div>
-
           </div>
 
-          <!-- SUMMARY -->
-          <div
-            class="
-              order-summary
-            "
-          >
-
-            <div>
-
-              <strong>
-                Payment:
-              </strong>
-
-              {{
-                order.paymentMethod
-              }}
-
+          <!-- Footer row -->
+          <div class="order-footer">
+            <div class="order-meta-row">
+              <span class="meta-pill">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="3" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 3V2a2 2 0 0 1 4 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                {{ order.paymentMethod }}
+              </span>
+              <span class="meta-pill">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 5 4-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {{ order.shippingMethod }}
+              </span>
+              <span class="meta-pill" v-if="order.address">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.067 1 2.5 2.567 2.5 4.5 2.5 7 6 11 6 11s3.5-4 3.5-6.5C9.5 2.567 7.933 1 6 1z" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1" fill="currentColor"/></svg>
+                {{ order.address }}
+              </span>
             </div>
-
-            <div>
-
-              <strong>
-                Shipping:
-              </strong>
-
-              {{
-                order.shippingMethod
-              }}
-
-            </div>
-
+            <p class="order-total grad-text">RM {{ Number(order.total).toFixed(2) }}</p>
           </div>
-
-          <!-- ADDRESS -->
-          <div
-            class="
-              order-address
-            "
-          >
-
-            <strong>
-              Address:
-            </strong>
-
-            {{
-              order.address
-            }}
-
-          </div>
-
-          <!-- TOTAL -->
-          <div
-            class="
-              order-total
-            "
-          >
-
-            Total:
-            RM
-            {{
-
-              Number(
-                order.total
-              ).toFixed(2)
-
-            }}
-
-          </div>
-
         </div>
-
       </div>
 
-    </div>
+    </main>
 
     <Footer />
-
   </div>
 </template>
 
 <style scoped>
+.orders-page { background: #030712; min-height: 100vh; }
+.orders-main { padding-top: 130px; padding-bottom: 100px; }
 
-/* PAGE */
-.orders-page-container {
-
-  width: 100%;
-
-  max-width: 1400px;
-
-  margin: 0 auto;
-
-  padding: 40px;
-
-  box-sizing: border-box;
+/* Header */
+.orders-header { margin-bottom: 52px; }
+.orders-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(32px, 5vw, 60px); font-weight: 900; color: #f1f5f9;
+  margin: 14px 0 10px; line-height: 1.1;
 }
+.orders-sub { color: #475569; font-size: 16px; }
 
-/* HEADER */
-.orders-header {
-
-  margin-bottom: 35px;
+/* State boxes */
+.state-box {
+  padding: 80px 40px; border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 16px;
 }
-
-.orders-header h1 {
-
-  font-size: 52px;
-
-  font-weight: 800;
-
-  color: #f8fafc;
-
-  margin-bottom: 10px;
-
-  letter-spacing: -0.5px;
+.loader {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid rgba(59,130,246,0.2); border-top-color: #3b82f6;
+  animation: spin 0.9s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
+.state-box p { color: #475569; font-size: 16px; margin: 0; }
+.empty-icon { font-size: 64px; opacity: 0.6; }
+.empty-title { font-family: 'Orbitron', sans-serif; font-size: 24px; color: #f1f5f9; margin: 0; }
+.empty-desc { color: #475569; font-size: 15px; max-width: 380px; margin: 0; line-height: 1.7; }
 
-.orders-header p {
+/* Orders list */
+.orders-list { display: flex; flex-direction: column; gap: 24px; }
 
-  color: #94a3b8;
-
-  font-size: 18px;
-}
-
-/* EMPTY */
-.orders-empty-box {
-
-  background:
-    linear-gradient(
-      145deg,
-      #1e293b,
-      #162032
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.12);
-
-  border-radius: 24px;
-
-  padding: 60px;
-
-  text-align: center;
-
-  font-size: 22px;
-
-  color: #94a3b8;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-}
-
-/* GRID */
-.orders-grid {
-
-  display: grid;
-
-  gap: 28px;
-}
-
-/* CARD */
 .order-card {
-
-  background:
-    linear-gradient(
-      145deg,
-      #1e293b,
-      #162032
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.12);
-
   border-radius: 24px;
-
-  padding: 30px;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.22);
-
-  transition: 0.30s cubic-bezier(0.4,0,0.2,1);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 28px;
+  transition: border-color 0.3s;
 }
+.order-card:hover { border-color: rgba(59,130,246,0.25); }
 
-.order-card:hover {
-
-  border-color: rgba(59,130,246,0.28);
-
-  box-shadow:
-    0 14px 36px rgba(0,0,0,0.28);
-}
-
-/* TOP */
+/* Top */
 .order-top {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  gap: 20px;
-
-  margin-bottom: 28px;
-
-  padding-bottom: 20px;
-
-  border-bottom:
-    1px solid rgba(148,163,184,0.12);
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding-bottom: 20px; margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
+.order-id { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800; color: #f1f5f9; margin: 0 0 4px; }
+.order-email { font-size: 13px; color: #475569; margin: 0; }
 
-.order-top h2 {
-
-  margin: 0;
-
-  font-size: 30px;
-
-  font-weight: 800;
-
-  color: #f1f5f9;
-}
-
-.order-top p {
-
-  margin-top: 8px;
-
-  color: #64748b;
-
-  font-size: 14px;
-}
-
-/* STATUS BADGE */
-.order-status {
-
-  padding: 8px 18px;
-
-  border-radius: 999px;
-
-  font-size: 12px;
-
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.05em;
-}
-
-/* STATUS COLORS — dark translucent */
-.status-pending {
-
-  background: rgba(245,158,11,0.14);
-
-  color: #fcd34d;
-
-  border: 1px solid rgba(245,158,11,0.28);
-}
-
-.status-processing {
-
-  background: rgba(59,130,246,0.14);
-
-  color: #93c5fd;
-
-  border: 1px solid rgba(59,130,246,0.28);
-}
-
-.status-shipping {
-
-  background: rgba(139,92,246,0.14);
-
-  color: #c4b5fd;
-
-  border: 1px solid rgba(139,92,246,0.28);
-}
-
-.status-delivered {
-
-  background: rgba(16,185,129,0.14);
-
-  color: #6ee7b7;
-
-  border: 1px solid rgba(16,185,129,0.28);
-}
-
-.status-rejected {
-
-  background: rgba(239,68,68,0.14);
-
-  color: #fca5a5;
-
-  border: 1px solid rgba(239,68,68,0.28);
-}
-
-/* ITEMS */
-.order-items {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 14px;
-
-  margin-bottom: 28px;
-}
-
-/* ITEM ROW */
-.order-item {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 18px;
-
-  background:
-    rgba(255,255,255,0.04);
-
-  border:
-    1px solid rgba(148,163,184,0.10);
-
-  padding: 16px 18px;
-
-  border-radius: 16px;
-
-  transition: 0.20s;
-}
-
-.order-item:hover {
-
-  background:
-    rgba(59,130,246,0.06);
-
-  border-color:
-    rgba(59,130,246,0.20);
-}
-
-/* IMAGE */
-.order-item-image {
-
-  width: 80px;
-
-  height: 80px;
-
-  object-fit: contain;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(59,130,246,0.07),
-      rgba(15,23,42,0.70) 70%
-    );
-
-  border-radius: 12px;
-
-  padding: 10px;
-
+/* Status */
+.status-badge {
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
   flex-shrink: 0;
 }
+.s-pending   { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.s-processing{ background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.s-shipping  { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+.s-delivered { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+.s-rejected  { background: rgba(239,68,68,0.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
 
-/* INFO */
-.order-item-info {
-
-  flex: 1;
+/* Items */
+.order-items { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.order-item {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 16px; border-radius: 16px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s;
 }
+.order-item:hover { background: rgba(59,130,246,0.05); }
 
-.order-item-info h4 {
-
-  margin: 0 0 8px;
-
-  font-size: 17px;
-
-  font-weight: 700;
-
-  color: #f1f5f9;
+.item-img-wrap {
+  width: 64px; height: 64px; flex-shrink: 0;
+  border-radius: 12px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08), rgba(3,7,18,0.6) 70%);
+  padding: 8px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
 }
+.item-img { width: 100%; height: 100%; object-fit: contain; }
+.item-info { flex: 1; }
+.item-name { font-size: 15px; font-weight: 700; color: #f1f5f9; margin: 0 0 4px; }
+.item-qty  { font-size: 13px; color: #475569; margin: 0; }
+.item-price { font-size: 16px; font-weight: 800; color: #60a5fa; flex-shrink: 0; }
 
-.order-item-info p {
-
-  margin: 0;
-
-  color: #64748b;
-
-  font-size: 14px;
+/* Footer */
+.order-footer {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 16px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);
 }
-
-/* PRICE */
-.order-item-price {
-
-  font-size: 19px;
-
-  font-weight: 800;
-
-  color: #93c5fd;
+.order-meta-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.meta-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px; color: #64748b;
 }
+.order-total { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; margin: 0; }
 
-/* SUMMARY */
-.order-summary {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 20px;
-
-  margin-bottom: 16px;
-
-  color: #94a3b8;
-
-  font-size: 15px;
+/* Buttons */
+.btn-primary {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; border: none; border-radius: 14px;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s;
 }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,99,235,0.35); }
 
-.order-summary strong {
-
-  color: #cbd5e1;
-}
-
-/* ADDRESS */
-.order-address {
-
-  margin-bottom: 24px;
-
-  color: #94a3b8;
-
-  font-size: 15px;
-
-  line-height: 1.7;
-}
-
-.order-address strong {
-
-  color: #cbd5e1;
-}
-
-/* TOTAL */
-.order-total {
-
-  padding-top: 20px;
-
-  border-top:
-    1px solid rgba(59,130,246,0.18);
-
-  font-size: 28px;
-
-  font-weight: 800;
-
-  color: #93c5fd;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-
-  .orders-page-container {
-
-    padding: 20px;
-  }
-
-  .orders-header h1 {
-
-    font-size: 36px;
-  }
-
-  .order-top {
-
-    flex-direction: column;
-
-    align-items: flex-start;
-  }
-
-  .order-item {
-
-    flex-direction: column;
-
-    align-items: flex-start;
-  }
-
-  .order-item-image {
-
-    width: 100%;
-
-    height: 200px;
-  }
-
-  .order-summary {
-
-    flex-direction: column;
-  }
-
-  .order-total {
-
-    font-size: 22px;
-  }
+/* Responsive */
+@media (max-width: 640px) {
+  .order-top { flex-direction: column; gap: 12px; }
+  .order-item { flex-direction: column; align-items: flex-start; }
+  .item-img-wrap { width: 100%; height: 140px; }
+  .order-footer { flex-direction: column; align-items: flex-start; }
 }
 </style>
