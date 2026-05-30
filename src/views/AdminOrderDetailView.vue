@@ -1,653 +1,311 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
-const route = useRoute()
-
-const order = ref(null)
-
+const route  = useRoute()
+const router = useRouter()
+const order  = ref(null)
 const loading = ref(true)
-
 const errorMessage = ref('')
 
-// LOAD ORDER
+useScrollAnimation()
+
 async function loadOrder() {
-
   try {
-
     loading.value = true
-
     const { getWhere } = await import('../lib/api.js')
-
     const rows = await getWhere('orders', 'id', route.params.id)
-
-    if (!rows.length) {
-
-      throw new Error('Order not found')
-    }
-
+    if (!rows.length) throw new Error('Order not found')
     order.value = rows[0]
-
-  } catch (error) {
-
-    console.log(error)
-
-    errorMessage.value =
-      'Failed to load order.'
-
+  } catch (e) {
+    console.log(e)
+    errorMessage.value = 'Failed to load order.'
   } finally {
-
     loading.value = false
   }
 }
 
-onMounted(() => {
-  loadOrder()
-})
+onMounted(loadOrder)
 </script>
 
 <template>
-  <div>
-
+  <div class="admin-page">
     <AdminNavbar />
 
-    <div class="admin-order-details-container">
+    <main class="admin-main">
 
-      <!-- LOADING -->
-      <div
-        v-if="loading"
-        class="status-box"
-      >
-        Loading order details...
+      <!-- Loading -->
+      <div v-if="loading" class="state-screen">
+        <div class="loader" /><p>Loading order…</p>
       </div>
 
-      <!-- ERROR -->
-      <div
-        v-else-if="errorMessage"
-        class="error-box"
-      >
-        {{ errorMessage }}
+      <!-- Error -->
+      <div v-else-if="errorMessage" class="state-screen">
+        <p class="err">{{ errorMessage }}</p>
+        <button class="back-btn" @click="router.push('/admin/orders')">← Back to Orders</button>
       </div>
 
-      <!-- ORDER -->
-      <div v-else-if="order">
+      <!-- Order not found -->
+      <div v-else-if="!order" class="state-screen">
+        <p class="err">Order not found.</p>
+        <button class="back-btn" @click="router.push('/admin/orders')">← Back to Orders</button>
+      </div>
 
-        <!-- HEADER -->
-        <div class="admin-order-header">
+      <!-- Order detail -->
+      <div v-else>
 
-          <h1>
-            Order #{{ order.id }}
-          </h1>
-
-          <p>
-            Manage customer order information
-          </p>
-
-        </div>
-
-        <!-- ORDER INFO -->
-        <div class="admin-order-info-card">
-
-          <div class="admin-order-info-grid">
-
-            <!-- ORDER ID -->
-            <div class="admin-order-info-item">
-
-              <span class="label">
-                Order ID
-              </span>
-
-              <span class="value">
-                #{{ order.id }}
-              </span>
-
-            </div>
-
-            <!-- CUSTOMER -->
-            <div class="admin-order-info-item">
-
-              <span class="label">
-                Customer
-              </span>
-
-              <span class="value">
-                {{ order.userEmail }}
-              </span>
-
-            </div>
-
-            <!-- ADDRESS -->
-            <div class="admin-order-info-item">
-
-              <span class="label">
-                Address
-              </span>
-
-              <span class="value">
-                {{ order.address }}
-              </span>
-
-            </div>
-
-            <!-- PAYMENT -->
-            <div class="admin-order-info-item">
-
-              <span class="label">
-                Payment
-              </span>
-
-              <span class="value">
-                {{ order.paymentMethod }}
-              </span>
-
-            </div>
-
-            <!-- STATUS -->
-            <div class="admin-order-info-item">
-
-              <span class="label">
-                Status
-              </span>
-
-              <span
-                class="status-badge"
-                :class="
-                  order.status?.toLowerCase()
-                "
-              >
-                {{ order.status }}
-              </span>
-
-            </div>
-
-            <!-- TOTAL -->
-            <div class="admin-order-info-item">
-
-              <span class="label">
-                Total
-              </span>
-
-              <span class="total-price">
-
-                RM
-                {{
-                  Number(
-                    order.total || 0
-                  ).toFixed(2)
-                }}
-
-              </span>
-
-            </div>
-
+        <!-- Header -->
+        <div class="page-header reveal">
+          <div>
+            <button class="breadcrumb-btn" @click="router.push('/admin/orders')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              All Orders
+            </button>
+            <span class="kicker" style="margin-top:12px">Order Detail</span>
+            <h1 class="page-title">
+              Order <span class="grad-text">#{{ order.id }}</span>
+            </h1>
+            <p class="page-sub">Full breakdown of customer order and purchased items.</p>
           </div>
-
+          <span :class="['status-badge-lg', `s-${order.status?.toLowerCase()}`]">{{ order.status }}</span>
         </div>
 
-        <!-- PRODUCTS -->
-        <div class="admin-order-products">
+        <!-- Info grid -->
+        <div class="info-card glass reveal stagger-1">
+          <h2 class="card-title">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2" width="13" height="11" rx="2" stroke="#3b82f6" stroke-width="1.5"/><path d="M4 6h7M4 9h4" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Order Information
+          </h2>
 
-          <div
-            class="admin-order-product-card"
-            v-for="
-              item in order.items || []
-            "
-            :key="item.id"
-          >
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Order ID</span>
+              <span class="info-val mono">{{ order.id }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Customer Email</span>
+              <span class="info-val">{{ order.userEmail }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Recipient</span>
+              <span class="info-val">{{ order.recipientName || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Phone</span>
+              <span class="info-val">{{ order.phoneNumber || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Shipping Address</span>
+              <span class="info-val">{{ order.address || order.shippingAddress || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Payment Method</span>
+              <span class="info-val">{{ order.paymentMethod || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Shipping Method</span>
+              <span class="info-val">{{ order.shippingMethod || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Order Status</span>
+              <span :class="['status-badge', `s-${order.status?.toLowerCase()}`]">{{ order.status }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Order Total</span>
+              <span class="info-val total-val grad-text">RM {{ Number(order.total || 0).toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
 
-            <!-- IMAGE -->
-            <img
-              :src="
-                item.image ||
-                'https://via.placeholder.com/200'
-              "
-              class="admin-order-product-image"
-            />
+        <!-- Items -->
+        <div class="items-section reveal stagger-2">
+          <h2 class="section-heading">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2h2.5l2 7.5h7l1.5-4.5H5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="13" r="1.5" fill="#f59e0b"/><circle cx="13" cy="13" r="1.5" fill="#f59e0b"/></svg>
+            Ordered Items ({{ (order.items || []).length }})
+          </h2>
 
-            <!-- DETAILS -->
+          <div class="items-list">
             <div
-              class="
-                admin-order-product-details
-              "
+              v-for="(item, i) in (order.items || [])"
+              :key="item.id || i"
+              class="item-card glass reveal"
+              :class="`stagger-${Math.min(i+1,6)}`"
             >
+              <!-- Image -->
+              <div class="item-img-wrap">
+                <img
+                  :src="item.image || 'https://via.placeholder.com/200'"
+                  :alt="item.name"
+                  class="item-img"
+                />
+              </div>
 
-              <h3>
-                {{ item.name }}
-              </h3>
+              <!-- Details -->
+              <div class="item-details">
+                <p class="item-name">{{ item.name }}</p>
 
-              <p>
+                <div class="item-stats">
+                  <div class="stat-row">
+                    <span class="stat-key">Unit Price</span>
+                    <span class="stat-val">RM {{ Number(item.price || 0).toFixed(2) }}</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Quantity</span>
+                    <span class="stat-val">× {{ item.quantity }}</span>
+                  </div>
+                  <div class="stat-row subtotal-row">
+                    <span class="stat-key">Subtotal</span>
+                    <span class="stat-val subtotal-val grad-text">
+                      RM {{ (Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                <strong>
-                  Price:
-                </strong>
-
-                RM
-                {{
-                  Number(
-                    item.price || 0
-                  ).toFixed(2)
-                }}
-
-              </p>
-
-              <p>
-
-                <strong>
-                  Quantity:
-                </strong>
-
-                {{ item.quantity }}
-
-              </p>
-
-              <p class="subtotal">
-
-                <strong>
-                  Subtotal:
-                </strong>
-
-                RM
-                {{
-
-                  (
-                    Number(
-                      item.price || 0
-                    ) *
-
-                    Number(
-                      item.quantity || 0
-                    )
-
-                  ).toFixed(2)
-
-                }}
-
-              </p>
-
+              <!-- Qty badge -->
+              <div class="qty-badge">{{ item.quantity }}</div>
             </div>
+          </div>
+        </div>
 
+        <!-- Total summary bar -->
+        <div class="total-bar glass reveal stagger-3">
+          <div class="total-bar-inner">
+            <div class="total-row">
+              <span>Items ({{ (order.items || []).length }})</span>
+              <span>RM {{ Number(order.total || 0).toFixed(2) }}</span>
+            </div>
+            <div class="total-divider" />
+            <div class="total-row total-final">
+              <span>Order Total</span>
+              <span class="grad-text">RM {{ Number(order.total || 0).toFixed(2) }}</span>
+            </div>
           </div>
 
+          <button class="back-full-btn" @click="router.push('/admin/orders')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Orders
+          </button>
         </div>
 
       </div>
-
-      <!-- EMPTY -->
-      <div
-        v-else
-        class="status-box"
-      >
-        Order not found.
-      </div>
-
-    </div>
-
+    </main>
   </div>
 </template>
 
 <style scoped>
+.admin-page { display: flex; background: #030712; min-height: 100vh; }
+.admin-main { margin-left: 256px; flex: 1; padding: 48px 40px; box-sizing: border-box; }
 
-/* CONTAINER */
-.admin-order-details-container {
+/* States */
+.state-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 20px; color: #475569; font-size: 16px; }
+.loader { width: 42px; height: 42px; border-radius: 50%; border: 3px solid rgba(59,130,246,0.2); border-top-color: #3b82f6; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.err { color: #f87171; }
+.back-btn { padding: 10px 20px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.back-btn:hover { background: rgba(255,255,255,0.09); }
 
-  margin-left: 260px;
+/* Header */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 40px; flex-wrap: wrap; }
+.breadcrumb-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 10px; transition: color 0.2s; }
+.breadcrumb-btn:hover { color: #60a5fa; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(26px,4vw,52px); font-weight: 900; color: #f1f5f9; margin: 10px 0 8px; line-height: 1.1; }
+.page-sub { color: #475569; font-size: 15px; margin: 0; }
 
-  min-height: 100vh;
-
-  padding: 40px;
-
-  background:
-    linear-gradient(
-      to bottom,
-      #0f172a,
-      #111827
-    );
-
-  box-sizing: border-box;
+/* Large status badge in header */
+.status-badge-lg {
+  padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; margin-top: 48px;
 }
 
-/* HEADER */
-.admin-order-header {
+/* Status badge (small) */
+.status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.s-pending   { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.s-processing{ background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.s-shipping  { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+.s-delivered { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+.s-rejected  { background: rgba(239,68,68,0.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
 
-  margin-bottom: 30px;
+/* Info card */
+.info-card { padding: 28px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 28px; }
+.card-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #f1f5f9; margin: 0 0 24px; letter-spacing: 0.05em; }
+.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.info-item { display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+.info-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #334155; }
+.info-val { font-size: 14px; font-weight: 600; color: #f1f5f9; word-break: break-all; }
+.info-val.mono { font-family: monospace; font-size: 12px; color: #60a5fa; }
+.total-val { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; }
+
+/* Items section */
+.items-section { margin-bottom: 24px; }
+.section-heading { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #f1f5f9; margin: 0 0 16px; letter-spacing: 0.05em; }
+.items-list { display: flex; flex-direction: column; gap: 14px; }
+
+.item-card {
+  position: relative; display: flex; align-items: center; gap: 24px;
+  padding: 20px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: border-color 0.3s;
+}
+.item-card:hover { border-color: rgba(59,130,246,0.25); }
+
+.item-img-wrap {
+  width: 110px; height: 110px; flex-shrink: 0; border-radius: 16px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08), rgba(3,7,18,0.6) 70%);
+  padding: 12px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+}
+.item-img { width: 100%; height: 100%; object-fit: contain; }
+
+.item-details { flex: 1; }
+.item-name { font-size: 17px; font-weight: 700; color: #f1f5f9; margin: 0 0 14px; }
+
+.item-stats { display: flex; flex-direction: column; gap: 8px; }
+.stat-row { display: flex; align-items: center; justify-content: space-between; }
+.stat-key { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #334155; }
+.stat-val { font-size: 14px; font-weight: 700; color: #cbd5e1; }
+.subtotal-row { padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; }
+.subtotal-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; }
+
+.qty-badge {
+  position: absolute; top: 14px; right: 16px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
 }
 
-.admin-order-header h1 {
-
-  font-size: 50px;
-
-  font-weight: 800;
-
-  margin-bottom: 10px;
-
-  color: #f8fafc;
-
-  letter-spacing: -0.5px;
+/* Total bar */
+.total-bar {
+  padding: 24px 28px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
 }
-
-.admin-order-header p {
-
-  color: #94a3b8;
-
-  font-size: 18px;
-}
-
-/* INFO CARD */
-.admin-order-info-card {
-
-  background:
-    linear-gradient(
-      145deg,
-      #1e293b,
-      #162032
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.12);
-
-  border-radius: 22px;
-
-  padding: 30px;
-
-  margin-bottom: 35px;
-
-  box-shadow:
-    0 8px 28px rgba(0,0,0,0.22);
-}
-
-/* INFO GRID */
-.admin-order-info-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(250px, 1fr));
-
-  gap: 25px;
-}
-
-/* INFO ITEM */
-.admin-order-info-item {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 8px;
-}
-
-/* LABEL */
-.label {
-
-  color: #64748b;
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.06em;
-}
-
-/* VALUE */
-.value {
-
-  color: #f1f5f9;
-
-  font-size: 18px;
-
-  font-weight: 600;
-}
-
-/* TOTAL */
-.total-price {
-
-  color: #93c5fd;
-
-  font-size: 24px;
-
-  font-weight: 800;
-}
-
-/* STATUS BADGE */
-.status-badge {
-
-  width: fit-content;
-
-  padding: 7px 16px;
-
-  border-radius: 999px;
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.04em;
-}
-
-.pending {
-
-  background: rgba(245,158,11,0.14);
-
-  color: #fcd34d;
-
-  border: 1px solid rgba(245,158,11,0.28);
-}
-
-.processing {
-
-  background: rgba(59,130,246,0.14);
-
-  color: #93c5fd;
-
-  border: 1px solid rgba(59,130,246,0.28);
-}
-
-.shipping {
-
-  background: rgba(139,92,246,0.14);
-
-  color: #c4b5fd;
-
-  border: 1px solid rgba(139,92,246,0.28);
-}
-
-.delivered {
-
-  background: rgba(16,185,129,0.14);
-
-  color: #6ee7b7;
-
-  border: 1px solid rgba(16,185,129,0.28);
-}
-
-.rejected {
-
-  background: rgba(239,68,68,0.14);
-
-  color: #fca5a5;
-
-  border: 1px solid rgba(239,68,68,0.28);
-}
-
-/* PRODUCTS */
-.admin-order-products {
-
-  display: grid;
-
-  gap: 20px;
-}
-
-/* PRODUCT CARD */
-.admin-order-product-card {
-
-  display: flex;
-
-  gap: 25px;
-
-  align-items: center;
-
-  background:
-    linear-gradient(
-      145deg,
-      #1e293b,
-      #162032
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.12);
-
-  padding: 25px;
-
-  border-radius: 20px;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.20);
-
-  transition: 0.30s cubic-bezier(0.4,0,0.2,1);
-}
-
-.admin-order-product-card:hover {
-
-  transform: translateY(-4px);
-
-  border-color: rgba(59,130,246,0.28);
-
-  box-shadow:
-    0 14px 34px rgba(0,0,0,0.28);
-}
-
-/* IMAGE */
-.admin-order-product-image {
-
-  width: 200px;
-
-  height: 200px;
-
-  object-fit: contain;
-
-  border-radius: 18px;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(59,130,246,0.07),
-      rgba(15,23,42,0.70) 70%
-    );
-
-  padding: 15px;
-
+.total-bar-inner { flex: 1; min-width: 200px; }
+.total-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; color: #64748b; padding: 6px 0; }
+.total-final { font-size: 18px; font-weight: 800; color: #f1f5f9; padding-top: 12px; }
+.total-final .grad-text { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; }
+.total-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 8px 0; }
+
+.back-full-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border-radius: 14px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+  color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
   flex-shrink: 0;
 }
+.back-full-btn:hover { background: rgba(255,255,255,0.09); color: #94a3b8; }
 
-/* DETAILS */
-.admin-order-product-details {
-
-  flex: 1;
-}
-
-.admin-order-product-details h3 {
-
-  font-size: 28px;
-
-  font-weight: 700;
-
-  margin-bottom: 16px;
-
-  color: #f1f5f9;
-}
-
-.admin-order-product-details p {
-
-  margin-bottom: 10px;
-
-  font-size: 17px;
-
-  color: #94a3b8;
-}
-
-.admin-order-product-details p strong {
-
-  color: #cbd5e1;
-}
-
-/* SUBTOTAL */
-.subtotal {
-
-  color: #93c5fd !important;
-
-  font-weight: 700;
-
-  font-size: 19px;
-}
-
-/* STATUS / ERROR BOX */
-.status-box,
-.error-box {
-
-  background:
-    linear-gradient(
-      145deg,
-      #1e293b,
-      #162032
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.12);
-
-  padding: 28px;
-
-  border-radius: 18px;
-
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.20);
-
-  font-size: 18px;
-
-  color: #94a3b8;
-}
-
-.error-box {
-
-  color: #f87171;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-
-  .admin-order-details-container {
-
-    margin-left: 0;
-
-    padding: 20px;
-  }
-
-  .admin-order-header h1 {
-
-    font-size: 36px;
-  }
-
-  .admin-order-product-card {
-
-    flex-direction: column;
-
-    text-align: center;
-  }
-
-  .admin-order-product-image {
-
-    width: 160px;
-
-    height: 160px;
-  }
-
-  .admin-order-product-details h3 {
-
-    font-size: 24px;
-  }
+/* Responsive */
+@media (max-width: 1024px) { .info-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 768px)  {
+  .admin-main { margin-left: 0; padding: 20px; }
+  .info-grid { grid-template-columns: 1fr; }
+  .item-card { flex-direction: column; align-items: flex-start; }
+  .item-img-wrap { width: 100%; height: 160px; }
+  .page-header { flex-direction: column; }
+  .status-badge-lg { margin-top: 0; }
 }
 </style>
