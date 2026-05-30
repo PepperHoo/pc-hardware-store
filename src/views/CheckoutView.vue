@@ -2,747 +2,354 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-
-import {
-  ref,
-  computed
-} from 'vue'
-
-import {
-  useRouter
-} from 'vue-router'
-
-import {
-  useCartStore
-} from '../stores/cart'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
-
-const cart = useCartStore()
-
+const cart   = useCartStore()
 const toastRef = ref(null)
 
-const recipientName = ref('')
-
-const phoneNumber = ref('')
-
+const recipientName   = ref('')
+const phoneNumber     = ref('')
 const shippingAddress = ref('')
+const shippingMethod  = ref('standard')
+const paymentMethod   = ref('cod')
 
-const shippingMethod = ref('standard')
+useScrollAnimation()
 
-const paymentMethod = ref('cod')
+const shippingCost = computed(() => shippingMethod.value === 'express' ? 25 : 10)
+const total        = computed(() => cart.totalPrice + shippingCost.value)
 
-// SHIPPING COST
-const shippingCost = computed(() => {
+const shippingOptions = [
+  { value: 'standard', label: 'Standard Shipping', desc: '5–7 business days', price: 'RM 10' },
+  { value: 'express',  label: 'Express Shipping',  desc: '1–2 business days', price: 'RM 25' },
+]
+const paymentOptions = [
+  { value: 'cod',     label: 'Cash on Delivery',   icon: '💵' },
+  { value: 'card',    label: 'Credit / Debit Card', icon: '💳' },
+  { value: 'online',  label: 'Online Banking',      icon: '🏦' },
+  { value: 'ewallet', label: 'E-Wallet',            icon: '📱' },
+]
 
-  return shippingMethod.value ===
-    'express'
-
-    ? 25
-
-    : 10
-})
-
-// TOTAL
-const total = computed(() => {
-
-  return cart.totalPrice +
-    shippingCost.value
-})
-
-// PLACE ORDER
 async function placeOrder() {
-
-  if (
-    !recipientName.value ||
-    !phoneNumber.value ||
-    !shippingAddress.value
-  ) {
-
-    toastRef.value
-      .showToastMessage(
-        'Please complete all fields',
-        'error'
-      )
-
+  if (!recipientName.value || !phoneNumber.value || !shippingAddress.value) {
+    toastRef.value.showToastMessage('Please complete all fields', 'error')
     return
   }
-
-  // BUILD ORDER OBJECT
-  const user = JSON.parse(
-    localStorage.getItem('user')
-  )
-
+  const user = JSON.parse(localStorage.getItem('user'))
   const order = {
-    userEmail: user?.email ?? '',
-    recipientName: recipientName.value,
-    phoneNumber: phoneNumber.value,
-    shippingAddress: shippingAddress.value,
-    shippingMethod: shippingMethod.value,
-    paymentMethod: paymentMethod.value,
-    items: cart.items.map(i => ({
-      id: i.id,
-      name: i.name,
-      image: i.image,
-      price: i.price,
-      quantity: i.quantity
-    })),
-    total: total.value,
+    userEmail:       user?.email ?? '',
+    recipientName:   recipientName.value,
+    phoneNumber:     phoneNumber.value,
+    address:         shippingAddress.value,
+    shippingMethod:  shippingMethod.value,
+    paymentMethod:   paymentMethod.value,
+    items: cart.items.map(i => ({ id: i.id, name: i.name, image: i.image, price: i.price, quantity: i.quantity })),
+    total:  total.value,
     status: 'Pending',
-    date: new Date().toISOString()
+    date:   new Date().toISOString()
   }
-
   try {
-
-    // SAVE TO BACKEND
     const { create } = await import('../lib/api.js')
-
     await create('orders', order)
-
-    toastRef.value
-      .showToastMessage(
-        'Order placed successfully!',
-        'success'
-      )
-
-    // CLEAR CART
+    toastRef.value.showToastMessage('Order placed successfully!', 'success')
     cart.items = []
-
-    // REDIRECT
-    setTimeout(() => {
-
-      router.push('/')
-
-    }, 1500)
-
+    setTimeout(() => router.push('/orders'), 1500)
   } catch (err) {
-
-    toastRef.value
-      .showToastMessage(
-        'Failed to place order. Please try again.',
-        'error'
-      )
+    toastRef.value.showToastMessage('Failed to place order. Please try again.', 'error')
   }
 }
 </script>
 
 <template>
-  <div>
-
+  <div class="checkout-page">
     <Navbar />
 
-    <div class="checkout-container">
+    <main class="checkout-main section-inner">
 
-      <!-- LEFT -->
-      <div class="checkout-form">
-
-        <h1>
-          Checkout
-        </h1>
-
-        <!-- NAME -->
-        <div class="form-group">
-
-          <label>
-            Recipient Name
-          </label>
-
-          <input
-            v-model="
-              recipientName
-            "
-            type="text"
-            placeholder="
-              Enter recipient name
-            "
-          />
-
-        </div>
-
-        <!-- PHONE -->
-        <div class="form-group">
-
-          <label>
-            Phone Number
-          </label>
-
-          <input
-            v-model="
-              phoneNumber
-            "
-            type="text"
-            placeholder="
-              Enter phone number
-            "
-          />
-
-        </div>
-
-        <!-- ADDRESS -->
-        <div class="form-group">
-
-          <label>
-            Shipping Address
-          </label>
-
-          <textarea
-            v-model="
-              shippingAddress
-            "
-            rows="5"
-            placeholder="
-              Enter shipping address
-            "
-          ></textarea>
-
-        </div>
-
-        <!-- SHIPPING -->
-        <div class="form-group">
-
-          <label>
-            Shipping Method
-          </label>
-
-          <select
-            v-model="
-              shippingMethod
-            "
-          >
-
-            <option value="standard">
-              Standard Shipping
-              (RM 10)
-            </option>
-
-            <option value="express">
-              Express Shipping
-              (RM 25)
-            </option>
-
-          </select>
-
-        </div>
-
-        <!-- PAYMENT -->
-        <div class="form-group">
-
-          <label>
-            Payment Method
-          </label>
-
-          <select
-            v-model="
-              paymentMethod
-            "
-          >
-
-            <option value="cod">
-              Cash On Delivery
-            </option>
-
-            <option value="card">
-              Credit / Debit Card
-            </option>
-
-            <option value="online">
-              Online Banking
-            </option>
-
-            <option value="ewallet">
-              E-Wallet
-            </option>
-
-          </select>
-
-        </div>
-
+      <!-- Header -->
+      <div class="checkout-header reveal">
+        <span class="kicker">Almost There</span>
+        <h1 class="checkout-title">Check<span class="grad-text">out</span></h1>
+        <p class="checkout-sub">Complete your order details below.</p>
       </div>
 
-      <!-- RIGHT -->
-      <div class="summary-box">
+      <div class="checkout-layout">
 
-        <h2>
-          Order Summary
-        </h2>
+        <!-- LEFT: form -->
+        <div class="form-panel">
 
-        <!-- PRODUCTS -->
-        <div
-          v-for="
-            item in cart.items
-          "
-          :key="item.id"
-          class="summary-product"
-        >
+          <!-- Delivery -->
+          <section class="form-section glass reveal">
+            <h2 class="section-heading">
+              <span class="step-num">1</span> Delivery Details
+            </h2>
 
-          <!-- IMAGE -->
-          <img
-            :src="item.image"
-            class="summary-image"
-          />
+            <div class="field-group">
+              <label class="field-label">Recipient Name</label>
+              <input v-model="recipientName" type="text" placeholder="Full name" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Phone Number</label>
+              <input v-model="phoneNumber" type="text" placeholder="+60 12-345 6789" class="field-input" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Shipping Address</label>
+              <textarea v-model="shippingAddress" rows="4" placeholder="Full address including postcode" class="field-input field-textarea" />
+            </div>
+          </section>
 
-          <!-- INFO -->
-          <div class="summary-info">
+          <!-- Shipping method -->
+          <section class="form-section glass reveal stagger-2">
+            <h2 class="section-heading">
+              <span class="step-num">2</span> Shipping Method
+            </h2>
+            <div class="option-cards">
+              <label
+                v-for="opt in shippingOptions" :key="opt.value"
+                :class="['option-card', shippingMethod === opt.value && 'selected']"
+              >
+                <input type="radio" v-model="shippingMethod" :value="opt.value" hidden />
+                <div class="option-radio"><div class="radio-dot" v-if="shippingMethod === opt.value" /></div>
+                <div class="option-info">
+                  <p class="option-name">{{ opt.label }}</p>
+                  <p class="option-desc">{{ opt.desc }}</p>
+                </div>
+                <span class="option-price">{{ opt.price }}</span>
+              </label>
+            </div>
+          </section>
 
-            <h4>
-              {{ item.name }}
-            </h4>
+          <!-- Payment -->
+          <section class="form-section glass reveal stagger-3">
+            <h2 class="section-heading">
+              <span class="step-num">3</span> Payment Method
+            </h2>
+            <div class="option-cards">
+              <label
+                v-for="opt in paymentOptions" :key="opt.value"
+                :class="['option-card', paymentMethod === opt.value && 'selected']"
+              >
+                <input type="radio" v-model="paymentMethod" :value="opt.value" hidden />
+                <div class="option-radio"><div class="radio-dot" v-if="paymentMethod === opt.value" /></div>
+                <span class="pay-icon">{{ opt.icon }}</span>
+                <p class="option-name">{{ opt.label }}</p>
+              </label>
+            </div>
+          </section>
 
-            <p>
+        </div>
 
-              Quantity:
-              {{ item.quantity }}
+        <!-- RIGHT: summary -->
+        <aside class="summary-panel glass reveal stagger-2">
+          <h2 class="summary-title">Order Summary</h2>
 
-            </p>
-
-            <p>
-
-              RM
-
-              {{
-
-                (
-                  item.price *
-                  item.quantity
-                ).toFixed(2)
-
-              }}
-
-            </p>
-
+          <!-- Items -->
+          <div class="summary-items">
+            <div v-for="item in cart.items" :key="item.id" class="summary-item">
+              <div class="si-img-wrap">
+                <img :src="item.image" :alt="item.name" class="si-img" />
+                <span class="si-qty">{{ item.quantity }}</span>
+              </div>
+              <div class="si-info">
+                <p class="si-name">{{ item.name }}</p>
+                <p class="si-unit">RM {{ Number(item.price).toFixed(2) }} each</p>
+              </div>
+              <p class="si-price">RM {{ (item.price * item.quantity).toFixed(2) }}</p>
+            </div>
           </div>
 
-        </div>
+          <div class="summary-divider" />
 
-        <hr />
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>RM {{ cart.totalPrice.toFixed(2) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping ({{ shippingMethod }})</span>
+            <span>RM {{ shippingCost.toFixed(2) }}</span>
+          </div>
 
-        <!-- SUBTOTAL -->
-        <div class="summary-row">
+          <div class="summary-total">
+            <span>Total</span>
+            <span class="total-val grad-text">RM {{ total.toFixed(2) }}</span>
+          </div>
 
-          <span>
-            Subtotal
-          </span>
+          <button class="place-btn" @click="placeOrder">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M2 9h14M11 4l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Place Order
+          </button>
 
-          <span>
+          <button class="back-btn" @click="router.push('/cart')">← Back to Cart</button>
 
-            RM
-
-            {{
-              cart.totalPrice
-                .toFixed(2)
-            }}
-
-          </span>
-
-        </div>
-
-        <!-- SHIPPING -->
-        <div class="summary-row">
-
-          <span>
-            Shipping
-          </span>
-
-          <span>
-
-            RM
-
-            {{
-              shippingCost
-                .toFixed(2)
-            }}
-
-          </span>
-
-        </div>
-
-        <!-- TOTAL -->
-        <div class="summary-total">
-
-          <span>
-            Total
-          </span>
-
-          <span>
-
-            RM
-
-            {{
-              total.toFixed(2)
-            }}
-
-          </span>
-
-        </div>
-
-        <!-- BUTTON -->
-        <button
-          class="
-            place-order-btn
-          "
-          @click="
-            placeOrder
-          "
-        >
-
-          Place Order
-
-        </button>
+          <div class="secure-note">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="6" width="12" height="7" rx="2" stroke="#475569" stroke-width="1.3"/><path d="M4 6V4a3 3 0 0 1 6 0v2" stroke="#475569" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Secure & encrypted checkout
+          </div>
+        </aside>
 
       </div>
-
-    </div>
+    </main>
 
     <Toast ref="toastRef" />
-
     <Footer />
-
   </div>
 </template>
 
 <style scoped>
+.checkout-page { background: #030712; min-height: 100vh; }
+.checkout-main { padding-top: 130px; padding-bottom: 100px; }
 
-/* CONTAINER */
-.checkout-container {
+/* Header */
+.checkout-header { margin-bottom: 52px; }
+.checkout-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(32px, 5vw, 60px); font-weight: 900; color: #f1f5f9;
+  margin: 14px 0 10px; line-height: 1.1;
+}
+.checkout-sub { color: #475569; font-size: 16px; }
 
-  max-width: 1400px;
-
-  margin: 40px auto;
-
-  padding: 0 20px 60px;
-
+/* Layout */
+.checkout-layout {
   display: grid;
-
-  grid-template-columns:
-    2fr 1fr;
-
-  gap: 30px;
+  grid-template-columns: 1fr 380px;
+  gap: 28px;
+  align-items: start;
 }
 
-/* FORM PANEL — dark slate */
-.checkout-form {
+/* Form panel */
+.form-panel { display: flex; flex-direction: column; gap: 20px; }
 
-  background:
-    linear-gradient(
-      145deg,
-      #1e293b,
-      #0f172a
-    );
-
-  border:
-    1px solid rgba(148,163,184,0.12);
-
-  border-top:
-    3px solid #3b82f6;
-
+.form-section {
+  padding: 28px;
   border-radius: 24px;
-
-  padding: 32px;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.07);
 }
 
-/* SUMMARY PANEL — deep navy with blue tint */
-.summary-box {
-
-  background:
-    linear-gradient(
-      145deg,
-      #0f172a,
-      #111827
-    );
-
-  border:
-    1px solid rgba(59,130,246,0.18);
-
-  border-top:
-    3px solid #6366f1;
-
-  border-radius: 24px;
-
-  padding: 32px;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.36),
-    0 0 0 1px rgba(99,102,241,0.08) inset;
+.section-heading {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 800;
+  color: #f1f5f9; margin: 0 0 24px; letter-spacing: 0.04em;
+}
+.step-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 
-/* TITLES */
-.checkout-form h1 {
+.field-group { margin-bottom: 18px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; }
+.field-input {
+  width: 100%; padding: 13px 16px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; color: #f1f5f9; font-size: 15px; outline: none;
+  transition: all 0.25s; box-sizing: border-box; font-family: inherit;
+}
+.field-input::placeholder { color: #334155; }
+.field-input:focus { border-color: #3b82f6; background: rgba(59,130,246,0.07); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.field-textarea { resize: vertical; min-height: 100px; }
 
-  margin-bottom: 28px;
+/* Option cards */
+.option-cards { display: flex; flex-direction: column; gap: 10px; }
+.option-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer; transition: all 0.2s;
+}
+.option-card:hover { border-color: rgba(59,130,246,0.3); }
+.option-card.selected { border-color: #3b82f6; background: rgba(59,130,246,0.08); }
 
-  font-size: 36px;
+.option-radio {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s;
+}
+.option-card.selected .option-radio { border-color: #3b82f6; }
+.radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
 
-  font-weight: 800;
+.option-info { flex: 1; }
+.option-name { font-size: 14px; font-weight: 600; color: #f1f5f9; margin: 0 0 2px; }
+.option-desc { font-size: 12px; color: #475569; margin: 0; }
+.option-price { font-size: 14px; font-weight: 700; color: #60a5fa; flex-shrink: 0; }
+.pay-icon { font-size: 20px; }
 
-  color: #f8fafc;
-
-  letter-spacing: -0.5px;
+/* Summary */
+.summary-panel {
+  position: sticky; top: 100px;
+  padding: 28px; border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.summary-title {
+  font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800;
+  color: #f1f5f9; margin: 0 0 20px;
 }
 
-.summary-box h2 {
-
-  margin-bottom: 24px;
-
-  font-size: 26px;
-
-  font-weight: 700;
-
-  color: #f1f5f9;
+.summary-items { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.summary-item { display: flex; align-items: center; gap: 12px; }
+.si-img-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+.si-img {
+  width: 100%; height: 100%; object-fit: contain; border-radius: 10px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08), rgba(3,7,18,0.6));
+  padding: 6px; box-sizing: border-box;
 }
-
-/* FORM */
-.form-group {
-
-  margin-bottom: 22px;
+.si-qty {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #3b82f6; color: white; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
 }
+.si-info { flex: 1; min-width: 0; }
+.si-name { font-size: 13px; font-weight: 600; color: #f1f5f9; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si-unit { font-size: 11px; color: #475569; margin: 0; }
+.si-price { font-size: 13px; font-weight: 700; color: #60a5fa; flex-shrink: 0; }
 
-.form-group label {
-
-  display: block;
-
-  margin-bottom: 10px;
-
-  font-weight: 600;
-
-  font-size: 14px;
-
-  color: #cbd5e1;
-
-  letter-spacing: 0.03em;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-
-  width: 100%;
-
-  padding: 14px 16px;
-
-  border-radius: 14px;
-
-  border:
-    1px solid rgba(148,163,184,0.18);
-
-  background:
-    rgba(255,255,255,0.05);
-
-  color: #f1f5f9;
-
-  font-size: 15px;
-
-  outline: none;
-
-  box-sizing: border-box;
-
-  transition: 0.3s;
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-
-  color: rgba(203,213,225,0.45);
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-
-  border-color: #3b82f6;
-
-  background:
-    rgba(59,130,246,0.07);
-
-  box-shadow:
-    0 0 0 3px rgba(59,130,246,0.14);
-}
-
-/* SUMMARY PRODUCT */
-.summary-product {
-
-  display: flex;
-
-  gap: 14px;
-
-  margin-bottom: 18px;
-
-  padding-bottom: 18px;
-
-  border-bottom:
-    1px solid rgba(148,163,184,0.10);
-}
-
-/* IMAGE */
-.summary-image {
-
-  width: 75px;
-
-  height: 75px;
-
-  object-fit: contain;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(59,130,246,0.07),
-      rgba(15,23,42,0.70) 70%
-    );
-
-  border-radius: 12px;
-
-  padding: 8px;
-
-  flex-shrink: 0;
-}
-
-/* INFO */
-.summary-info {
-
-  flex: 1;
-}
-
-.summary-info h4 {
-
-  margin: 0 0 6px;
-
-  font-size: 15px;
-
-  font-weight: 600;
-
-  color: #f1f5f9;
-}
-
-.summary-info p {
-
-  margin: 4px 0;
-
-  color: #94a3b8;
-
-  font-size: 14px;
-}
-
-/* HR */
-hr {
-
-  border: none;
-
-  border-top:
-    1px solid rgba(148,163,184,0.10);
-
-  margin: 10px 0;
-}
-
-/* SUMMARY ROWS */
-.summary-row,
+.summary-divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 16px 0; }
+.summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #64748b; margin-bottom: 10px; }
+.summary-row span:last-child { color: #94a3b8; }
 .summary-total {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 0; border-top: 1px solid rgba(59,130,246,0.2);
+  margin: 12px 0 20px; font-size: 15px; font-weight: 700; color: #94a3b8;
+}
+.total-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; }
 
-  display: flex;
+.place-btn {
+  width: 100%; padding: 15px 20px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  color: white; border: none; border-radius: 14px;
+  font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.05em;
+  cursor: pointer; transition: all 0.3s; margin-bottom: 10px;
+}
+.place-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(29,78,216,0.4); }
 
-  justify-content: space-between;
+.back-btn {
+  width: 100%; padding: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  color: #475569; border-radius: 12px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+}
+.back-btn:hover { color: #64748b; background: rgba(255,255,255,0.07); }
 
-  align-items: center;
-
-  margin-top: 16px;
+.secure-note {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: #334155;
 }
 
-.summary-row {
-
-  color: #94a3b8;
-
-  font-size: 15px;
+/* Responsive */
+@media (max-width: 1024px) {
+  .checkout-layout { grid-template-columns: 1fr; }
+  .summary-panel { position: relative; top: 0; }
 }
-
-.summary-row span:last-child {
-
-  color: #cbd5e1;
-
-  font-weight: 600;
-}
-
-.summary-total {
-
-  font-size: 26px;
-
-  font-weight: 800;
-
-  margin-top: 24px;
-
-  padding-top: 16px;
-
-  border-top:
-    1px solid rgba(148,163,184,0.12);
-}
-
-.summary-total span:first-child {
-
-  color: #f1f5f9;
-}
-
-.summary-total span:last-child {
-
-  color: #93c5fd;
-}
-
-/* BUTTON */
-.place-order-btn {
-
-  width: 100%;
-
-  margin-top: 28px;
-
-  height: 56px;
-
-  border: none;
-
-  border-radius: 16px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #3b82f6
-    );
-
-  color: white;
-
-  font-size: 16px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition: 0.25s cubic-bezier(0.4,0,0.2,1);
-
-  box-shadow:
-    0 6px 18px rgba(37,99,235,0.28);
-
-  letter-spacing: 0.02em;
-}
-
-.place-order-btn:hover {
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 12px 28px rgba(37,99,235,0.38);
-}
-
-/* MOBILE */
-@media (max-width: 900px) {
-
-  .checkout-container {
-
-    grid-template-columns: 1fr;
-
-    padding: 0 16px 40px;
-  }
-
-  .checkout-form h1 {
-
-    font-size: 28px;
-  }
+@media (max-width: 640px) {
+  .checkout-main { padding-top: 100px; }
 }
 </style>
