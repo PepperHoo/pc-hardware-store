@@ -1,3 +1,20 @@
+<script setup>
+import { onMounted } from 'vue'
+import CompareBar from './components/CompareBar.vue'
+import { useCurrencyStore } from './stores/currency'
+import { useWishlistStore } from './stores/wishlist'
+
+const currency = useCurrencyStore()
+const wishlist = useWishlistStore()
+
+onMounted(() => {
+  currency.fetchRates()
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  if (user?.email) wishlist.load(user.email)
+})
+</script>
+
 <template>
   <router-view />
+  <CompareBar />
 </template>

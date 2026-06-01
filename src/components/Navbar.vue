@@ -1,22 +1,28 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCartStore } from '../stores/cart'
+import { useCartStore }     from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
+import { useCurrencyStore } from '../stores/currency'
 
 const router   = useRouter()
 const cart     = useCartStore()
-const showMenu = ref(false)
-const searchQuery  = ref('')
-const showDropdown = ref(false)
-const selectedIndex = ref(-1)
-const scrolled = ref(false)
-const products = ref([])
+const wishlist = useWishlistStore()
+const currency = useCurrencyStore()
 
-const user = ref(JSON.parse(localStorage.getItem('user')))
+const showMenu      = ref(false)
+const searchQuery   = ref('')
+const showDropdown  = ref(false)
+const selectedIndex = ref(-1)
+const scrolled      = ref(false)
+const products      = ref([])
+const showCurrency  = ref(false)
+
+const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+const isDark = ref(localStorage.getItem('theme') !== 'light')
 
 const profilePath = computed(() => user.value ? '/profile' : '/login')
-
-const cartCount = computed(() => cart.items.reduce((n, i) => n + i.quantity, 0))
+const cartCount   = computed(() => cart.items.reduce((n, i) => n + i.quantity, 0))
 
 const filteredResults = computed(() => {
   if (!searchQuery.value.trim()) return []
@@ -28,6 +34,18 @@ const filteredResults = computed(() => {
 function toggleMenu()  { showMenu.value = !showMenu.value }
 function closeMenu()   { showMenu.value = false }
 
+function toggleTheme() {
+  isDark.value = !isDark.value
+  const theme = isDark.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}
+
+function selectCurrency(code) {
+  currency.setCurrency(code)
+  showCurrency.value = false
+}
+
 function searchProduct() {
   if (!searchQuery.value.trim()) return
   showDropdown.value  = false
@@ -35,11 +53,10 @@ function searchProduct() {
   router.push({ path: '/products', query: { search: searchQuery.value } })
 }
 
-function selectProduct(name) {
-  searchQuery.value   = name
+function selectProduct(product) {
   showDropdown.value  = false
   selectedIndex.value = -1
-  searchProduct()
+  router.push(`/product/${product.id}`)
 }
 
 function handleKeydown(e) {
@@ -51,7 +68,7 @@ function handleKeydown(e) {
     if (selectedIndex.value > 0) selectedIndex.value--
   } else if (e.key === 'Enter') {
     e.preventDefault()
-    if (selectedIndex.value >= 0) selectProduct(filteredResults.value[selectedIndex.value].name)
+    if (selectedIndex.value >= 0) selectProduct(filteredResults.value[selectedIndex.value])
     else searchProduct()
   } else if (e.key === 'Escape') {
     showDropdown.value = false
@@ -62,6 +79,10 @@ function onScroll() { scrolled.value = window.scrollY > 20 }
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll)
+  // Apply saved theme
+  const saved = localStorage.getItem('theme') || 'dark'
+  isDark.value = saved !== 'light'
+  document.documentElement.setAttribute('data-theme', saved)
   try {
     const { getAll } = await import('../lib/api.js')
     products.value = await getAll('products')
@@ -143,6 +164,43 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
               </div>
             </transition>
           </div>
+
+          <!-- Currency Picker -->
+          <div class="currency-wrap">
+            <button class="currency-btn nav-icon-btn" @click="showCurrency = !showCurrency" :title="currency.current">
+              <span class="currency-sym">{{ currency.symbol }}</span>
+            </button>
+            <transition name="dropdown">
+              <div v-if="showCurrency" class="currency-dropdown">
+                <button
+                  v-for="code in currency.currencies" :key="code"
+                  class="currency-opt" :class="{ active: currency.current === code }"
+                  @mousedown.prevent="selectCurrency(code)"
+                >
+                  <span class="opt-sym">{{ currency.symbols[code] }}</span>
+                  <span class="opt-code">{{ code }}</span>
+                </button>
+              </div>
+            </transition>
+          </div>
+
+          <!-- Dark / Light toggle -->
+          <button class="nav-icon-btn theme-btn" @click="toggleTheme" :title="isDark ? 'Light mode' : 'Dark mode'">
+            <svg v-if="isDark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+
+          <!-- Wishlist -->
+          <router-link to="/wishlist" class="nav-icon-btn" aria-label="Wishlist">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" :fill="wishlist.count > 0 ? '#f87171' : 'none'" :stroke="wishlist.count > 0 ? '#f87171' : 'currentColor'"/>
+            </svg>
+            <span v-if="wishlist.count > 0" class="cart-badge" style="background:#ef4444">{{ wishlist.count }}</span>
+          </router-link>
 
           <!-- Cart -->
           <router-link to="/cart" class="nav-icon-btn" aria-label="Cart">
@@ -442,6 +500,26 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   height: 1px; background: rgba(255,255,255,0.05);
   margin: 8px 0;
 }
+
+/* Currency */
+.currency-wrap { position: relative; }
+.currency-btn { font-size: 13px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: #60a5fa !important; }
+.currency-sym { line-height: 1; }
+.currency-dropdown {
+  position: absolute; top: 48px; right: 0;
+  background: #0d1526; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 9999; min-width: 100px;
+}
+.currency-opt {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 10px 14px;
+  background: none; border: none; cursor: pointer; text-align: left;
+  transition: background 0.15s; color: #94a3b8;
+}
+.currency-opt:hover, .currency-opt.active { background: rgba(59,130,246,0.12); color: #93c5fd; }
+.opt-sym { font-weight: 800; font-size: 14px; width: 20px; }
+.opt-code { font-size: 12px; font-weight: 600; }
 
 /* Transitions */
 .dropdown-enter-active, .dropdown-leave-active { transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }

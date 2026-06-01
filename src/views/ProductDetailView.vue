@@ -1,16 +1,25 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Navbar from '../components/Navbar.vue'
-import Footer from '../components/Footer.vue'
-import Toast  from '../components/Toast.vue'
-import { useCartStore } from '../stores/cart'
-import { useCardTilt } from '../composables/useCardTilt'
+import Navbar          from '../components/Navbar.vue'
+import Footer          from '../components/Footer.vue'
+import Toast           from '../components/Toast.vue'
+import ProductReviews  from '../components/ProductReviews.vue'
+import { useCartStore }        from '../stores/cart'
+import { useWishlistStore }    from '../stores/wishlist'
+import { useCompareStore }     from '../stores/compare'
+import { useCurrencyStore }    from '../stores/currency'
+import { useCardTilt }         from '../composables/useCardTilt'
+import { useRecentlyViewed }   from '../composables/useRecentlyViewed'
 
-const route  = useRoute()
-const router = useRouter()
-const cart   = useCartStore()
-const tilt   = useCardTilt(6)
+const route    = useRoute()
+const router   = useRouter()
+const cart     = useCartStore()
+const wishlist = useWishlistStore()
+const compare  = useCompareStore()
+const currency = useCurrencyStore()
+const tilt     = useCardTilt(6)
+const { addProduct, getProducts } = useRecentlyViewed()
 const toastRef = ref(null)
 
 const product      = ref(null)
@@ -18,6 +27,12 @@ const loading      = ref(true)
 const errorMessage = ref('')
 const quantity     = ref(1)
 const imgZoomed    = ref(false)
+const recentlyViewed = ref([])
+
+const user = JSON.parse(localStorage.getItem('user') || 'null')
+
+const isWishlisted = computed(() => product.value ? wishlist.isWishlisted(product.value.id) : false)
+const isCompared   = computed(() => product.value ? compare.isAdded(product.value.id) : false)
 
 async function loadProduct() {
   try {
@@ -25,6 +40,8 @@ async function loadProduct() {
     const rows = await getWhere('products', 'id', route.params.id)
     if (!rows.length) throw new Error('Not found')
     product.value = rows[0]
+    addProduct(product.value)
+    recentlyViewed.value = getProducts().filter(p => p.id !== product.value.id).slice(0, 4)
   } catch (e) {
     errorMessage.value = 'Product not found.'
   } finally {
@@ -36,6 +53,17 @@ function addToCart() {
   if (!product.value) return
   for (let i = 0; i < quantity.value; i++) cart.addToCart(product.value)
   toastRef.value.showToastMessage(`${quantity.value} × ${product.value.name} added to cart!`, 'success')
+}
+
+function toggleWishlist() {
+  if (!user) { toastRef.value.showToastMessage('Please login to save items', 'error'); return }
+  const added = wishlist.toggle(product.value, user.email)
+  toastRef.value.showToastMessage(added ? 'Added to wishlist!' : 'Removed from wishlist', 'success')
+}
+
+function toggleCompare() {
+  compare.toggle(product.value)
+  toastRef.value.showToastMessage(isCompared.value ? 'Removed from comparison' : 'Added to comparison', 'success')
 }
 
 onMounted(loadProduct)
@@ -160,15 +188,20 @@ onMounted(loadProduct)
             <span class="total-val">RM {{ (Number(product.price) * quantity).toFixed(2) }}</span>
           </div>
 
+          <!-- Currency price -->
+          <p class="currency-price">≈ {{ currency.format(product.price) }}</p>
+
           <!-- Actions -->
           <div class="detail-actions">
-            <button
-              class="btn-cart"
-              :disabled="product.stock === 0"
-              @click="addToCart"
-            >
+            <button class="btn-cart" :disabled="product.stock === 0" @click="addToCart">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               Add {{ quantity }} to Cart
+            </button>
+            <button class="btn-wishlist" @click="toggleWishlist" :class="{ wishlisted: isWishlisted }">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" :fill="isWishlisted ? '#f87171' : 'none'" :stroke="isWishlisted ? '#f87171' : 'currentColor'"/></svg>
+            </button>
+            <button class="btn-compare-tog" @click="toggleCompare" :class="{ comparing: isCompared }">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1 9h16M12 5l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <button class="btn-back-ghost" @click="router.back()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -178,6 +211,31 @@ onMounted(loadProduct)
 
         </div>
       </div>
+
+      <!-- Reviews -->
+      <ProductReviews :product-id="String(product.id)" />
+
+      <!-- Recently Viewed -->
+      <div v-if="recentlyViewed.length" class="recently-viewed">
+        <h2 class="rv-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#60a5fa" stroke-width="1.5"/><path d="M8 5v3l2 1.5" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Recently Viewed
+        </h2>
+        <div class="rv-grid">
+          <div
+            v-for="p in recentlyViewed" :key="p.id"
+            class="rv-card glass"
+            @click="router.push(`/product/${p.id}`)"
+          >
+            <div class="rv-img-wrap">
+              <img :src="p.image" :alt="p.name" class="rv-img" />
+            </div>
+            <p class="rv-name">{{ p.name }}</p>
+            <p class="rv-price">{{ currency.format(p.price) }}</p>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <Toast ref="toastRef" />
@@ -369,6 +427,29 @@ onMounted(loadProduct)
   cursor: pointer; transition: all 0.2s;
 }
 .btn-back-ghost:hover, .btn-back:hover { background: rgba(255,255,255,0.08); color: #cbd5e1; }
+
+.currency-price { font-size: 14px; color: #64748b; margin: -18px 0 18px; }
+
+.btn-wishlist, .btn-compare-tog {
+  width: 52px; height: 52px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); color: #64748b;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.btn-wishlist:hover  { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); color: #f87171; }
+.btn-wishlist.wishlisted { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #f87171; }
+.btn-compare-tog:hover   { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.25); color: #60a5fa; }
+.btn-compare-tog.comparing { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); color: #60a5fa; }
+
+/* Recently Viewed */
+.recently-viewed { margin-top: 56px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.06); }
+.rv-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800; color: #f1f5f9; margin-bottom: 20px; letter-spacing: 0.04em; }
+.rv-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.rv-card { padding: 16px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: border-color 0.3s, transform 0.2s; }
+.rv-card:hover { border-color: rgba(59,130,246,0.3); transform: translateY(-3px); }
+.rv-img-wrap { height: 100px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(59,130,246,0.07), rgba(3,7,18,0.5)); border-radius: 12px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
+.rv-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.rv-name { font-size: 12px; font-weight: 600; color: #cbd5e1; margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-price { font-size: 13px; font-weight: 800; color: #60a5fa; margin: 0; }
 
 /* Responsive */
 @media (max-width: 900px) {

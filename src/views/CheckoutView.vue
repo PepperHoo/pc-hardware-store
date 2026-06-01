@@ -53,10 +53,24 @@ async function placeOrder() {
   }
   try {
     const { create } = await import('../lib/api.js')
-    await create('orders', order)
-    toastRef.value.showToastMessage('Order placed successfully!', 'success')
+    const saved = await create('orders', order)
+    // Send order confirmation email via EmailJS
+    try {
+      const itemsList = cart.items.map(i => `${i.name} × ${i.quantity} — RM ${(i.price*i.quantity).toFixed(2)}`).join('\n')
+      await window.emailjs.send('service_50rx02q', 'template_order_confirm', {
+        to_email:     user?.email ?? '',
+        recipient:    recipientName.value,
+        order_id:     saved?.id ?? 'N/A',
+        items_list:   itemsList,
+        total:        `RM ${total.value.toFixed(2)}`,
+        shipping:     shippingMethod.value,
+        payment:      paymentMethod.value,
+        address:      shippingAddress.value,
+      })
+    } catch (emailErr) { console.warn('Email failed (non-critical):', emailErr) }
+    toastRef.value.showToastMessage('Order placed! Confirmation email sent.', 'success')
     cart.items = []
-    setTimeout(() => router.push('/orders'), 1500)
+    setTimeout(() => router.push('/orders'), 1800)
   } catch (err) {
     toastRef.value.showToastMessage('Failed to place order. Please try again.', 'error')
   }

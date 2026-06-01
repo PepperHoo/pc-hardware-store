@@ -1,18 +1,26 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Navbar from '../components/Navbar.vue'
-import Footer from '../components/Footer.vue'
-import Toast  from '../components/Toast.vue'
-import { useCartStore } from '../stores/cart'
+import Navbar       from '../components/Navbar.vue'
+import Footer       from '../components/Footer.vue'
+import Toast        from '../components/Toast.vue'
+import SkeletonCard from '../components/SkeletonCard.vue'
+import { useCartStore }     from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
+import { useCompareStore }  from '../stores/compare'
+import { useCurrencyStore } from '../stores/currency'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { useCardTilt } from '../composables/useCardTilt'
 
-const route  = useRoute()
-const router = useRouter()
-const cart   = useCartStore()
-const tilt   = useCardTilt(7)
+const route    = useRoute()
+const router   = useRouter()
+const cart     = useCartStore()
+const wishlist = useWishlistStore()
+const compare  = useCompareStore()
+const currency = useCurrencyStore()
+const tilt     = useCardTilt(7)
 const toastRef = ref(null)
+const user     = JSON.parse(localStorage.getItem('user') || 'null')
 useScrollAnimation()
 
 const products         = ref([])
@@ -180,14 +188,35 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Skeleton loading -->
+        <div v-if="loading" :class="viewMode === 'grid' ? 'p-grid' : 'p-list'">
+          <SkeletonCard v-for="n in 12" :key="n" />
+        </div>
+
         <!-- Products grid -->
-        <div v-if="paginatedProducts.length" :class="viewMode === 'grid' ? 'p-grid' : 'p-list'">
+        <div v-else-if="paginatedProducts.length" :class="viewMode === 'grid' ? 'p-grid' : 'p-list'">
           <div
             v-for="(product, i) in paginatedProducts" :key="product.id"
             class="p-card tilt-card reveal" :class="`stagger-${(i % 4) + 1}`"
             @mousemove="tilt.onMove" @mouseleave="tilt.onLeave"
           >
             <div class="card-shine" />
+
+            <!-- Low stock badge -->
+            <div v-if="product.stock > 0 && product.stock <= 5" class="low-stock-badge">
+              <span class="ls-dot" />Only {{ product.stock }} left!
+            </div>
+            <div v-else-if="product.stock === 0" class="out-of-stock-badge">Out of Stock</div>
+
+            <!-- Wishlist + Compare quick buttons -->
+            <div class="card-quick-actions">
+              <button class="quick-btn" :class="{ active: wishlist.isWishlisted(product.id) }" @click.stop="toggleWishlist(product)" title="Wishlist">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" :fill="wishlist.isWishlisted(product.id) ? '#f87171' : 'none'" :stroke="wishlist.isWishlisted(product.id) ? '#f87171' : 'currentColor'"/></svg>
+              </button>
+              <button class="quick-btn" :class="{ active: compare.isAdded(product.id) }" @click.stop="compare.toggle(product)" title="Compare">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M1 8h14M10 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
 
             <!-- Image -->
             <div class="p-img-wrap" @click="router.push(`/product/${product.id}`)">
@@ -199,6 +228,7 @@ onMounted(async () => {
               <span class="p-tag">{{ product.category }}</span>
               <h3 class="p-name" @click="router.push(`/product/${product.id}`)">{{ product.name }}</h3>
               <p class="p-price">RM {{ Number(product.price).toFixed(2) }}</p>
+              <p class="p-price-converted">{{ currency.format(product.price) }}</p>
 
               <!-- Quantity -->
               <div class="qty-row">
@@ -213,9 +243,9 @@ onMounted(async () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   Details
                 </button>
-                <button class="btn-primary" @click="addToCart(product)">
+                <button class="btn-primary" @click="addToCart(product)" :disabled="product.stock === 0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                  Add to Cart
+                  {{ product.stock === 0 ? 'Sold Out' : 'Add to Cart' }}
                 </button>
               </div>
             </div>
