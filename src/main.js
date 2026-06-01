@@ -4,6 +4,9 @@ import router from './router'
 import './assets/main.css'
 import { createPinia } from 'pinia' 
 
+const savedTheme = localStorage.getItem('theme') || 'dark'
+document.documentElement.setAttribute('data-theme', savedTheme)
+
 const app = createApp(App)
 const pinia = createPinia()
 

@@ -1,8 +1,10 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route  = useRoute()
 const router = useRouter()
+const isDark = ref(true)
 
 const navItems = [
   {
@@ -30,6 +32,21 @@ const navItems = [
 function isActive(item) {
   return item.exact ? route.path === item.to : route.path.startsWith(item.to)
 }
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+  const theme = isDark.value ? 'dark' : 'light'
+
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}
+
+onMounted(() => {
+  const saved = localStorage.getItem('theme') || 'dark'
+
+  isDark.value = saved !== 'light'
+  document.documentElement.setAttribute('data-theme', saved)
+})
 </script>
 
 <template>
@@ -78,6 +95,16 @@ function isActive(item) {
 
     <!-- Bottom -->
     <div class="sidebar-bottom">
+      <button class="theme-toggle" @click="toggleTheme">
+        <span>
+          {{ isDark ? 'Light Mode' : 'Dark Mode' }}
+        </span>
+
+        <span class="theme-pill">
+          {{ isDark ? '☀' : '☾' }}
+        </span>
+      </button>
+
       <router-link to="/admin/profile" class="profile-link">
         <div class="profile-avatar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -181,6 +208,36 @@ function isActive(item) {
 
 /* Bottom */
 .sidebar-bottom { padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: rgba(59,130,246,0.07);
+  border-color: rgba(59,130,246,0.20);
+}
+
+.theme-pill {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(59,130,246,0.14);
+  color: #93c5fd;
+}
 
 .profile-link {
   display: flex; align-items: center; gap: 10px;

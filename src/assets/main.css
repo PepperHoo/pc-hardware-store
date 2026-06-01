@@ -1025,3 +1025,184 @@ a:focus-visible {
 @media (max-width: 768px) {
   .section-inner { padding: 0 20px; }
 }
+
+/* FULL SITE LIGHT MODE */
+:root[data-theme="light"] {
+  --surface-0: #f8fafc;
+  --surface-1: #eef6fb;
+  --surface-2: #ffffff;
+  --surface-3: #e5edf5;
+  --line: rgba(71,85,105,0.18);
+  --line-strong: rgba(14,116,144,0.28);
+  --text: #172033;
+  --muted: #64748b;
+  --soft: #334155;
+  --accent: #0f766e;
+  --accent-2: #0284c7;
+  --panel: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(239,246,255,0.94));
+  --page-bg: radial-gradient(circle at top right, rgba(14,116,144,0.10), transparent 30%),
+    linear-gradient(135deg, #f8fafc, #eef6fb 52%, #e5edf5);
+  --shadow: 0 16px 34px rgba(15,23,42,0.12);
+}
+
+:root[data-theme="light"] body,
+:root[data-theme="light"] .page-wrap,
+:root[data-theme="light"] .builder-page,
+:root[data-theme="light"] [class*="admin-"][class*="-container"],
+:root[data-theme="light"] [class*="admin-"][class*="-page"] {
+  background: var(--page-bg) !important;
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] .nav,
+:root[data-theme="light"] .navbar,
+:root[data-theme="light"] .sidebar,
+:root[data-theme="light"] .admin-sidebar {
+  background: rgba(255,255,255,0.94) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,0.10) !important;
+}
+
+:root[data-theme="light"] .nav-logo,
+:root[data-theme="light"] .logo-name,
+:root[data-theme="light"] .sidebar-title,
+:root[data-theme="light"] .menu-link,
+:root[data-theme="light"] .s-link,
+:root[data-theme="light"] .profile-name,
+:root[data-theme="light"] .theme-toggle {
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] .logo-sub,
+:root[data-theme="light"] .profile-role,
+:root[data-theme="light"] .nav-label,
+:root[data-theme="light"] .back-site-link,
+:root[data-theme="light"] .part-cat,
+:root[data-theme="light"] .part-name.empty,
+:root[data-theme="light"] .cat-hint,
+:root[data-theme="light"] .builder-sub {
+  color: var(--muted) !important;
+}
+
+:root[data-theme="light"] .search-box,
+:root[data-theme="light"] .search-dropdown,
+:root[data-theme="light"] .currency-dropdown,
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  background: rgba(255,255,255,0.86) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] .glass,
+:root[data-theme="light"] .products-card,
+:root[data-theme="light"] .products-filter-bar,
+:root[data-theme="light"] .product-detail-card,
+:root[data-theme="light"] .product-details-box,
+:root[data-theme="light"] .cart-empty,
+:root[data-theme="light"] .cart-item,
+:root[data-theme="light"] .cart-summary,
+:root[data-theme="light"] .checkout-card,
+:root[data-theme="light"] .checkout-summary,
+:root[data-theme="light"] .orders-card,
+:root[data-theme="light"] .order-card,
+:root[data-theme="light"] .login-card,
+:root[data-theme="light"] .register-card,
+:root[data-theme="light"] .profile-main-card,
+:root[data-theme="light"] .profile-stat-card,
+:root[data-theme="light"] .profile-overview-card,
+:root[data-theme="light"] .profile-recent-order,
+:root[data-theme="light"] .admin-products-form,
+:root[data-theme="light"] .admin-products-list,
+:root[data-theme="light"] .admin-products-table-wrapper,
+:root[data-theme="light"] .admin-users-table-wrapper,
+:root[data-theme="light"] .admin-users-search,
+:root[data-theme="light"] .admin-homepage-card,
+:root[data-theme="light"] .banner-card,
+:root[data-theme="light"] .upload-box,
+:root[data-theme="light"] .mini-upload-box,
+:root[data-theme="light"] .empty-banner-box,
+:root[data-theme="light"] .admin-profile-card,
+:root[data-theme="light"] .stat-card,
+:root[data-theme="light"] .dashboard-card,
+:root[data-theme="light"] .latest-card,
+:root[data-theme="light"] .summary-card,
+:root[data-theme="light"] .parts-panel,
+:root[data-theme="light"] .cat-section,
+:root[data-theme="light"] .reco-card,
+:root[data-theme="light"] .selected-card,
+:root[data-theme="light"] .summary-bar,
+:root[data-theme="light"] .status-box,
+:root[data-theme="light"] .success-box,
+:root[data-theme="light"] .error-box {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+:root[data-theme="light"] tbody,
+:root[data-theme="light"] tr,
+:root[data-theme="light"] td,
+:root[data-theme="light"] .part-row,
+:root[data-theme="light"] .latest-products-list div,
+:root[data-theme="light"] .latest-product-item {
+  background: rgba(255,255,255,0.62) !important;
+  color: var(--soft) !important;
+}
+
+:root[data-theme="light"] h1,
+:root[data-theme="light"] h2,
+:root[data-theme="light"] h3,
+:root[data-theme="light"] .products-page-title,
+:root[data-theme="light"] .cart-title,
+:root[data-theme="light"] .profile-page-title,
+:root[data-theme="light"] .home-section-title,
+:root[data-theme="light"] .product-name,
+:root[data-theme="light"] .builder-title,
+:root[data-theme="light"] .cat-title,
+:root[data-theme="light"] .reco-name,
+:root[data-theme="light"] .sc-name,
+:root[data-theme="light"] .part-name.selected {
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] p,
+:root[data-theme="light"] label,
+:root[data-theme="light"] .banner-subtitle,
+:root[data-theme="light"] .products-result-count,
+:root[data-theme="light"] .login-subtitle,
+:root[data-theme="light"] .register-subtitle,
+:root[data-theme="light"] .profile-email,
+:root[data-theme="light"] .profile-birthday,
+:root[data-theme="light"] .product-details-text,
+:root[data-theme="light"] .cart-empty,
+:root[data-theme="light"] .sb-status,
+:root[data-theme="light"] .progress-text {
+  color: var(--muted) !important;
+}
+
+:root[data-theme="light"] .products-price,
+:root[data-theme="light"] .product-price,
+:root[data-theme="light"] .cart-price,
+:root[data-theme="light"] .cart-total,
+:root[data-theme="light"] .checkout-total,
+:root[data-theme="light"] .builder-summary strong,
+:root[data-theme="light"] .component-card p,
+:root[data-theme="light"] .profile-stat-card p,
+:root[data-theme="light"] .reco-price,
+:root[data-theme="light"] .sc-price,
+:root[data-theme="light"] .price-val {
+  color: #0f766e !important;
+}
+
+:root[data-theme="light"] .products-image-wrapper,
+:root[data-theme="light"] .product-image-section,
+:root[data-theme="light"] .cart-image-wrapper,
+:root[data-theme="light"] .reco-img-wrap,
+:root[data-theme="light"] .sc-img-wrap,
+:root[data-theme="light"] .avatar-frame {
+  background: radial-gradient(circle at center, rgba(14,116,144,0.10), rgba(226,232,240,0.78) 68%) !important;
+}
