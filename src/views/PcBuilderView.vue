@@ -144,39 +144,11 @@ onMounted(async () => {
 
       <!-- Header -->
       <div class="builder-header">
-        <div>
-          <span class="kicker">Custom Build</span>
-          <h1 class="builder-title">PC <span class="grad-text">Builder</span></h1>
-          <p class="builder-sub">
-            Pick a motherboard first — the builder will intelligently suggest compatible components for your platform.
-          </p>
-        </div>
-
-        <!-- Summary card -->
-        <div class="summary-card glass">
-          <div class="summary-progress">
-            <div class="progress-track">
-              <div class="progress-fill" :style="{ width: (selectedCount / buildCategories.length * 100) + '%' }" />
-            </div>
-            <span class="progress-text">{{ selectedCount }}/{{ buildCategories.length }} selected</span>
-          </div>
-
-          <p class="summary-status">{{ buildStatus }}</p>
-
-          <div class="summary-price">
-            <span class="price-label">Build Total</span>
-            <span class="price-val grad-text">RM {{ totalPrice.toFixed(2) }}</span>
-          </div>
-
-          <button class="add-build-btn" @click="addBuildToCart" :disabled="selectedCount === 0">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 2h2l2 7h6l1.5-4H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="7" cy="13" r="1.2" fill="currentColor"/>
-              <circle cx="12" cy="13" r="1.2" fill="currentColor"/>
-            </svg>
-            Add Build to Cart
-          </button>
-        </div>
+        <span class="kicker">Custom Build</span>
+        <h1 class="builder-title">PC <span class="grad-text">Builder</span></h1>
+        <p class="builder-sub">
+          Pick a motherboard first — the builder will intelligently suggest compatible components for your platform.
+        </p>
       </div>
 
       <!-- Layout -->
@@ -268,6 +240,34 @@ onMounted(async () => {
         </section>
 
       </div>
+
+      <!-- Summary bar — below the builder -->
+      <div class="summary-bar glass">
+        <div class="sb-progress">
+          <div class="progress-track">
+            <div class="progress-fill" :style="{ width: (selectedCount / buildCategories.length * 100) + '%' }" />
+          </div>
+          <span class="progress-text">{{ selectedCount }}/{{ buildCategories.length }} components selected</span>
+        </div>
+
+        <p class="sb-status">{{ buildStatus }}</p>
+
+        <div class="sb-right">
+          <div class="sb-price">
+            <span class="price-label">Build Total</span>
+            <span class="price-val grad-text">RM {{ totalPrice.toFixed(2) }}</span>
+          </div>
+          <button class="add-build-btn" @click="addBuildToCart" :disabled="selectedCount === 0">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 2h2l2 7h6l1.5-4H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="7" cy="13" r="1.2" fill="currentColor"/>
+              <circle cx="12" cy="13" r="1.2" fill="currentColor"/>
+            </svg>
+            Add Build to Cart
+          </button>
+        </div>
+      </div>
+
     </main>
 
     <Toast ref="toastRef" />
@@ -296,38 +296,38 @@ onMounted(async () => {
 .builder-main { padding-top: 120px; padding-bottom: 100px; }
 
 /* Header */
-.builder-header {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 32px; margin-bottom: 52px; flex-wrap: wrap;
-}
+.builder-header { margin-bottom: 40px; }
 .builder-title {
   font-family: 'Orbitron', sans-serif;
   font-size: clamp(36px, 5vw, 68px); font-weight: 900; color: #f1f5f9;
   margin: 14px 0 10px; line-height: 1.05;
 }
-.builder-sub { color: #475569; font-size: 15px; max-width: 560px; line-height: 1.7; margin: 0; }
+.builder-sub { color: #475569; font-size: 15px; max-width: 680px; line-height: 1.7; margin: 0; }
 
-/* Summary card */
-.summary-card {
-  min-width: 280px; max-width: 340px; padding: 24px;
-  border-radius: 24px; border: 1px solid rgba(255,255,255,0.07);
-  display: flex; flex-direction: column; gap: 16px; flex-shrink: 0;
+/* Summary bar — below builder */
+.summary-bar {
+  margin-top: 32px;
+  padding: 24px 32px;
+  border-radius: 24px;
+  border: 1px solid rgba(59,130,246,0.2);
+  display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
 }
-.summary-progress { display: flex; flex-direction: column; gap: 8px; }
-.progress-track { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.sb-progress { display: flex; flex-direction: column; gap: 8px; min-width: 200px; flex: 1; }
+.progress-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #2563eb, #8b5cf6); transition: width 0.5s cubic-bezier(0.16,1,0.3,1); }
 .progress-text { font-size: 12px; color: #475569; font-weight: 600; }
-.summary-status { font-size: 13px; color: #64748b; margin: 0; line-height: 1.5; }
-.summary-price { display: flex; justify-content: space-between; align-items: baseline; }
-.price-label { font-size: 13px; color: #475569; font-weight: 600; }
-.price-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; }
+.sb-status { font-size: 13px; color: #64748b; margin: 0; flex: 1; min-width: 180px; }
+.sb-right { display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+.sb-price { display: flex; flex-direction: column; gap: 2px; }
+.price-label { font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.price-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; }
 .add-build-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 13px 20px; border-radius: 14px;
+  padding: 14px 24px; border-radius: 14px;
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: white; border: none;
-  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
-  cursor: pointer; transition: all 0.3s;
+  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0.06em;
+  cursor: pointer; transition: all 0.3s; white-space: nowrap;
 }
 .add-build-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,99,235,0.4); }
 .add-build-btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -460,7 +460,8 @@ onMounted(async () => {
 }
 @media (max-width: 900px) {
   .builder-header { flex-direction: column; }
-  .summary-card { max-width: 100%; }
+  .summary-bar { flex-direction: column; align-items: flex-start; }
+  .sb-right { width: 100%; justify-content: space-between; }
   .reco-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) {
