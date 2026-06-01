@@ -2,7 +2,6 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-import SketchfabViewer from '../components/SketchfabViewer.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useRouter } from 'vue-router'
@@ -185,11 +184,6 @@ onMounted(async () => {
 
         <!-- Sidebar -->
         <aside class="builder-sidebar">
-          <!-- 3D Viewer -->
-          <div class="viewer-wrap glass">
-            <SketchfabViewer :selected-parts="selectedParts" />
-          </div>
-
           <!-- Selected parts list -->
           <div class="parts-panel glass">
             <h2 class="parts-title">
@@ -344,7 +338,6 @@ onMounted(async () => {
 /* Sidebar */
 .builder-sidebar { position: sticky; top: 92px; display: flex; flex-direction: column; gap: 20px; }
 
-.viewer-wrap { border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
 
 .parts-panel { padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); }
 .parts-title {
