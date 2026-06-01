@@ -5,7 +5,6 @@ import Toast from '../components/Toast.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
 const cart   = useCartStore()
@@ -13,7 +12,7 @@ const toastRef = ref(null)
 const user   = ref(JSON.parse(localStorage.getItem('user')))
 const checkingOut = ref(false)
 
-useScrollAnimation()
+
 
 function checkout() {
   if (!user.value) {
@@ -35,7 +34,7 @@ function checkout() {
     <main class="cart-main section-inner">
 
       <!-- Page header -->
-      <div class="cart-header reveal">
+      <div class="cart-header">
         <span class="kicker">Shopping</span>
         <h1 class="cart-title">
           Your <span class="grad-text">Cart</span>
@@ -46,7 +45,7 @@ function checkout() {
       </div>
 
       <!-- Empty state -->
-      <div v-if="cart.items.length === 0" class="empty-state reveal">
+      <div v-if="cart.items.length === 0" class="empty-state">
         <div class="empty-icon">🛒</div>
         <h2 class="empty-title">Your cart is empty</h2>
         <p class="empty-desc">Looks like you haven't added anything yet. Explore our catalog and find your perfect build.</p>
@@ -61,8 +60,7 @@ function checkout() {
           <div
             v-for="(item, i) in cart.items"
             :key="item.id"
-            class="cart-card glass tilt-card reveal"
-            :class="`stagger-${Math.min(i+1,6)}`"
+            class="cart-card glass tilt-card"
           >
             <div class="card-shine" />
 
@@ -96,7 +94,7 @@ function checkout() {
         </div>
 
         <!-- Right: summary -->
-        <div class="cart-summary glass reveal stagger-2">
+        <div class="cart-summary glass">
           <div class="card-shine" />
 
           <h3 class="summary-title">Order Summary</h3>

@@ -5,7 +5,6 @@ import Toast from '../components/Toast.vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
 const cart   = useCartStore()
@@ -16,8 +15,6 @@ const phoneNumber     = ref('')
 const shippingAddress = ref('')
 const shippingMethod  = ref('standard')
 const paymentMethod   = ref('cod')
-
-useScrollAnimation()
 
 const shippingCost = computed(() => shippingMethod.value === 'express' ? 25 : 10)
 const total        = computed(() => cart.totalPrice + shippingCost.value)
@@ -84,7 +81,7 @@ async function placeOrder() {
     <main class="checkout-main section-inner">
 
       <!-- Header -->
-      <div class="checkout-header reveal">
+      <div class="checkout-header">
         <span class="kicker">Almost There</span>
         <h1 class="checkout-title">Check<span class="grad-text">out</span></h1>
         <p class="checkout-sub">Complete your order details below.</p>
@@ -96,7 +93,7 @@ async function placeOrder() {
         <div class="form-panel">
 
           <!-- Delivery -->
-          <section class="form-section glass reveal">
+          <section class="form-section glass">
             <h2 class="section-heading">
               <span class="step-num">1</span> Delivery Details
             </h2>
@@ -116,7 +113,7 @@ async function placeOrder() {
           </section>
 
           <!-- Shipping method -->
-          <section class="form-section glass reveal stagger-2">
+          <section class="form-section glass">
             <h2 class="section-heading">
               <span class="step-num">2</span> Shipping Method
             </h2>
@@ -137,7 +134,7 @@ async function placeOrder() {
           </section>
 
           <!-- Payment -->
-          <section class="form-section glass reveal stagger-3">
+          <section class="form-section glass">
             <h2 class="section-heading">
               <span class="step-num">3</span> Payment Method
             </h2>
@@ -157,7 +154,7 @@ async function placeOrder() {
         </div>
 
         <!-- RIGHT: summary -->
-        <aside class="summary-panel glass reveal stagger-2">
+        <aside class="summary-panel glass">
           <h2 class="summary-title">Order Summary</h2>
 
           <!-- Items -->

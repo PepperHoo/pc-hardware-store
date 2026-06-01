@@ -6,7 +6,6 @@ import SketchfabViewer from '../components/SketchfabViewer.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useRouter } from 'vue-router'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const cart   = useCartStore()
 const router = useRouter()
@@ -16,7 +15,7 @@ const loading   = ref(true)
 const errorMsg  = ref('')
 const selectedParts = ref({})
 
-useScrollAnimation()
+
 
 const buildCategories = [
   { key: 'motherboard', label: 'Motherboard',   icon: '🔲', color: '#3b82f6' },
@@ -145,7 +144,7 @@ onMounted(async () => {
     <main v-else class="builder-main section-inner">
 
       <!-- Header -->
-      <div class="builder-header reveal">
+      <div class="builder-header">
         <div>
           <span class="kicker">Custom Build</span>
           <h1 class="builder-title">PC <span class="grad-text">Builder</span></h1>
@@ -187,12 +186,12 @@ onMounted(async () => {
         <!-- Sidebar -->
         <aside class="builder-sidebar">
           <!-- 3D Viewer -->
-          <div class="viewer-wrap glass reveal">
+          <div class="viewer-wrap glass">
             <SketchfabViewer :selected-parts="selectedParts" />
           </div>
 
           <!-- Selected parts list -->
-          <div class="parts-panel glass reveal stagger-2">
+          <div class="parts-panel glass">
             <h2 class="parts-title">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="#3b82f6"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="#8b5cf6"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="#10b981"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="#f59e0b"/></svg>
               Your Build
@@ -220,8 +219,7 @@ onMounted(async () => {
           <div
             v-for="(cat, i) in buildCategories"
             :key="cat.key"
-            class="cat-section glass reveal"
-            :class="`stagger-${Math.min(i+1,6)}`"
+            class="cat-section glass"
           >
             <!-- Category header -->
             <div class="cat-header">

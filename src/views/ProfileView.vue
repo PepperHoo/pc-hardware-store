@@ -3,7 +3,6 @@ import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
 const user = ref(JSON.parse(localStorage.getItem('user')))
@@ -29,8 +28,6 @@ const editCity         = ref('')
 const editState        = ref('')
 const editZipCode      = ref('')
 const editCountry      = ref('')
-
-useScrollAnimation()
 
 async function loadOrders() {
   if (!user.value) { loading.value = false; return }
@@ -109,7 +106,7 @@ onMounted(loadOrders)
     <main class="profile-main section-inner">
 
       <!-- Header -->
-      <div class="page-header reveal">
+      <div class="page-header">
         <span class="kicker">Account</span>
         <h1 class="page-title">My <span class="grad-text">Profile</span></h1>
       </div>
@@ -117,7 +114,7 @@ onMounted(loadOrders)
       <div v-if="user" class="profile-grid">
 
         <!-- Left: avatar + quick nav -->
-        <aside class="profile-sidebar glass reveal">
+        <aside class="profile-sidebar glass">
           <div class="avatar-wrap">
             <div class="avatar-ring">
               <img
@@ -163,22 +160,22 @@ onMounted(loadOrders)
 
           <!-- Stats -->
           <div class="stats-row">
-            <div class="stat-card glass reveal stagger-1">
+            <div class="stat-card glass">
               <p class="stat-label">Total Orders</p>
               <p class="stat-value grad-text-blue">{{ totalOrders }}</p>
             </div>
-            <div class="stat-card glass reveal stagger-2">
+            <div class="stat-card glass">
               <p class="stat-label">Total Spent</p>
               <p class="stat-value grad-text">RM {{ totalSpent }}</p>
             </div>
-            <div class="stat-card glass reveal stagger-3">
+            <div class="stat-card glass">
               <p class="stat-label">Pending</p>
               <p class="stat-value" style="color:#fcd34d">{{ pendingOrders }}</p>
             </div>
           </div>
 
           <!-- Profile info card -->
-          <div class="info-card glass reveal stagger-2">
+          <div class="info-card glass">
             <div class="info-card-header">
               <h3 class="info-card-title">Personal Info</h3>
               <button class="edit-btn" @click="editProfile">Edit</button>
@@ -192,7 +189,7 @@ onMounted(loadOrders)
           </div>
 
           <!-- Address card -->
-          <div class="info-card glass reveal stagger-3">
+          <div class="info-card glass">
             <div class="info-card-header">
               <h3 class="info-card-title">Default Address</h3>
               <button class="edit-btn" @click="editAddressFn">Edit</button>
@@ -206,7 +203,7 @@ onMounted(loadOrders)
           </div>
 
           <!-- Recent orders -->
-          <div class="info-card glass reveal stagger-4">
+          <div class="info-card glass">
             <div class="info-card-header">
               <h3 class="info-card-title">Recent Orders</h3>
               <button class="edit-btn" @click="router.push('/orders')">View All</button>
@@ -229,7 +226,7 @@ onMounted(loadOrders)
       </div>
 
       <!-- Not logged in -->
-      <div v-else class="not-logged reveal">
+      <div v-else class="not-logged">
         <p>You are not logged in.</p>
         <button class="btn-primary" @click="router.push('/login')">Go to Login</button>
       </div>

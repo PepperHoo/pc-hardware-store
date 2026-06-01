@@ -9,7 +9,6 @@ import { useCartStore }     from '../stores/cart'
 import { useWishlistStore } from '../stores/wishlist'
 import { useCompareStore }  from '../stores/compare'
 import { useCurrencyStore } from '../stores/currency'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { useCardTilt } from '../composables/useCardTilt'
 
 const route    = useRoute()
@@ -21,7 +20,6 @@ const currency = useCurrencyStore()
 const tilt     = useCardTilt(7)
 const toastRef = ref(null)
 const user     = JSON.parse(localStorage.getItem('user') || 'null')
-useScrollAnimation()
 
 const products         = ref([])
 const loading          = ref(true)

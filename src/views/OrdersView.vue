@@ -3,14 +3,13 @@ import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
 const user   = ref(JSON.parse(localStorage.getItem('user')))
 const orders = ref([])
 const loading = ref(true)
 
-useScrollAnimation()
+
 
 async function loadOrders() {
   if (!user.value) { router.push('/login'); return }
@@ -32,20 +31,20 @@ onMounted(loadOrders)
     <main class="orders-main section-inner">
 
       <!-- Header -->
-      <div class="orders-header reveal">
+      <div class="orders-header">
         <span class="kicker">Account</span>
         <h1 class="orders-title">Order <span class="grad-text">History</span></h1>
         <p class="orders-sub">Track all your purchases in one place.</p>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="state-box glass reveal">
+      <div v-if="loading" class="state-box glass">
         <div class="loader" />
         <p>Loading your orders…</p>
       </div>
 
       <!-- Empty -->
-      <div v-else-if="orders.length === 0" class="state-box glass reveal">
+      <div v-else-if="orders.length === 0" class="state-box glass">
         <div class="empty-icon">📦</div>
         <h2 class="empty-title">No orders yet</h2>
         <p class="empty-desc">You haven't placed any orders. Start building your dream PC!</p>
@@ -57,8 +56,7 @@ onMounted(loadOrders)
         <div
           v-for="(order, i) in orders"
           :key="order.id"
-          class="order-card glass reveal"
-          :class="`stagger-${Math.min(i+1,6)}`"
+          class="order-card glass"
         >
           <!-- Order header -->
           <div class="order-top">
