@@ -99,7 +99,10 @@ onMounted(loadOrders)
                 {{ order.address }}
               </span>
             </div>
-            <p class="order-total grad-text">RM {{ Number(order.total).toFixed(2) }}</p>
+            <div class="order-right">
+              <p class="order-total grad-text">RM {{ Number(order.total).toFixed(2) }}</p>
+              <button class="print-btn" @click="window.print()">🖨 Print</button>
+            </div>
           </div>
         </div>
       </div>
@@ -208,7 +211,21 @@ onMounted(loadOrders)
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
   font-size: 12px; color: #64748b;
 }
+.order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
 .order-total { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; margin: 0; }
+.print-btn { padding: 6px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.print-btn:hover { background: rgba(255,255,255,0.09); color: #94a3b8; }
+
+@media print {
+  .orders-header, .state-box, .print-btn { display: none !important; }
+  .orders-page { background: #fff !important; }
+  .order-card  { background: #fff !important; border: 1px solid #ddd !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 24px; }
+  .order-id, .order-email { color: #000 !important; }
+  .item-name, .item-qty { color: #000 !important; }
+  .item-price, .order-total { color: #000 !important; background: none !important; -webkit-text-fill-color: #000 !important; }
+  .status-badge { border: 1px solid #999 !important; color: #333 !important; background: #eee !important; }
+  * { print-color-adjust: exact !important; }
+}
 
 /* Buttons */
 .btn-primary {

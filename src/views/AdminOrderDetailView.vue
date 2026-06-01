@@ -185,6 +185,10 @@ onMounted(loadOrder)
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Back to Orders
           </button>
+          <button class="print-btn" @click="window.print()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="4" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 4V2.5A.5.5 0 0 1 4.5 2h5a.5.5 0 0 1 .5.5V4" stroke="currentColor" stroke-width="1.4"/><path d="M4 9h6M4 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Print Receipt
+          </button>
         </div>
 
       </div>
@@ -294,6 +298,32 @@ onMounted(loadOrder)
   flex-shrink: 0;
 }
 .back-full-btn:hover { background: rgba(255,255,255,0.09); color: #94a3b8; }
+
+.print-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border-radius: 14px;
+  background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);
+  color: #6ee7b7; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  flex-shrink: 0;
+}
+.print-btn:hover { background: rgba(16,185,129,0.18); }
+
+/* ── Print styles ────────────────────────────────────────────── */
+@media print {
+  .admin-page { display: block !important; }
+  .admin-sidebar, .back-full-btn, .print-btn, .breadcrumb-btn { display: none !important; }
+  .admin-main { margin-left: 0 !important; padding: 20px !important; }
+  .page-title { font-size: 24px !important; color: #000 !important; }
+  .grad-text  { color: #000 !important; background: none !important; -webkit-text-fill-color: #000 !important; }
+  .info-card, .item-card, .total-bar { background: #fff !important; border: 1px solid #ddd !important; border-radius: 8px !important; box-shadow: none !important; }
+  .info-item { background: #f9f9f9 !important; border: 1px solid #eee !important; }
+  .info-label { color: #666 !important; }
+  .info-val   { color: #000 !important; }
+  .status-badge-lg, .status-badge { border: 1px solid #999 !important; color: #333 !important; background: #eee !important; }
+  .item-name, .section-heading, .card-title, .total-final { color: #000 !important; }
+  .total-bar-inner span { color: #000 !important; }
+  * { print-color-adjust: exact !important; }
+}
 
 /* Responsive */
 @media (max-width: 1024px) { .info-grid { grid-template-columns: repeat(2,1fr); } }

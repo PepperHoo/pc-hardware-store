@@ -93,6 +93,12 @@ function addToCart(product) {
   toastRef.value.showToastMessage(`${qty} × ${product.name} added to cart!`, 'success')
 }
 
+function toggleWishlist(product) {
+  if (!user) { toastRef.value.showToastMessage('Please login to save items', 'error'); return }
+  const added = wishlist.toggle(product, user.email)
+  toastRef.value.showToastMessage(added ? '❤️ Added to wishlist!' : 'Removed from wishlist', 'success')
+}
+
 onMounted(async () => {
   try {
     const { getAll } = await import('../lib/api.js')
@@ -403,7 +409,49 @@ onMounted(async () => {
   border-radius: 20px; overflow: hidden;
   display: flex; flex-direction: column;
   transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
 }
+
+/* Low stock / out of stock badges */
+.low-stock-badge {
+  position: absolute; top: 10px; left: 10px; z-index: 10;
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4);
+  color: #fcd34d; font-size: 10px; font-weight: 800;
+  padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em;
+}
+.ls-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #fcd34d;
+  animation: pulse 1.5s ease infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+.out-of-stock-badge {
+  position: absolute; top: 10px; left: 10px; z-index: 10;
+  background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.35);
+  color: #fca5a5; font-size: 10px; font-weight: 800;
+  padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em;
+}
+
+/* Quick action buttons on card hover */
+.card-quick-actions {
+  position: absolute; top: 10px; right: 10px; z-index: 10;
+  display: flex; flex-direction: column; gap: 6px;
+  opacity: 0; transform: translateX(6px);
+  transition: all 0.25s ease;
+}
+.p-card:hover .card-quick-actions { opacity: 1; transform: translateX(0); }
+.quick-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(3,7,18,0.75); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #64748b; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.quick-btn:hover, .quick-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: rgba(59,130,246,0.3); }
+
+/* Currency sub-price */
+.p-price-converted { font-size: 11px; color: #475569; margin: -4px 0 8px; }
 .p-card:hover {
   border-color: rgba(59,130,246,0.22);
   box-shadow: 0 24px 56px rgba(0,0,0,0.45), 0 0 0 1px rgba(59,130,246,0.08);
