@@ -203,7 +203,7 @@ onMounted(async () => {
         <div v-else-if="paginatedProducts.length" :class="viewMode === 'grid' ? 'p-grid' : 'p-list'">
           <div
             v-for="(product, i) in paginatedProducts" :key="product.id"
-            class="p-card tilt-card reveal" :class="`stagger-${(i % 4) + 1}`"
+            class="p-card tilt-card"
             @mousemove="tilt.onMove" @mouseleave="tilt.onLeave"
           >
             <div class="card-shine" />

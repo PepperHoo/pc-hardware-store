@@ -1,41 +1,48 @@
 import { onMounted, onBeforeUnmount } from 'vue'
 
-/**
- * Observes all elements with reveal classes and adds .is-visible
- * when they enter the viewport, triggering the CSS 3D animations.
- *
- * Classes supported:
- *   .reveal        — rotates up from below
- *   .reveal-left   — swings in from left
- *   .reveal-right  — swings in from right
- *   .reveal-scale  — scales up from small
- *
- * Stagger delays:
- *   .stagger-1 through .stagger-6
- */
-export function useScrollAnimation () {
-  let observer = null
+const SELECTOR = '.reveal, .reveal-left, .reveal-right, .reveal-scale'
 
-  function init () {
-    const targets = document.querySelectorAll(
-      '.reveal, .reveal-left, .reveal-right, .reveal-scale'
-    )
+export function useScrollAnimation() {
+  let intersectionObs = null
+  let mutationObs     = null
 
-    observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.07, rootMargin: '0px 0px -48px 0px' }
-    )
-
-    targets.forEach((el) => observer.observe(el))
+  function observeEl(el) {
+    if (!el || el._scrollObserved) return
+    el._scrollObserved = true
+    intersectionObs.observe(el)
   }
 
-  onMounted(() => setTimeout(init, 80))
-  onBeforeUnmount(() => observer?.disconnect())
+  function init() {
+    // IntersectionObserver – adds .is-visible when element enters viewport
+    intersectionObs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          intersectionObs.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' })
+
+    // Observe elements already in the DOM
+    document.querySelectorAll(SELECTOR).forEach(observeEl)
+
+    // MutationObserver – catches elements added AFTER mount (v-if / async data)
+    mutationObs = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType !== 1) return
+          if (node.matches?.(SELECTOR))            observeEl(node)
+          node.querySelectorAll?.(SELECTOR).forEach(observeEl)
+        })
+      })
+    })
+
+    mutationObs.observe(document.body, { childList: true, subtree: true })
+  }
+
+  onMounted(() => setTimeout(init, 50))
+  onBeforeUnmount(() => {
+    intersectionObs?.disconnect()
+    mutationObs?.disconnect()
+  })
 }
