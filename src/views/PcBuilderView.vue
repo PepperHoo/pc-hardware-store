@@ -293,7 +293,7 @@ onMounted(async () => {
 .error-text { color: #f87171; }
 
 /* Main */
-.builder-main { padding-top: 120px; padding-bottom: 100px; }
+.builder-main { padding-top: 120px; padding-bottom: 140px; }
 
 /* Header */
 .builder-header { margin-bottom: 40px; }
@@ -304,13 +304,18 @@ onMounted(async () => {
 }
 .builder-sub { color: #475569; font-size: 15px; max-width: 680px; line-height: 1.7; margin: 0; }
 
-/* Summary bar — below builder */
+/* Summary bar — fixed at bottom of screen */
 .summary-bar {
-  margin-top: 32px;
-  padding: 24px 32px;
-  border-radius: 24px;
-  border: 1px solid rgba(59,130,246,0.2);
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 400;
+  padding: 18px 40px;
+  border-radius: 0;
+  border-top: 1px solid rgba(59,130,246,0.25);
+  background: rgba(3,7,18,0.95);
+  backdrop-filter: blur(20px);
   display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+  margin-top: 0;
 }
 .sb-progress { display: flex; flex-direction: column; gap: 8px; min-width: 200px; flex: 1; }
 .progress-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
