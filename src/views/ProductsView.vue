@@ -231,8 +231,7 @@ onMounted(async () => {
             <div class="p-body">
               <span class="p-tag">{{ product.category }}</span>
               <h3 class="p-name" @click="router.push(`/product/${product.id}`)">{{ product.name }}</h3>
-              <p class="p-price">RM {{ Number(product.price).toFixed(2) }}</p>
-              <p class="p-price-converted">{{ currency.format(product.price) }}</p>
+              <p class="p-price">{{ currency.format(product.price) }}</p>
 
               <!-- Quantity -->
               <div class="qty-row">

@@ -2,7 +2,7 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useRouter } from 'vue-router'
 
@@ -96,7 +96,24 @@ function getScore(p) {
 function getRecommendations(cat) {
   return getProductsByCategory(cat).filter(p => p.id !== selectedParts.value[cat]).filter(isCompatible).sort((a,b) => getScore(b)-getScore(a)).slice(0, 3)
 }
-function selectPart(p) { selectedParts.value = { ...selectedParts.value, [p.category]: p.id } }
+function selectPart(p) {
+  selectedParts.value = { ...selectedParts.value, [p.category]: p.id }
+  // Auto-scroll to the next unselected category
+  nextTick(() => {
+    const currentIdx = buildCategories.findIndex(c => c.key === p.category)
+    for (let i = currentIdx + 1; i < buildCategories.length; i++) {
+      if (!selectedParts.value[buildCategories[i].key]) {
+        const el = document.getElementById(`cat-${buildCategories[i].key}`)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          // Small offset for the fixed summary bar
+          setTimeout(() => window.scrollBy({ top: -20, behavior: 'smooth' }), 400)
+        }
+        break
+      }
+    }
+  })
+}
 function clearPart(cat) { const n = { ...selectedParts.value }; delete n[cat]; selectedParts.value = n }
 
 function addBuildToCart() {
@@ -185,6 +202,7 @@ onMounted(async () => {
           <div
             v-for="(cat, i) in buildCategories"
             :key="cat.key"
+            :id="`cat-${cat.key}`"
             class="cat-section glass"
           >
             <!-- Category header -->

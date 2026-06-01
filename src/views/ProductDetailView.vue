@@ -142,7 +142,7 @@ onMounted(loadProduct)
 
           <!-- Price -->
           <div class="price-row">
-            <span class="detail-price">RM {{ Number(product.price).toFixed(2) }}</span>
+            <span class="detail-price">{{ currency.format(product.price) }}</span>
             <span class="price-note">Inclusive of SST</span>
           </div>
 
@@ -185,11 +185,8 @@ onMounted(loadProduct)
           <!-- Total -->
           <div class="total-row">
             <span class="total-label">Total</span>
-            <span class="total-val">RM {{ (Number(product.price) * quantity).toFixed(2) }}</span>
+            <span class="total-val">{{ currency.format(Number(product.price) * quantity) }}</span>
           </div>
-
-          <!-- Currency price -->
-          <p class="currency-price">≈ {{ currency.format(product.price) }}</p>
 
           <!-- Actions -->
           <div class="detail-actions">
