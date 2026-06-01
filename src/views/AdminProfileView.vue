@@ -3,7 +3,6 @@ import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const router = useRouter()
 const toastRef = ref(null)
@@ -14,8 +13,6 @@ const editEmail = ref('')
 const editPhone = ref('')
 const editTitle = ref('')
 const saving = ref(false)
-
-useScrollAnimation()
 
 function syncForm() {
   editName.value  = user.value?.username || user.value?.name || 'Admin User'
@@ -68,7 +65,7 @@ onMounted(() => {
 
     <main class="admin-main">
       <!-- Header -->
-      <div class="page-header reveal">
+      <div class="page-header">
         <div>
           <span class="kicker">Admin</span>
           <h1 class="page-title">Admin <span class="grad-text">Profile</span></h1>
@@ -83,7 +80,7 @@ onMounted(() => {
       <!-- Grid -->
       <div class="profile-grid">
         <!-- Avatar card -->
-        <div class="avatar-card glass reveal stagger-1">
+        <div class="avatar-card glass">
           <div class="avatar-ring">
             <img v-if="profileImage" :src="profileImage" class="avatar-img" alt="admin" />
             <span v-else class="avatar-initial">{{ editName ? editName.charAt(0).toUpperCase() : 'A' }}</span>
@@ -100,7 +97,7 @@ onMounted(() => {
         </div>
 
         <!-- Form card -->
-        <div class="form-card glass reveal stagger-2">
+        <div class="form-card glass">
           <h2 class="form-title">Edit Profile</h2>
           <p class="form-sub">Changes are saved to your admin session and database.</p>
 

@@ -1,7 +1,6 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, onMounted } from 'vue'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const totalProducts = ref(0)
 const totalOrders   = ref(0)
@@ -11,8 +10,6 @@ const latestProducts = ref([])
 const latestOrders   = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
-
-useScrollAnimation()
 
 async function loadDashboard() {
   try {
@@ -51,7 +48,7 @@ onMounted(loadDashboard)
 
       <div v-else>
         <!-- Header -->
-        <div class="page-header reveal">
+        <div class="page-header">
           <div>
             <span class="kicker">Admin Panel</span>
             <h1 class="page-title">Dashboard <span class="grad-text">Overview</span></h1>
@@ -75,7 +72,7 @@ onMounted(loadDashboard)
 
         <!-- Stat cards -->
         <div class="stats-grid">
-          <div class="stat-card glass reveal stagger-1">
+          <div class="stat-card glass">
             <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="5" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="5" y="9" width="5" height="3" rx="1" fill="currentColor" opacity=".6"/><rect x="12" y="9" width="6" height="3" rx="1" fill="currentColor" opacity=".6"/></svg>
             </div>
@@ -85,7 +82,7 @@ onMounted(loadDashboard)
               <p class="stat-hint">Total inventory items</p>
             </div>
           </div>
-          <div class="stat-card glass reveal stagger-2">
+          <div class="stat-card glass">
             <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 2h3l2.5 9h9l2-6H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="16" cy="19" r="1.5" fill="currentColor"/></svg>
             </div>
@@ -95,7 +92,7 @@ onMounted(loadDashboard)
               <p class="stat-hint">All time orders</p>
             </div>
           </div>
-          <div class="stat-card glass reveal stagger-3">
+          <div class="stat-card glass">
             <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:#10b981">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M2 20c0-4.418 4.03-8 9-8s9 3.582 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             </div>
@@ -105,7 +102,7 @@ onMounted(loadDashboard)
               <p class="stat-hint">Registered accounts</p>
             </div>
           </div>
-          <div class="stat-card glass reveal stagger-4">
+          <div class="stat-card glass">
             <div class="stat-icon" style="background:rgba(139,92,246,0.15);color:#8b5cf6">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M11 6v10M8 8.5C8 7.12 9.34 6 11 6s3 1.12 3 2.5c0 1.5-1.5 2-3 2.5-1.5.5-3 1-3 2.5C8 14.88 9.34 16 11 16s3-1.12 3-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
@@ -120,7 +117,7 @@ onMounted(loadDashboard)
         <!-- Bottom grid -->
         <div class="bottom-grid">
           <!-- Latest products -->
-          <div class="activity-card glass reveal stagger-2">
+          <div class="activity-card glass">
             <h2 class="ac-title">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="#3b82f6" stroke-width="1.5"/><rect x="3" y="6" width="4" height="2" rx=".5" fill="#3b82f6" opacity=".6"/><rect x="9" y="6" width="5" height="2" rx=".5" fill="#8b5cf6" opacity=".6"/></svg>
               Latest Products
@@ -134,7 +131,7 @@ onMounted(loadDashboard)
           </div>
 
           <!-- Latest orders -->
-          <div class="activity-card glass reveal stagger-3">
+          <div class="activity-card glass">
             <h2 class="ac-title">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="#f59e0b" stroke-width="1.5"/><path d="M4 6h8M4 9h5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
               Latest Orders

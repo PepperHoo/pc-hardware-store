@@ -2,15 +2,12 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const route  = useRoute()
 const router = useRouter()
 const order  = ref(null)
 const loading = ref(true)
 const errorMessage = ref('')
-
-useScrollAnimation()
 
 async function loadOrder() {
   try {
@@ -57,7 +54,7 @@ onMounted(loadOrder)
       <div v-else>
 
         <!-- Header -->
-        <div class="page-header reveal">
+        <div class="page-header">
           <div>
             <button class="breadcrumb-btn" @click="router.push('/admin/orders')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -73,7 +70,7 @@ onMounted(loadOrder)
         </div>
 
         <!-- Info grid -->
-        <div class="info-card glass reveal stagger-1">
+        <div class="info-card glass">
           <h2 class="card-title">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2" width="13" height="11" rx="2" stroke="#3b82f6" stroke-width="1.5"/><path d="M4 6h7M4 9h4" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/></svg>
             Order Information
@@ -120,7 +117,7 @@ onMounted(loadOrder)
         </div>
 
         <!-- Items -->
-        <div class="items-section reveal stagger-2">
+        <div class="items-section">
           <h2 class="section-heading">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2h2.5l2 7.5h7l1.5-4.5H5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="13" r="1.5" fill="#f59e0b"/><circle cx="13" cy="13" r="1.5" fill="#f59e0b"/></svg>
             Ordered Items ({{ (order.items || []).length }})
@@ -130,7 +127,7 @@ onMounted(loadOrder)
             <div
               v-for="(item, i) in (order.items || [])"
               :key="item.id || i"
-              class="item-card glass reveal"
+              class="item-card glass"
               :class="`stagger-${Math.min(i+1,6)}`"
             >
               <!-- Image -->
@@ -171,7 +168,7 @@ onMounted(loadOrder)
         </div>
 
         <!-- Total summary bar -->
-        <div class="total-bar glass reveal stagger-3">
+        <div class="total-bar glass">
           <div class="total-bar-inner">
             <div class="total-row">
               <span>Items ({{ (order.items || []).length }})</span>

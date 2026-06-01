@@ -2,7 +2,6 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted, computed } from 'vue'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const products = ref([])
 const name = ref(''); const price = ref(''); const stock = ref('')
@@ -13,8 +12,6 @@ const editCategory = ref(''); const editImage = ref(''); const editDetails = ref
 const selectedCategory = ref('all')
 const toastRef = ref(null)
 const uploadingImage = ref(false); const uploadingEditImage = ref(false)
-
-useScrollAnimation()
 
 const categories = ['processor','motherboard','gpu','ram','storage','psu','cooler','casing']
 
@@ -91,14 +88,14 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
 
     <main class="admin-main">
       <!-- Header -->
-      <div class="page-header reveal">
+      <div class="page-header">
         <span class="kicker">Admin</span>
         <h1 class="page-title">Product <span class="grad-text">Inventory</span></h1>
         <p class="page-sub">Add, edit, and manage PC hardware components.</p>
       </div>
 
       <!-- Stats -->
-      <div class="stats-row reveal stagger-1">
+      <div class="stats-row">
         <div class="stat-pill glass">
           <div class="sp-icon" style="color:#60a5fa">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="8" width="4" height="2" rx=".5" fill="currentColor" opacity=".6"/><rect x="10" y="8" width="5" height="2" rx=".5" fill="currentColor" opacity=".6"/></svg>
@@ -117,7 +114,7 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
       <div class="products-layout">
 
         <!-- Add form -->
-        <div class="add-form glass reveal stagger-2">
+        <div class="add-form glass">
           <h2 class="form-title">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/></svg>
             Add New Product
@@ -166,7 +163,7 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
         <!-- Right: filter + grid -->
         <div class="products-right">
           <!-- Filter -->
-          <div class="filter-bar glass reveal stagger-2">
+          <div class="filter-bar glass">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M1 3h13M3 7h9M5 11h5" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
             <select v-model="selectedCategory" class="filter-select">
               <option value="all">All Categories</option>
@@ -177,7 +174,7 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
 
           <!-- Product cards -->
           <div class="product-grid">
-            <div v-for="(product, i) in filteredProducts" :key="product.id" class="product-card glass reveal" :class="`stagger-${Math.min(i+1,6)}`">
+            <div v-for="(product, i) in filteredProducts" :key="product.id" class="product-card glass" :class="`stagger-${Math.min(i+1,6)}`">
               <div class="prod-img-wrap">
                 <img :src="product.image" :alt="product.name" class="prod-img" />
               </div>

@@ -1,7 +1,6 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, onMounted } from 'vue'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const bannerImages    = ref([])
 const hotSelling      = ref([])
@@ -11,8 +10,6 @@ const saving          = ref(false)
 const successMessage  = ref('')
 const errorMessage    = ref('')
 const homepageId      = ref(null)
-
-useScrollAnimation()
 
 async function loadHomepage() {
   try {
@@ -80,24 +77,24 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 
       <div v-else>
         <!-- Header -->
-        <div class="page-header reveal">
+        <div class="page-header">
           <span class="kicker">Admin</span>
           <h1 class="page-title">Homepage <span class="grad-text">Editor</span></h1>
           <p class="page-sub">Manage banners, hot selling products, and featured listings.</p>
         </div>
 
         <!-- Alert messages -->
-        <div v-if="successMessage" class="alert-box success reveal">
+        <div v-if="successMessage" class="alert-box success">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ successMessage }}
         </div>
-        <div v-if="errorMessage" class="alert-box error reveal">
+        <div v-if="errorMessage" class="alert-box error">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 5v4M8 11v1" stroke="#fca5a5" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="8" r="6.5" stroke="#fca5a5" stroke-width="1.5"/></svg>
           {{ errorMessage }}
         </div>
 
         <!-- Banner section -->
-        <div class="section-card glass reveal stagger-1">
+        <div class="section-card glass stagger-1">
           <div class="section-header">
             <div>
               <h2 class="section-title">
@@ -131,7 +128,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
         </div>
 
         <!-- Hot Selling -->
-        <div class="section-card glass reveal stagger-2">
+        <div class="section-card glass stagger-2">
           <div class="section-header">
             <div>
               <h2 class="section-title">
@@ -167,7 +164,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
         </div>
 
         <!-- Latest Products -->
-        <div class="section-card glass reveal stagger-3">
+        <div class="section-card glass stagger-3">
           <div class="section-header">
             <div>
               <h2 class="section-title">

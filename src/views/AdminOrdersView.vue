@@ -2,7 +2,6 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted, computed } from 'vue'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const orders = ref([])
 const loading = ref(true)
@@ -10,8 +9,6 @@ const errorMessage = ref('')
 const savingOrderId = ref(null)
 const deletingOrderId = ref(null)
 const toastRef = ref(null)
-
-useScrollAnimation()
 
 async function loadOrders() {
   try {
@@ -63,14 +60,14 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
 
       <div v-else>
         <!-- Header -->
-        <div class="page-header reveal">
+        <div class="page-header">
           <span class="kicker">Admin</span>
           <h1 class="page-title">Order <span class="grad-text">Management</span></h1>
           <p class="page-sub">Monitor and update all customer purchases.</p>
         </div>
 
         <!-- Stats -->
-        <div class="stats-row reveal stagger-1">
+        <div class="stats-row">
           <div class="stat-pill glass">
             <div class="sp-icon" style="color:#60a5fa">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 2h2.5l2 7h7l1.5-4H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="14" cy="16" r="1.5" fill="currentColor"/></svg>
@@ -98,7 +95,7 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
         </div>
 
         <!-- Table -->
-        <div class="table-card glass reveal stagger-2">
+        <div class="table-card glass">
           <div class="table-scroll">
             <table class="data-table">
               <thead>

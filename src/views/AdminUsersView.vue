@@ -2,7 +2,6 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted, computed } from 'vue'
-import { useScrollAnimation } from '../composables/useScrollAnimation'
 
 const users = ref([])
 const search = ref('')
@@ -10,8 +9,6 @@ const loading = ref(true)
 const errorMessage = ref('')
 const deletingId = ref(null)
 const toastRef = ref(null)
-
-useScrollAnimation()
 
 async function loadUsers() {
   try {
@@ -60,14 +57,14 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
 
       <div v-else>
         <!-- Header -->
-        <div class="page-header reveal">
+        <div class="page-header">
           <span class="kicker">Admin</span>
           <h1 class="page-title">User <span class="grad-text">Management</span></h1>
           <p class="page-sub">View and manage all registered customer accounts.</p>
         </div>
 
         <!-- Stats -->
-        <div class="stats-row reveal stagger-1">
+        <div class="stats-row">
           <div class="stat-pill glass">
             <div class="sp-icon" style="color:#60a5fa">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 17c0-4.142 3.358-7.5 7.5-7.5s7.5 3.358 7.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -89,13 +86,13 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
         </div>
 
         <!-- Search -->
-        <div class="search-bar reveal stagger-2">
+        <div class="search-bar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#475569" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
           <input v-model="search" placeholder="Search by username or email…" class="search-input" />
         </div>
 
         <!-- Table -->
-        <div class="table-card glass reveal stagger-3">
+        <div class="table-card glass">
           <div class="table-scroll">
             <table class="data-table">
               <thead>
