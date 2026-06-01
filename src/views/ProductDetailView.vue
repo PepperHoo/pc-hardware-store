@@ -190,7 +190,11 @@ onMounted(loadProduct)
 
           <!-- Actions -->
           <div class="detail-actions">
-            <button class="btn-cart" :disabled="product.stock === 0" @click="addToCart">
+            <button v-if="product.stock === 0" class="btn-sold-out" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Sold Out
+            </button>
+            <button v-else class="btn-cart" @click="addToCart">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               Add {{ quantity }} to Cart
             </button>
@@ -412,8 +416,16 @@ onMounted(loadProduct)
   cursor: pointer; transition: all 0.3s;
   box-shadow: 0 10px 28px rgba(59,130,246,0.3);
 }
-.btn-cart:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(59,130,246,0.45); }
-.btn-cart:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-cart:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(59,130,246,0.45); }
+
+.btn-sold-out {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 16px 28px; border-radius: 14px; border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239,68,68,0.08);
+  color: #f87171; font-family: 'Orbitron', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  cursor: not-allowed;
+}
 
 .btn-back-ghost, .btn-back {
   display: flex; align-items: center; gap: 8px;

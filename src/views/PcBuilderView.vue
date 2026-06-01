@@ -259,8 +259,9 @@ onMounted(async () => {
 
       </div>
 
-      <!-- Summary bar — below the builder -->
-      <div class="summary-bar glass">
+      <!-- Summary bar — fixed at bottom, only visible when items selected -->
+      <Transition name="bar-slide">
+        <div v-if="selectedCount > 0" class="summary-bar glass">
         <div class="sb-progress">
           <div class="progress-track">
             <div class="progress-fill" :style="{ width: (selectedCount / buildCategories.length * 100) + '%' }" />
@@ -284,7 +285,8 @@ onMounted(async () => {
             Add Build to Cart
           </button>
         </div>
-      </div>
+        </div>
+      </Transition>
 
     </main>
 
@@ -326,15 +328,20 @@ onMounted(async () => {
 .summary-bar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  z-index: 400;
-  padding: 18px 40px;
+  z-index: 450;
+  padding: 16px 40px;
   border-radius: 0;
-  border-top: 1px solid rgba(59,130,246,0.25);
-  background: rgba(3,7,18,0.95);
-  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(59,130,246,0.3);
+  background: rgba(3,7,18,0.97) !important;
+  backdrop-filter: blur(24px);
   display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
   margin-top: 0;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.4);
 }
+
+/* Slide-up animation for the summary bar */
+.bar-slide-enter-active, .bar-slide-leave-active { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); }
+.bar-slide-enter-from, .bar-slide-leave-to { transform: translateY(100%); }
 .sb-progress { display: flex; flex-direction: column; gap: 8px; min-width: 200px; flex: 1; }
 .progress-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #2563eb, #8b5cf6); transition: width 0.5s cubic-bezier(0.16,1,0.3,1); }
