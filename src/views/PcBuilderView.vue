@@ -196,32 +196,6 @@ onMounted(async () => {
             </div>
           </div>
 
-          <Transition name="bar-slide">
-            <div v-if="selectedCount > 0" class="summary-bar glass">
-              <div class="sb-progress">
-                <div class="progress-track">
-                  <div class="progress-fill" :style="{ width: (selectedCount / buildCategories.length * 100) + '%' }" />
-                </div>
-                <span class="progress-text">{{ selectedCount }}/{{ buildCategories.length }} selected</span>
-              </div>
-
-              <p class="sb-status">{{ buildStatus }}</p>
-
-              <div class="sb-price">
-                <span class="price-label">Build Total</span>
-                <span class="price-val grad-text">RM {{ totalPrice.toFixed(2) }}</span>
-              </div>
-
-              <button class="add-build-btn" @click="addBuildToCart" :disabled="selectedCount === 0">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M2 2h2l2 7h6l1.5-4H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="7" cy="13" r="1.2" fill="currentColor"/>
-                  <circle cx="12" cy="13" r="1.2" fill="currentColor"/>
-                </svg>
-                Add Build to Cart
-              </button>
-            </div>
-          </Transition>
         </aside>
 
         <!-- Component columns -->
@@ -286,6 +260,33 @@ onMounted(async () => {
 
       </div>
 
+      <Transition name="bar-slide">
+        <div v-if="selectedCount > 0" class="summary-bar glass">
+          <div class="sb-progress">
+            <div class="progress-track">
+              <div class="progress-fill" :style="{ width: (selectedCount / buildCategories.length * 100) + '%' }" />
+            </div>
+            <span class="progress-text">{{ selectedCount }}/{{ buildCategories.length }} selected</span>
+          </div>
+
+          <p class="sb-status">{{ buildStatus }}</p>
+
+          <div class="sb-price">
+            <span class="price-label">Build Total</span>
+            <span class="price-val grad-text">RM {{ totalPrice.toFixed(2) }}</span>
+          </div>
+
+          <button class="add-build-btn" @click="addBuildToCart" :disabled="selectedCount === 0">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 2h2l2 7h6l1.5-4H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="7" cy="13" r="1.2" fill="currentColor"/>
+              <circle cx="12" cy="13" r="1.2" fill="currentColor"/>
+            </svg>
+            Add Build to Cart
+          </button>
+        </div>
+      </Transition>
+
     </main>
 
     <Toast ref="toastRef" />
@@ -322,36 +323,35 @@ onMounted(async () => {
 }
 .builder-sub { color: #475569; font-size: 15px; max-width: 680px; line-height: 1.7; margin: 0; }
 
-/* Summary bar — compact and shown under the selected parts panel */
+/* Summary bar — full width under the builder selection area */
 .summary-bar {
   position: static;
-  padding: 16px;
-  border-radius: 18px;
+  padding: 18px 22px;
+  border-radius: 20px;
   border: 1px solid rgba(94,234,212,0.20);
   background: rgba(17,24,39,0.92) !important;
   backdrop-filter: blur(18px);
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
-  margin-top: 0;
+  align-items: center;
+  gap: 22px;
+  margin-top: 22px;
   box-shadow: 0 16px 34px rgba(0,0,0,0.22);
 }
 
 /* Slide-up animation for the summary bar */
 .bar-slide-enter-active, .bar-slide-leave-active { transition: opacity 0.25s, transform 0.25s cubic-bezier(0.16,1,0.3,1); }
 .bar-slide-enter-from, .bar-slide-leave-to { opacity: 0; transform: translateY(-8px); }
-.sb-progress { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 0; }
+.sb-progress { display: flex; flex-direction: column; gap: 8px; min-width: 220px; flex: 1; }
 .progress-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #2dd4bf, #38bdf8); transition: width 0.5s cubic-bezier(0.16,1,0.3,1); }
 .progress-text { font-size: 12px; color: #a9b7c8; font-weight: 700; }
-.sb-status { font-size: 13px; color: #a9b7c8; margin: 0; line-height: 1.5; min-width: 0; }
+.sb-status { font-size: 13px; color: #a9b7c8; margin: 0; line-height: 1.5; min-width: 180px; flex: 1; }
 .sb-price { display: flex; flex-direction: column; gap: 2px; }
 .price-label { font-size: 11px; color: #a9b7c8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .price-val { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; }
 .add-build-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%;
+  min-width: 220px;
   padding: 13px 16px; border-radius: 12px;
   background: linear-gradient(135deg, #2dd4bf, #38bdf8);
   color: #07131f; border: none;
@@ -489,6 +489,8 @@ onMounted(async () => {
 }
 @media (max-width: 900px) {
   .builder-header { flex-direction: column; }
+  .summary-bar { flex-direction: column; align-items: stretch; }
+  .add-build-btn { width: 100%; }
   .reco-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) {

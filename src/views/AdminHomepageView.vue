@@ -1,6 +1,6 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 const bannerImages    = ref([])
 const hotSelling      = ref([])
@@ -10,6 +10,14 @@ const saving          = ref(false)
 const successMessage  = ref('')
 const errorMessage    = ref('')
 const homepageId      = ref(null)
+const MAX_BANNERS     = 3
+const MAX_HOT_SELLING = 6
+const MAX_LATEST      = 6
+
+const bannerSlotsLeft = computed(() => Math.max(0, MAX_BANNERS - bannerImages.value.length))
+const canAddBanner    = computed(() => bannerImages.value.length < MAX_BANNERS)
+const canAddHot       = computed(() => hotSelling.value.length < MAX_HOT_SELLING)
+const canAddLatest    = computed(() => latestProducts.value.length < MAX_LATEST)
 
 async function loadHomepage() {
   try {
@@ -41,11 +49,21 @@ async function saveHomepage() {
 
 async function handleBannerUpload(e) {
   const files = [...e.target.files]; if (!files.length) return
+  if (!canAddBanner.value) {
+    errorMessage.value = `Maximum ${MAX_BANNERS} homepage banners allowed.`
+    e.target.value = ''
+    return
+  }
   const { uploadImage } = await import('../lib/api.js')
-  for (const file of files) {
+  const acceptedFiles = files.slice(0, bannerSlotsLeft.value)
+  if (files.length > acceptedFiles.length) {
+    errorMessage.value = `Only ${MAX_BANNERS} banners are allowed. Extra files were skipped.`
+  }
+  for (const file of acceptedFiles) {
     try { bannerImages.value.push(await uploadImage('images', file, 'banners')) }
     catch (err) { errorMessage.value = 'Banner upload failed: '+err.message }
   }
+  e.target.value = ''
 }
 async function handleHotSellingUpload(e, i) {
   const file = e.target.files[0]; if (!file) return
@@ -61,9 +79,15 @@ async function handleLatestUpload(e, i) {
 function removeBanner(i)              { bannerImages.value.splice(i, 1) }
 function removeHotSellingImage(i)     { hotSelling.value[i].image = '' }
 function removeLatestProductImage(i)  { latestProducts.value[i].image = '' }
-function addHotSellingProduct()       { hotSelling.value.push({ name: '', image: '' }) }
+function addHotSellingProduct()       {
+  if (!canAddHot.value) { errorMessage.value = `Maximum ${MAX_HOT_SELLING} hot selling products allowed.`; return }
+  hotSelling.value.push({ name: '', image: '' })
+}
 function removeHotSellingProduct(i)   { hotSelling.value.splice(i, 1) }
-function addLatestProduct()           { latestProducts.value.push({ name: '', image: '' }) }
+function addLatestProduct()           {
+  if (!canAddLatest.value) { errorMessage.value = `Maximum ${MAX_LATEST} latest products allowed.`; return }
+  latestProducts.value.push({ name: '', image: '' })
+}
 function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 </script>
 
@@ -102,6 +126,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
                 Homepage Banners
               </h2>
               <p class="section-sub">Slideshow images shown at the top of the homepage.</p>
+              <p class="limit-text">{{ bannerImages.length }}/{{ MAX_BANNERS }} banners used</p>
             </div>
           </div>
 
@@ -121,9 +146,9 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 
           <label class="upload-zone">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M6 10l6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <p>Click to upload banner images</p>
-            <span>Multiple images supported</span>
-            <input type="file" accept="image/*" multiple @change="handleBannerUpload" hidden />
+            <p>{{ canAddBanner ? 'Click to upload banner images' : 'Banner limit reached' }}</p>
+            <span>{{ canAddBanner ? `${bannerSlotsLeft} slot(s) remaining` : `Maximum ${MAX_BANNERS} banners` }}</span>
+            <input type="file" accept="image/*" multiple @change="handleBannerUpload" :disabled="!canAddBanner" hidden />
           </label>
         </div>
 
@@ -136,8 +161,9 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
                 Hot Selling Products
               </h2>
               <p class="section-sub">Featured products displayed on the homepage.</p>
+              <p class="limit-text">{{ hotSelling.length }}/{{ MAX_HOT_SELLING }} products used</p>
             </div>
-            <button class="btn-add" @click="addHotSellingProduct">
+            <button class="btn-add" @click="addHotSellingProduct" :disabled="!canAddHot">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               Add Product
             </button>
@@ -172,8 +198,9 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
                 Latest Products
               </h2>
               <p class="section-sub">New arrivals displayed on the homepage.</p>
+              <p class="limit-text">{{ latestProducts.length }}/{{ MAX_LATEST }} products used</p>
             </div>
-            <button class="btn-add" @click="addLatestProduct">
+            <button class="btn-add" @click="addLatestProduct" :disabled="!canAddLatest">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               Add Product
             </button>
@@ -230,6 +257,18 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 .section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
 .section-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 800; color: #f1f5f9; margin: 0 0 6px; letter-spacing: 0.04em; }
 .section-sub { font-size: 13px; color: #475569; margin: 0; }
+.limit-text {
+  display: inline-flex;
+  margin: 10px 0 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(59,130,246,0.10);
+  border: 1px solid rgba(59,130,246,0.20);
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
 
 .empty-state { text-align: center; padding: 32px; border: 2px dashed rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 20px; }
 .empty-icon { font-size: 40px; margin: 0 0 8px; }
@@ -250,6 +289,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
   color: #3b82f6; cursor: pointer; transition: all 0.3s; text-align: center;
 }
 .upload-zone:hover { background: rgba(59,130,246,0.05); border-color: rgba(59,130,246,0.5); }
+.upload-zone:has(input:disabled) { opacity: 0.55; cursor: not-allowed; border-style: solid; }
 .upload-zone p { font-size: 14px; font-weight: 600; margin: 0; }
 .upload-zone span { font-size: 12px; color: #334155; }
 
@@ -270,6 +310,13 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 
 .btn-add { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s; flex-shrink: 0; }
 .btn-add:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(37,99,235,0.35); }
+.btn-add:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+:global(:root[data-theme="light"]) .limit-text {
+  background: rgba(14,116,144,0.10);
+  border-color: rgba(14,116,144,0.22);
+  color: #0f766e;
+}
 
 .save-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px 24px; border-radius: 16px; background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: white; border: none; font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.05em; cursor: pointer; transition: all 0.3s; margin-top: 8px; }
 .save-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(29,78,216,0.4); }

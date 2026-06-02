@@ -159,7 +159,24 @@ onMounted(() => {
 .avatar-name  { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800; color: #f1f5f9; margin: 0; }
 .avatar-title { font-size: 12px; color: #475569; margin: 0; }
 .avatar-email { font-size: 12px; color: #334155; margin: 0; }
-.role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(96,165,250,0.28);
+  color: #93c5fd;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
 .upload-label { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 12px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
 .upload-label:hover { background: rgba(59,130,246,0.18); }
 

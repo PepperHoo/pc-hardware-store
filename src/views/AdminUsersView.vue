@@ -86,9 +86,12 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
         </div>
 
         <!-- Search -->
-        <div class="search-bar">
+        <div class="search-bar glass">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#475569" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
           <input v-model="search" placeholder="Search by username or email…" class="search-input" />
+          <button v-if="search" class="clear-search" @click="search = ''" title="Clear search">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
         </div>
 
         <!-- Table -->
@@ -158,12 +161,39 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
 .sp-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; margin: 0; }
 
 .search-bar {
-  display: flex; align-items: center; gap: 10px;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px; padding: 12px 16px; margin-bottom: 20px; max-width: 480px;
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(15,23,42,0.68);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 16px; padding: 13px 14px; margin-bottom: 22px; max-width: 560px;
+  box-shadow: 0 16px 34px rgba(2,8,23,0.18);
 }
-.search-input { flex: 1; background: none; border: none; outline: none; color: #f1f5f9; font-size: 14px; }
-.search-input::placeholder { color: #334155; }
+.search-bar:focus-within {
+  border-color: rgba(45,212,191,0.42);
+  box-shadow: 0 0 0 3px rgba(45,212,191,0.10), 0 16px 34px rgba(2,8,23,0.22);
+}
+.search-input { flex: 1; background: none !important; border: none !important; outline: none; color: #f1f5f9; font-size: 14px; padding: 0 !important; box-shadow: none !important; }
+.search-input::placeholder { color: #64748b; }
+.clear-search {
+  width: 28px; height: 28px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: #94a3b8;
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.clear-search:hover { color: #f8fafc; border-color: rgba(96,165,250,0.28); }
+
+:global(:root[data-theme="light"]) .search-bar {
+  background: rgba(255,255,255,0.92) !important;
+  border-color: rgba(14,116,144,0.20) !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,0.10) !important;
+}
+:global(:root[data-theme="light"]) .search-input { color: #172033 !important; }
+:global(:root[data-theme="light"]) .clear-search {
+  background: #eef6fb;
+  color: #64748b;
+  border-color: rgba(14,116,144,0.18);
+}
 
 .table-card { border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
 .table-scroll { overflow-x: auto; }

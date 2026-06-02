@@ -24,6 +24,117 @@ async function loadOrder() {
   }
 }
 
+function money(value) {
+  return `RM ${Number(value || 0).toFixed(2)}`
+}
+
+function receiptText() {
+  if (!order.value) return ''
+
+  const items = (order.value.items || []).map((item, index) => {
+    const quantity = Number(item.quantity || 0)
+    const subtotal = Number(item.price || 0) * quantity
+    return `${index + 1}. ${item.name}
+   Qty: ${quantity}
+   Unit Price: ${money(item.price)}
+   Subtotal: ${money(subtotal)}`
+  }).join('\n\n')
+
+  return `PC Hardware Receipt
+Order #${order.value.id}
+Status: ${order.value.status || '-'}
+
+Customer: ${order.value.userEmail || '-'}
+Recipient: ${order.value.recipientName || '-'}
+Phone: ${order.value.phoneNumber || '-'}
+Shipping Address: ${order.value.address || order.value.shippingAddress || '-'}
+Payment Method: ${order.value.paymentMethod || '-'}
+
+Items:
+${items || 'No items'}
+
+Order Total: ${money(order.value.total)}`
+}
+
+function printReceipt() {
+  if (!order.value) return
+
+  const itemRows = (order.value.items || []).map(item => {
+    const quantity = Number(item.quantity || 0)
+    const subtotal = Number(item.price || 0) * quantity
+    return `
+      <tr>
+        <td>${item.name || '-'}</td>
+        <td>${quantity}</td>
+        <td>${money(item.price)}</td>
+        <td>${money(subtotal)}</td>
+      </tr>
+    `
+  }).join('')
+
+  const receiptWindow = window.open('', '_blank', 'width=900,height=720')
+  if (!receiptWindow) {
+    window.print()
+    return
+  }
+
+  receiptWindow.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>Receipt Order #${order.value.id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; color: #111827; margin: 36px; }
+          .receipt { max-width: 820px; margin: 0 auto; }
+          h1 { margin: 0 0 6px; font-size: 28px; }
+          .muted { color: #64748b; margin: 0 0 24px; }
+          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+          .box { border: 1px solid #dbe3ef; border-radius: 10px; padding: 14px; }
+          .label { display: block; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+          th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+          th { background: #f1f5f9; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+          .total { text-align: right; font-size: 24px; font-weight: 800; margin-top: 24px; }
+          @media print { body { margin: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <h1>PC Hardware Receipt</h1>
+          <p class="muted">Order #${order.value.id} - ${order.value.status || '-'}</p>
+          <div class="grid">
+            <div class="box"><span class="label">Customer</span>${order.value.userEmail || '-'}</div>
+            <div class="box"><span class="label">Recipient</span>${order.value.recipientName || '-'}</div>
+            <div class="box"><span class="label">Phone</span>${order.value.phoneNumber || '-'}</div>
+            <div class="box"><span class="label">Payment</span>${order.value.paymentMethod || '-'}</div>
+            <div class="box" style="grid-column:1/-1"><span class="label">Shipping Address</span>${order.value.address || order.value.shippingAddress || '-'}</div>
+          </div>
+          <table>
+            <thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+            <tbody>${itemRows || '<tr><td colspan="4">No items</td></tr>'}</tbody>
+          </table>
+          <div class="total">Total: ${money(order.value.total)}</div>
+        </div>
+        <script>
+          window.onload = () => {
+            window.print();
+          };
+        <\/script>
+      </body>
+    </html>
+  `)
+  receiptWindow.document.close()
+}
+
+function emailReceipt() {
+  if (!order.value) return
+
+  const to = order.value.userEmail || ''
+  const subject = encodeURIComponent(`PC Hardware Receipt - Order #${order.value.id}`)
+  const body = encodeURIComponent(receiptText())
+  window.location.href = `mailto:${to}?subject=${subject}&body=${body}`
+}
+
 onMounted(loadOrder)
 </script>
 
@@ -185,7 +296,11 @@ onMounted(loadOrder)
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Back to Orders
           </button>
-          <button class="print-btn" @click="window.print()">
+          <button class="back-full-btn" @click="emailReceipt">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10v8H2z" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 3.5L7 7l4.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Email Receipt
+          </button>
+          <button class="print-btn" @click="printReceipt">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="4" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 4V2.5A.5.5 0 0 1 4.5 2h5a.5.5 0 0 1 .5.5V4" stroke="currentColor" stroke-width="1.4"/><path d="M4 9h6M4 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
             Print Receipt
           </button>

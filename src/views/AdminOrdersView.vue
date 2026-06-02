@@ -195,9 +195,42 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
 .s-rejected  { background: rgba(239,68,68,0.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
 
 .status-select {
-  padding: 7px 10px; border-radius: 10px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  color: #f1f5f9; font-size: 12px; cursor: pointer; outline: none; width: 130px;
+  width: 148px;
+  padding: 9px 34px 9px 12px;
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(15,23,42,0.94), rgba(30,41,59,0.96)),
+    url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%2393c5fd' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid rgba(96,165,250,0.28);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  box-shadow: 0 8px 18px rgba(2,8,23,0.22);
+}
+.status-select:focus {
+  border-color: rgba(45,212,191,0.55);
+  box-shadow: 0 0 0 3px rgba(45,212,191,0.14);
+}
+.status-select option {
+  background: #0f172a;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+:global(:root[data-theme="light"]) .status-select {
+  background:
+    linear-gradient(135deg, #ffffff, #eef6fb),
+    url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%230f766e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center !important;
+  border-color: rgba(14,116,144,0.26) !important;
+  color: #172033 !important;
+  box-shadow: 0 8px 18px rgba(15,23,42,0.10) !important;
+}
+:global(:root[data-theme="light"]) .status-select option {
+  background: #ffffff;
+  color: #172033;
 }
 
 .action-btns { display: flex; gap: 6px; }

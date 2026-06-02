@@ -121,12 +121,6 @@ onMounted(() => {
         </svg>
       </router-link>
 
-      <router-link to="/" class="back-site-link">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M6 3L2 7l4 4M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Back to Store
-      </router-link>
     </div>
   </aside>
 </template>
