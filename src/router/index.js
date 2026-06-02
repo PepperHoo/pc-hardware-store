@@ -61,6 +61,10 @@ const router = createRouter({
 router.beforeEach((to) => {
   const user = JSON.parse(localStorage.getItem('user') || 'null')
 
+  if (user?.role === 'admin' && !to.path.startsWith('/admin')) {
+    return '/admin'
+  }
+
   // Admin-only routes
   if (to.meta.requiresAdmin) {
     if (!user)              return '/login'

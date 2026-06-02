@@ -1,9 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const route  = useRoute()
-const router = useRouter()
 const isDark = ref(true)
 
 const navItems = [
@@ -55,7 +54,7 @@ onMounted(() => {
     <div class="sidebar-bar" />
 
     <!-- Logo -->
-    <div class="sidebar-logo" @click="router.push('/')">
+    <div class="sidebar-logo">
       <div class="logo-icon">
         <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
           <rect x="2" y="6" width="24" height="16" rx="3" stroke="#3b82f6" stroke-width="2"/>
@@ -151,7 +150,6 @@ onMounted(() => {
 .sidebar-logo {
   display: flex; align-items: center; gap: 12px;
   padding: 22px 20px 18px;
-  cursor: pointer;
 }
 .logo-icon {
   width: 42px; height: 42px; border-radius: 12px;

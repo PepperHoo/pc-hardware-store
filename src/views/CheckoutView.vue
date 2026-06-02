@@ -37,6 +37,10 @@ async function placeOrder() {
     toastRef.value.showToastMessage('Please complete all fields', 'error')
     return
   }
+  if (cart.items.length === 0) {
+    toastRef.value.showToastMessage('Your cart is empty', 'error')
+    return
+  }
   const user = JSON.parse(localStorage.getItem('user'))
   const order = {
     userEmail:       user?.email ?? '',
@@ -51,8 +55,29 @@ async function placeOrder() {
     date:   new Date().toISOString()
   }
   try {
-    const { createOrder } = await import('../lib/api.js')
+    const { createOrder, getWhere, update } = await import('../lib/api.js')
+    const stockChecks = await Promise.all(
+      cart.items.map(async item => {
+        const rows = await getWhere('products', 'id', item.id)
+        const product = rows?.[0]
+        return { item, product }
+      })
+    )
+
+    const missingStock = stockChecks.find(({ item, product }) => !product || Number(product.stock || 0) < Number(item.quantity || 0))
+    if (missingStock) {
+      const name = missingStock.item.name || 'A product'
+      const available = Number(missingStock.product?.stock || 0)
+      toastRef.value.showToastMessage(`${name} only has ${available} stock left`, 'error')
+      return
+    }
+
     await createOrder(order)
+    await Promise.all(
+      stockChecks.map(({ item, product }) => update('products', product.id, {
+        stock: Math.max(0, Number(product.stock || 0) - Number(item.quantity || 0))
+      }))
+    )
     // Send order confirmation email (non-critical)
     try {
       if (window.emailjs) {
