@@ -357,4 +357,165 @@ onMounted(() => {
     padding: 10px;
   }
 }
+
+/* Top admin navigation */
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  left: auto;
+  width: 100%;
+  height: auto;
+  min-height: 76px;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  border-right: none;
+  border-bottom: 1px solid rgba(96,165,250,0.14);
+  background: rgba(2,8,23,0.92);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 18px 42px rgba(2,6,23,0.28);
+  overflow: visible;
+}
+
+.sidebar-bar,
+.sidebar-divider,
+.nav-label,
+.sidebar-spacer {
+  display: none;
+}
+
+.sidebar-logo {
+  padding: 0;
+  min-width: 210px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.sidebar-menu {
+  flex: 1;
+  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.menu-link {
+  min-height: 42px;
+  padding: 10px 13px;
+  border-radius: 13px;
+  white-space: nowrap;
+}
+
+.link-text {
+  flex: 0 0 auto;
+}
+
+.active-dot {
+  display: none;
+}
+
+.sidebar-bottom {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.theme-toggle {
+  width: auto;
+  min-height: 42px;
+  gap: 10px;
+  padding: 9px 12px;
+}
+
+.profile-link {
+  min-width: 204px;
+  padding: 9px 11px;
+}
+
+:global(:root[data-theme="light"]) .admin-sidebar {
+  background: rgba(255,255,255,0.94) !important;
+  border-bottom-color: rgba(14,116,144,0.16) !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,0.10) !important;
+}
+
+@media (max-width: 1100px) {
+  .admin-sidebar {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .sidebar-logo {
+    min-width: 180px;
+  }
+
+  .sidebar-menu {
+    order: 3;
+    flex: 0 0 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .sidebar-bottom {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-sidebar {
+    min-height: 0;
+    padding: 9px 12px 10px;
+  }
+
+  .sidebar-logo {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sidebar-menu {
+    gap: 6px;
+  }
+
+  .menu-link {
+    flex: 1 0 44px;
+    min-width: 44px;
+    padding: 10px;
+  }
+
+  .link-text {
+    display: none;
+  }
+
+  .theme-toggle {
+    min-height: 38px;
+  }
+
+  .theme-toggle span:first-child {
+    display: none;
+  }
+
+  .profile-link {
+    min-width: 0;
+    width: 42px;
+    height: 42px;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .profile-link > div:not(.profile-avatar),
+  .profile-arrow {
+    display: none;
+  }
+}
 </style>

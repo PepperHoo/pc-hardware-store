@@ -1049,6 +1049,16 @@ body {
   max-width: 100%;
 }
 
+/* Admin uses a top navigation bar instead of a fixed left sidebar */
+.admin-page {
+  display: block !important;
+}
+
+.admin-main {
+  margin-left: 0 !important;
+  max-width: 100% !important;
+}
+
 .admin-main,
 .products-layout,
 .builder-layout,
