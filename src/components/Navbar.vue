@@ -635,4 +635,80 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     padding: 0 8px;
   }
 }
+
+@media (max-width: 640px) {
+  .nav {
+    background: rgba(248,250,252,0.96);
+  }
+
+  .nav-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 8px 10px;
+    height: auto;
+    min-height: 92px;
+    padding: 8px 12px 10px;
+  }
+
+  .nav-left {
+    order: 1;
+    flex: 1 1 auto;
+    max-width: calc(100% - 116px);
+  }
+
+  .nav-logo {
+    max-width: 140px;
+    font-size: 13px;
+  }
+
+  .nav-right {
+    display: contents;
+  }
+
+  .search-wrap {
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+  }
+
+  .search-box,
+  .search-box.focused {
+    width: 100%;
+    height: 38px;
+    background: rgba(255,255,255,0.78);
+  }
+
+  .theme-btn,
+  .nav-right > .nav-icon-btn[aria-label="Cart"],
+  .nav-right > .nav-icon-btn[aria-label="Profile"] {
+    order: 2;
+  }
+
+  .search-dropdown {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+
+  .sidebar {
+    width: min(84vw, 320px);
+    left: min(-84vw, -320px);
+  }
+}
+
+@media (max-width: 380px) {
+  .nav-left {
+    max-width: calc(100% - 104px);
+  }
+
+  .nav-logo span {
+    display: inline;
+  }
+
+  .nav-logo {
+    max-width: 116px;
+    font-size: 12px;
+  }
+}
 </style>
