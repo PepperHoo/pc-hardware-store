@@ -242,7 +242,7 @@ onMounted(loadDashboard)
         </div>
 
         <!-- Category bar chart -->
-        <div class="chart-card glass" style="margin-bottom:24px">
+        <div class="chart-card chart-card--category glass">
           <h3 class="chart-title">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="2" height="6" rx="1" fill="#8b5cf6"/><rect x="5" y="4" width="2" height="9" rx="1" fill="#3b82f6"/><rect x="9" y="2" width="2" height="11" rx="1" fill="#10b981"/></svg>
             Products by Category
@@ -318,18 +318,20 @@ onMounted(loadDashboard)
 .stat-hint { font-size: 11px; color: #334155; margin: 0; }
 
 /* Charts */
-.charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
-.chart-card { padding: 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); }
-.chart-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 800; color: #94a3b8; margin: 0 0 20px; letter-spacing: 0.08em; text-transform: uppercase; }
-.chart-wrap { height: 220px; position: relative; }
-.chart-wrap--sm { height: 200px; }
+.charts-row { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .9fr); gap: 14px; margin-bottom: 14px; }
+.chart-card { padding: 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); }
+.chart-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 800; color: #94a3b8; margin: 0 0 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.chart-wrap { height: 142px; position: relative; }
+.chart-wrap--sm { height: 142px; }
+.chart-card--category { margin-bottom: 14px; }
+.chart-card--category .chart-wrap { height: 132px; }
 
 /* Activity */
-.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.activity-card { padding: 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); }
-.ac-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #f1f5f9; margin: 0 0 20px; letter-spacing: 0.05em; }
-.ac-empty { color: #334155; font-size: 14px; padding: 12px 0; }
-.ac-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px; transition: background 0.2s; }
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.activity-card { padding: 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); }
+.ac-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 800; color: #f1f5f9; margin: 0 0 12px; letter-spacing: 0.05em; }
+.ac-empty { color: #334155; font-size: 13px; padding: 6px 0; }
+.ac-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 7px; transition: background 0.2s; }
 .ac-row:hover { background: rgba(255,255,255,0.05); }
 .ac-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .ac-name { flex: 1; font-size: 13px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
