@@ -563,4 +563,98 @@ onMounted(async () => {
   .p-list .p-card { flex-direction: column; }
   .p-list .p-img-wrap { width: 100%; height: 180px; }
 }
+
+:global(:root[data-theme="light"]) .page {
+  background: linear-gradient(135deg, #f8fafc, #eef6fb 54%, #e5edf5) !important;
+  color: #172033 !important;
+}
+
+:global(:root[data-theme="light"]) .sidebar-card,
+:global(:root[data-theme="light"]) .p-card {
+  background: rgba(255,255,255,0.92) !important;
+  border-color: rgba(14,116,144,0.16) !important;
+  box-shadow: 0 16px 34px rgba(15,23,42,0.10) !important;
+}
+
+:global(:root[data-theme="light"]) .p-card:hover {
+  border-color: rgba(14,116,144,0.34) !important;
+  box-shadow: 0 24px 52px rgba(15,23,42,0.14) !important;
+}
+
+:global(:root[data-theme="light"]) .p-img-wrap {
+  background: radial-gradient(circle at 50% 60%, rgba(14,116,144,0.10), #edf5fa 74%) !important;
+}
+
+:global(:root[data-theme="light"]) .p-img {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+:global(:root[data-theme="light"]) .page-title,
+:global(:root[data-theme="light"]) .p-name,
+:global(:root[data-theme="light"]) .qty-val {
+  color: #172033 !important;
+}
+
+:global(:root[data-theme="light"]) .result-count,
+:global(:root[data-theme="light"]) .sidebar-heading,
+:global(:root[data-theme="light"]) .cat-count {
+  color: #64748b !important;
+}
+
+:global(:root[data-theme="light"]) .cat-btn,
+:global(:root[data-theme="light"]) .sort-btn,
+:global(:root[data-theme="light"]) .btn-ghost {
+  color: #475569 !important;
+}
+
+:global(:root[data-theme="light"]) .cat-btn:hover,
+:global(:root[data-theme="light"]) .sort-btn:hover {
+  background: rgba(14,116,144,0.08) !important;
+  color: #172033 !important;
+}
+
+:global(:root[data-theme="light"]) .cat-btn.active,
+:global(:root[data-theme="light"]) .sort-btn.active {
+  background: rgba(37,99,235,0.16) !important;
+  color: #1d4ed8 !important;
+}
+
+:global(:root[data-theme="light"]) .p-tag {
+  background: rgba(37,99,235,0.10) !important;
+  color: #2563eb !important;
+}
+
+:global(:root[data-theme="light"]) .p-price {
+  color: #0f766e !important;
+}
+
+:global(:root[data-theme="light"]) .qty-btn {
+  background: rgba(37,99,235,0.10) !important;
+  color: #2563eb !important;
+}
+
+:global(:root[data-theme="light"]) .btn-ghost {
+  background: rgba(15,23,42,0.04) !important;
+  border-color: rgba(15,23,42,0.08) !important;
+}
+
+:global(:root[data-theme="light"]) .quick-btn {
+  background: rgba(255,255,255,0.88) !important;
+  border-color: rgba(14,116,144,0.18) !important;
+  color: #475569 !important;
+}
+
+:global(:root[data-theme="light"]) .search-box {
+  background: rgba(255,255,255,0.88) !important;
+  border-color: rgba(14,116,144,0.18) !important;
+}
+
+:global(:root[data-theme="light"]) .search-input {
+  color: #172033 !important;
+}
+
+:global(:root[data-theme="light"]) .search-input::placeholder {
+  color: #94a3b8 !important;
+}
 </style>

@@ -80,7 +80,6 @@
 [data-theme="light"] .orders-title, [data-theme="light"] .page-title {
   color: #0f172a !important;
 }
-[data-theme="light"] p, [data-theme="light"] span,
 [data-theme="light"] .page-sub, [data-theme="light"] .builder-sub,
 [data-theme="light"] .auth-sub, [data-theme="light"] .cart-subtitle {
   color: #475569 !important;
