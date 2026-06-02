@@ -533,8 +533,106 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 }
 
 @media (max-width: 640px) {
-  .nav-inner { padding: 0 16px; }
-  .search-box { width: 160px; }
-  .search-box.focused { width: 200px; }
+  .nav-inner {
+    gap: 8px;
+    height: 58px;
+    padding: 0 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .nav-left {
+    gap: 8px;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  .hamburger {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    gap: 6px;
+    font-size: 12px;
+    max-width: 96px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .nav-logo svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .nav-right {
+    flex: 1;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-box,
+  .search-box.focused {
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    padding: 0 9px;
+    border-radius: 10px;
+  }
+
+  .search-input {
+    min-width: 0;
+    font-size: 11px;
+  }
+
+  .search-input::placeholder {
+    font-size: 10px;
+  }
+
+  .search-dropdown {
+    top: 42px;
+    width: min(280px, calc(100vw - 20px));
+    left: auto;
+    right: 0;
+  }
+
+  .currency-wrap,
+  .nav-right > .nav-icon-btn[aria-label="Wishlist"] {
+    display: none;
+  }
+
+  .nav-icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .nav-icon-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+@media (max-width: 380px) {
+  .nav-logo span {
+    display: none;
+  }
+
+  .nav-logo {
+    max-width: 28px;
+  }
+
+  .nav-inner {
+    padding: 0 8px;
+  }
 }
 </style>

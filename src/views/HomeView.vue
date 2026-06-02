@@ -280,11 +280,11 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.home { background: #030712; color: #f1f5f9; min-height: 100vh; }
+.home { background: #030712; color: #f1f5f9; min-height: 100vh; width: 100%; overflow-x: clip; }
 
 /* ── HERO ─────────────────────────────────────────────────────────────── */
 .hero {
-  position: relative; min-height: 100vh;
+  position: relative; min-height: 100vh; width: 100%;
   display: flex; align-items: center; overflow: hidden;
 }
 .hero-bg {
@@ -332,7 +332,8 @@ onBeforeUnmount(() => {
 .hero-content {
   position: relative; z-index: 10;
   padding-top: 100px; padding-bottom: 100px;
-  max-width: 780px;
+  width: 100%;
+  max-width: 1400px;
 }
 .hero-title {
   font-family: 'Orbitron', sans-serif;
@@ -539,10 +540,90 @@ onBeforeUnmount(() => {
 @media (max-width: 640px) {
   .categories-grid { grid-template-columns: 1fr; }
   .products-grid   { grid-template-columns: 1fr; }
-  .stat-item       { padding: 16px 24px; }
+  .stats-grid      { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .stat-item       { padding: 0; }
   .stat-divider    { display: none; }
-  .hero-title      { font-size: 36px; }
+  .hero {
+    min-height: 720px;
+    align-items: flex-start;
+  }
+  .hero-content {
+    padding-top: 98px;
+    padding-bottom: 72px;
+  }
+  .hero-title {
+    font-size: clamp(28px, 9vw, 38px);
+    margin: 18px 0 18px;
+    letter-spacing: 0;
+  }
+  .hero-sub {
+    font-size: 13px;
+    line-height: 1.7;
+    max-width: 100%;
+  }
+  .hero-ctas {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .cta-primary,
+  .cta-secondary {
+    min-height: 46px;
+    padding: 13px 18px;
+    font-size: 11px;
+    border-radius: 12px;
+  }
+  .banner-dots {
+    margin-top: 28px;
+  }
+  .hero-arrow {
+    width: 36px;
+    height: 36px;
+    top: 48%;
+  }
+  .hero-arrow--left  { left: 14px; }
+  .hero-arrow--right { right: 14px; }
+  .scroll-cue {
+    bottom: 20px;
+    font-size: 8px;
+  }
+  .stats-strip {
+    padding: 34px 0;
+  }
+  .stat-num {
+    font-size: 28px;
+  }
+  .stat-label {
+    font-size: 9px;
+    text-align: center;
+  }
   .home-section    { padding: 60px 0; }
+  .section-head {
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .section-link {
+    margin-left: 0;
+  }
+  .cat-card,
+  .product-card {
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .hero-sub {
+    font-size: 12px;
+  }
+
+  .hero-arrow {
+    top: 45%;
+  }
 }
 
 :global(:root[data-theme="light"]) .home {

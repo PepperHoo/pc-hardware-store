@@ -192,6 +192,8 @@ body {
 
   width: 100%;
 
+  max-width: 100%;
+
   min-height: 100vh;
 }
 
@@ -1023,6 +1025,109 @@ a:focus-visible {
 
 @media (max-width: 768px) {
   .section-inner { padding: 0 20px; }
+}
+
+/* Responsive baseline for coursework mobile-first requirement */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+#app,
+.page-wrap,
+.home,
+.admin-page,
+.cart-page,
+.checkout-page,
+.orders-page,
+.profile-page,
+.builder-page {
+  width: 100%;
+  max-width: 100%;
+}
+
+.admin-main,
+.products-layout,
+.builder-layout,
+.checkout-layout,
+.cart-layout,
+.profile-grid,
+.detail-grid {
+  min-width: 0;
+}
+
+.table-scroll,
+.table-card {
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #app {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .admin-main {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .page-header,
+  .checkout-header,
+  .builder-header,
+  .profile-header,
+  .cart-header,
+  .orders-header {
+    margin-bottom: 24px !important;
+  }
+
+  .page-title,
+  .checkout-title,
+  .builder-title,
+  .profile-title,
+  .cart-title,
+  .orders-title {
+    line-height: 1.08 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 680px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-inner {
+    padding: 0 16px;
+  }
+
+  .glass {
+    border-radius: 16px !important;
+  }
+
+  .kicker {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
 }
 
 /* FULL SITE LIGHT MODE */
