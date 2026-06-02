@@ -677,4 +677,65 @@ onBeforeUnmount(() => {
   background: rgba(14,116,144,0.10);
   color: #0f766e;
 }
+
+:global(:root[data-theme="light"] .home) {
+  background: linear-gradient(135deg, #f8fafc, #eef6fb 52%, #e5edf5) !important;
+  color: #172033 !important;
+}
+
+:global(:root[data-theme="light"] .hero) {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(37,99,235,0.10), transparent 30%),
+    linear-gradient(135deg, #f8fafc, #edf6fb 58%, #e5edf5) !important;
+}
+
+:global(:root[data-theme="light"] .hero-bg-img) {
+  opacity: 0.24 !important;
+  filter: saturate(1.08) brightness(1.08) !important;
+}
+
+:global(:root[data-theme="light"] .hero-bg-gradient) {
+  background:
+    linear-gradient(to right, rgba(248,250,252,0.88) 0%, rgba(248,250,252,0.70) 45%, rgba(248,250,252,0.32) 100%),
+    linear-gradient(to top, rgba(248,250,252,0.94) 0%, rgba(248,250,252,0.48) 48%, rgba(248,250,252,0.10) 100%) !important;
+}
+
+:global(:root[data-theme="light"] .hero-title),
+:global(:root[data-theme="light"] .section-title),
+:global(:root[data-theme="light"] .cat-label),
+:global(:root[data-theme="light"] .product-name) {
+  color: #172033 !important;
+  text-shadow: none !important;
+}
+
+:global(:root[data-theme="light"] .hero-sub),
+:global(:root[data-theme="light"] .builder-cta-sub),
+:global(:root[data-theme="light"] .cat-desc),
+:global(:root[data-theme="light"] .stat-label) {
+  color: #52657d !important;
+}
+
+:global(:root[data-theme="light"] .kicker) {
+  background: rgba(37,99,235,0.08) !important;
+  color: #2563eb !important;
+  border-color: rgba(37,99,235,0.20) !important;
+}
+
+:global(:root[data-theme="light"] .cta-primary) {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(37,99,235,0.24) !important;
+}
+
+:global(:root[data-theme="light"] .cta-secondary) {
+  background: rgba(255,255,255,0.82) !important;
+  border-color: rgba(14,116,144,0.20) !important;
+  color: #334155 !important;
+}
+
+:global(:root[data-theme="light"] .hero-arrow) {
+  background: rgba(255,255,255,0.72) !important;
+  border-color: rgba(14,116,144,0.18) !important;
+  color: #334155 !important;
+}
 </style>
