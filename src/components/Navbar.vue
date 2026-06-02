@@ -153,7 +153,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
                   :key="product.id"
                   class="dropdown-item"
                   :class="{ active: selectedIndex === i }"
-                  @mousedown.prevent="selectProduct(product.name)"
+                  @mousedown.prevent="selectProduct(product)"
                 >
                   <img :src="product.image" :alt="product.name" class="dropdown-img" />
                   <div>

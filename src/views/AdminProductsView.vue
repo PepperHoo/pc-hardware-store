@@ -13,7 +13,7 @@ const selectedCategory = ref('all')
 const toastRef = ref(null)
 const uploadingImage = ref(false); const uploadingEditImage = ref(false)
 
-const categories = ['processor','motherboard','gpu','ram','storage','psu','cooler','casing']
+const categories = ['processor','motherboard','gpu','ram','storage','psu','cooler','casing','rgb']
 
 async function loadProducts() {
   const { getAll } = await import('../lib/api.js')
