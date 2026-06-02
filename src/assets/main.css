@@ -1164,18 +1164,39 @@ body {
 }
 
 .admin-main .chart-wrap {
-  height: 160px !important;
+  height: 92px !important;
+  max-height: 92px !important;
 }
 
 .admin-main .chart-wrap--sm {
-  height: 150px !important;
+  height: 112px !important;
+  max-height: 112px !important;
+}
+
+.admin-main .chart-card--category .chart-wrap {
+  height: 96px !important;
+  max-height: 96px !important;
 }
 
 .admin-main .charts-row,
 .admin-main .bottom-grid,
 .admin-main .products-layout,
 .admin-main .profile-grid {
-  gap: 14px !important;
+  gap: 12px !important;
+}
+
+.admin-main .bottom-grid {
+  align-items: start !important;
+}
+
+.admin-main .bottom-grid > .activity-card {
+  align-self: start !important;
+  min-height: 0 !important;
+}
+
+.admin-main .ac-row {
+  padding: 6px 10px !important;
+  margin-bottom: 5px !important;
 }
 
 .admin-main .data-table th,
