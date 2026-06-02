@@ -266,10 +266,11 @@ onMounted(() => {
     padding-bottom: 10px;
     border-right: none;
     border-bottom: 1px solid rgba(255,255,255,0.06);
+    overflow: visible;
   }
 
   .sidebar-logo {
-    padding: 14px 16px 10px;
+    padding: 12px 16px 8px;
   }
 
   .logo-icon {
@@ -294,17 +295,24 @@ onMounted(() => {
 
   .sidebar-menu {
     flex-direction: row;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 6px;
     overflow-x: auto;
-    padding: 8px 12px 10px;
+    padding: 8px 12px;
     scroll-snap-type: x proximity;
   }
 
   .menu-link {
-    flex: 0 0 auto;
-    min-height: 44px;
-    padding: 10px 12px;
+    flex: 1 1 0;
+    min-width: 46px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 9px;
     scroll-snap-align: start;
+  }
+
+  .link-text {
+    display: none;
   }
 
   .active-dot {
@@ -314,18 +322,25 @@ onMounted(() => {
   .sidebar-bottom {
     flex-direction: row;
     align-items: center;
-    padding: 0 12px;
+    gap: 8px;
+    padding: 4px 12px 10px;
   }
 
   .theme-toggle {
     flex: 0 0 auto;
     width: auto;
-    min-height: 44px;
+    min-height: 38px;
+    padding: 9px 10px;
+  }
+
+  .theme-toggle span:first-child {
+    display: none;
   }
 
   .profile-link {
     flex: 1;
     min-width: 0;
+    padding: 9px 10px;
   }
 
   .profile-name,
@@ -337,18 +352,9 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-  .link-text {
-    display: none;
-  }
-
   .menu-link {
-    justify-content: center;
     width: 46px;
     padding: 10px;
-  }
-
-  .theme-toggle span:first-child {
-    display: none;
   }
 }
 </style>

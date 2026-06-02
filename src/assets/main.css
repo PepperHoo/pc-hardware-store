@@ -1081,9 +1081,23 @@ textarea {
     overflow-x: hidden;
   }
 
+  .admin-page {
+    display: block !important;
+  }
+
+  .admin-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    z-index: 4000 !important;
+  }
+
   .admin-main {
     width: 100%;
     max-width: 100%;
+    margin-left: 0 !important;
   }
 
   .page-header,

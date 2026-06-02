@@ -554,14 +554,139 @@ onMounted(async () => {
 
 /* Responsive */
 @media (max-width: 900px) {
-  .products-layout { grid-template-columns: 1fr; }
-  .sidebar { position: static; }
-  .p-grid { grid-template-columns: repeat(2, 1fr); }
+  .products-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding-top: 28px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .content-header {
+    align-items: stretch;
+    margin-bottom: 22px;
+  }
+
+  .header-controls {
+    width: 100%;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .view-toggle {
+    display: none;
+  }
+
+  .p-grid,
+  .p-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .p-list .p-card {
+    flex-direction: column;
+  }
+
+  .p-list .p-img-wrap {
+    width: 100%;
+    height: 150px;
+  }
 }
 @media (max-width: 560px) {
-  .p-grid { grid-template-columns: 1fr; }
-  .p-list .p-card { flex-direction: column; }
-  .p-list .p-img-wrap { width: 100%; height: 180px; }
+  .products-layout {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .p-grid,
+  .p-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .content-header {
+    gap: 14px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .p-card {
+    border-radius: 15px;
+  }
+
+  .p-img-wrap {
+    height: 128px;
+  }
+
+  .p-img {
+    max-height: 108px;
+  }
+
+  .p-body {
+    padding: 12px;
+  }
+
+  .p-tag {
+    font-size: 8px;
+    padding: 2px 7px;
+    margin-bottom: 7px;
+  }
+
+  .p-name {
+    font-size: 11px;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+
+  .p-price {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .qty-row {
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 15px;
+  }
+
+  .p-actions {
+    flex-direction: column;
+  }
+
+  .btn-ghost,
+  .btn-primary {
+    width: 100%;
+    min-height: 34px;
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  .card-quick-actions {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .p-grid,
+  .p-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 :global(:root[data-theme="light"]) .page {
