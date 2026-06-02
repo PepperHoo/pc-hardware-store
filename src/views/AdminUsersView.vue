@@ -150,28 +150,28 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
 @keyframes spin { to { transform: rotate(360deg); } }
 .err { color: #f87171; }
 
-.page-header { margin-bottom: 36px; }
-.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(26px,4vw,48px); font-weight: 900; color: #f1f5f9; margin: 12px 0 8px; line-height: 1.1; }
-.page-sub { color: #475569; font-size: 15px; margin: 0; }
+.page-header { margin-bottom: 12px; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(22px,2.5vw,34px); font-weight: 900; color: #f1f5f9; margin: 6px 0 4px; line-height: 1.08; }
+.page-sub { color: #475569; font-size: 12px; margin: 0; }
 
-.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
-.stat-pill { display: flex; align-items: center; gap: 14px; padding: 20px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.07); }
-.sp-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stats-row { display: grid; grid-template-columns: repeat(3,minmax(160px,220px)); gap: 10px; margin-bottom: 10px; }
+.stat-pill { display: flex; align-items: center; gap: 9px; padding: 10px 12px !important; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); }
+.sp-icon { width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
-.sp-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; margin: 0; }
+.sp-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; margin: 0; }
 
 .search-bar {
   display: flex; align-items: center; gap: 12px;
   background: rgba(15,23,42,0.68);
   border: 1px solid rgba(96,165,250,0.18);
-  border-radius: 16px; padding: 13px 14px; margin-bottom: 22px; max-width: 560px;
+  border-radius: 11px; padding: 8px 10px !important; margin-bottom: 10px; max-width: 430px;
   box-shadow: 0 16px 34px rgba(2,8,23,0.18);
 }
 .search-bar:focus-within {
   border-color: rgba(45,212,191,0.42);
   box-shadow: 0 0 0 3px rgba(45,212,191,0.10), 0 16px 34px rgba(2,8,23,0.22);
 }
-.search-input { flex: 1; background: none !important; border: none !important; outline: none; color: #f1f5f9; font-size: 14px; padding: 0 !important; box-shadow: none !important; }
+.search-input { flex: 1; background: none !important; border: none !important; outline: none; color: #f1f5f9; font-size: 12px; padding: 0 !important; box-shadow: none !important; }
 .search-input::placeholder { color: #64748b; }
 .clear-search {
   width: 28px; height: 28px; border-radius: 9px;
@@ -195,32 +195,32 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
   border-color: rgba(14,116,144,0.18);
 }
 
-.table-card { border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
+.table-card { border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
 .table-scroll { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead tr { background: rgba(59,130,246,0.06); border-bottom: 1px solid rgba(255,255,255,0.07); }
-.data-table thead th { padding: 16px 20px; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
+.data-table thead th { padding: 8px 12px !important; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
 .data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
 .data-table tbody tr:hover { background: rgba(59,130,246,0.04); }
-.data-table td { padding: 16px 20px; vertical-align: middle; }
-.empty-row { text-align: center; color: #334155; padding: 48px !important; }
+.data-table td { padding: 8px 12px !important; vertical-align: middle; }
+.empty-row { text-align: center; color: #334155; padding: 18px !important; }
 
-.user-cell { display: flex; align-items: center; gap: 14px; }
+.user-cell { display: flex; align-items: center; gap: 9px; }
 .user-avatar {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, #2563eb, #8b5cf6);
-  color: white; font-size: 16px; font-weight: 800;
+  color: white; font-size: 13px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
 }
-.user-name { font-size: 14px; font-weight: 700; color: #f1f5f9; margin: 0 0 2px; }
-.user-id   { font-size: 11px; color: #334155; margin: 0; }
-.user-email { font-size: 13px; color: #94a3b8; }
+.user-name { font-size: 12px; font-weight: 700; color: #f1f5f9; margin: 0 0 1px; }
+.user-id   { font-size: 10px; color: #334155; margin: 0; }
+.user-email { font-size: 12px; color: #94a3b8; }
 
-.role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.role-badge { display: inline-block; padding: 3px 9px; border-radius: 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .role-badge.admin { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
 .role-badge.user  { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
 
-.btn-del { padding: 8px 16px; border-radius: 10px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-del { padding: 6px 10px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .btn-del:hover { background: rgba(239,68,68,0.22); }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 

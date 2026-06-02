@@ -159,35 +159,35 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
 @keyframes spin { to { transform: rotate(360deg); } }
 .err { color: #f87171; }
 
-.page-header { margin-bottom: 36px; }
-.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(26px,4vw,48px); font-weight: 900; color: #f1f5f9; margin: 12px 0 8px; line-height: 1.1; }
-.page-sub { color: #475569; font-size: 15px; margin: 0; }
+.page-header { margin-bottom: 12px; }
+.page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(22px,2.5vw,34px); font-weight: 900; color: #f1f5f9; margin: 6px 0 4px; line-height: 1.08; }
+.page-sub { color: #475569; font-size: 12px; margin: 0; }
 
 /* Stats row */
-.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
-.stat-pill { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.07); }
-.sp-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stats-row { display: grid; grid-template-columns: repeat(4,minmax(150px,210px)); gap: 10px; margin-bottom: 10px; }
+.stat-pill { display: flex; align-items: center; gap: 9px; padding: 10px 12px !important; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); }
+.sp-icon { width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
-.sp-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; margin: 0; }
+.sp-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; margin: 0; }
 
 /* Table */
-.table-card { border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
+.table-card { border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
 .table-scroll { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead tr { background: rgba(59,130,246,0.07); border-bottom: 1px solid rgba(255,255,255,0.07); }
-.data-table thead th { padding: 16px 18px; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
+.data-table thead th { padding: 8px 12px !important; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
 .data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
 .data-table tbody tr:hover { background: rgba(59,130,246,0.04); }
-.data-table td { padding: 16px 18px; vertical-align: middle; }
-.empty-row { text-align: center; color: #334155; padding: 48px !important; }
+.data-table td { padding: 8px 12px !important; vertical-align: middle; font-size: 12px; }
+.empty-row { text-align: center; color: #334155; padding: 18px !important; }
 
-.order-id { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: #60a5fa; }
-.customer-email { font-size: 13px; color: #cbd5e1; }
-.items-count { font-size: 13px; color: #64748b; }
-.price-val { font-size: 14px; font-weight: 700; color: #60a5fa; }
+.order-id { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: #60a5fa; }
+.customer-email { font-size: 12px; color: #cbd5e1; }
+.items-count { font-size: 12px; color: #64748b; }
+.price-val { font-size: 12px; font-weight: 700; color: #60a5fa; }
 
-.status-cell { display: flex; flex-direction: column; gap: 8px; }
-.status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.status-cell { display: flex; flex-direction: column; gap: 5px; }
+.status-badge { display: inline-block; padding: 3px 8px; border-radius: 14px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .s-pending   { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
 .s-processing{ background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
 .s-shipping  { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
@@ -195,15 +195,15 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
 .s-rejected  { background: rgba(239,68,68,0.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
 
 .status-select {
-  width: 148px;
-  padding: 9px 34px 9px 12px;
-  border-radius: 12px;
+  width: 130px;
+  padding: 6px 28px 6px 10px;
+  border-radius: 9px;
   background:
     linear-gradient(135deg, rgba(15,23,42,0.94), rgba(30,41,59,0.96)),
     url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%2393c5fd' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
   border: 1px solid rgba(96,165,250,0.28);
   color: #f8fafc;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   outline: none;
@@ -233,10 +233,10 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
   color: #172033;
 }
 
-.action-btns { display: flex; gap: 6px; }
+.action-btns { display: flex; gap: 5px; }
 .btn-view, .btn-save, .btn-del {
-  padding: 7px 12px; border-radius: 9px; border: none;
-  font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center;
+  padding: 5px 9px; border-radius: 8px; border: none;
+  font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center;
 }
 .btn-view { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
 .btn-view:hover { background: rgba(16,185,129,0.25); }
