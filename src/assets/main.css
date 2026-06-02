@@ -1057,6 +1057,31 @@ body {
 .admin-main {
   margin-left: 0 !important;
   max-width: 100% !important;
+  padding: 28px 32px !important;
+}
+
+.admin-main .page-header {
+  margin-bottom: 24px !important;
+}
+
+.admin-main .page-title {
+  font-size: clamp(28px, 3.2vw, 46px) !important;
+}
+
+.admin-main .stats-row {
+  margin-bottom: 18px !important;
+}
+
+.admin-main .stat-pill,
+.admin-main .stat-card,
+.admin-main .dashboard-card,
+.admin-main .chart-card,
+.admin-main .table-card,
+.admin-main .profile-card,
+.admin-main .add-form,
+.admin-main .admin-card,
+.admin-main .glass {
+  border-radius: 16px !important;
 }
 
 .admin-main,
@@ -1108,6 +1133,7 @@ textarea {
     width: 100%;
     max-width: 100%;
     margin-left: 0 !important;
+    padding: 18px 14px !important;
   }
 
   .page-header,

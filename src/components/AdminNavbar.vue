@@ -365,17 +365,17 @@ onMounted(() => {
   left: auto;
   width: 100%;
   height: auto;
-  min-height: 76px;
+  min-height: 58px;
   flex-direction: row;
   align-items: center;
-  gap: 14px;
-  padding: 10px 20px;
+  gap: 10px;
+  padding: 7px 16px;
   border-right: none;
   border-bottom: 1px solid rgba(96,165,250,0.14);
   background: rgba(2,8,23,0.92);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
-  box-shadow: 0 18px 42px rgba(2,6,23,0.28);
+  box-shadow: 0 10px 24px rgba(2,6,23,0.20);
   overflow: visible;
 }
 
@@ -388,12 +388,21 @@ onMounted(() => {
 
 .sidebar-logo {
   padding: 0;
-  min-width: 210px;
+  min-width: 184px;
 }
 
 .logo-icon {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.logo-name {
+  font-size: 14px;
+}
+
+.logo-sub {
+  font-size: 10px;
 }
 
 .sidebar-menu {
@@ -402,14 +411,15 @@ onMounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 5px;
   padding: 0;
 }
 
 .menu-link {
-  min-height: 42px;
-  padding: 10px 13px;
-  border-radius: 13px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -425,20 +435,41 @@ onMounted(() => {
   flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   padding: 0;
 }
 
 .theme-toggle {
   width: auto;
-  min-height: 42px;
-  gap: 10px;
-  padding: 9px 12px;
+  min-height: 34px;
+  gap: 7px;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.theme-pill {
+  width: 26px;
+  height: 18px;
 }
 
 .profile-link {
-  min-width: 204px;
-  padding: 9px 11px;
+  min-width: 176px;
+  padding: 7px 9px;
+  border-radius: 12px;
+}
+
+.profile-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.profile-name {
+  font-size: 12px;
+}
+
+.profile-role {
+  font-size: 10px;
 }
 
 :global(:root[data-theme="light"]) .admin-sidebar {
@@ -451,12 +482,12 @@ onMounted(() => {
   .admin-sidebar {
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+    gap: 8px;
+    padding: 8px 12px;
   }
 
   .sidebar-logo {
-    min-width: 180px;
+    min-width: 160px;
   }
 
   .sidebar-menu {
@@ -475,7 +506,7 @@ onMounted(() => {
 @media (max-width: 640px) {
   .admin-sidebar {
     min-height: 0;
-    padding: 9px 12px 10px;
+    padding: 8px 10px;
   }
 
   .sidebar-logo {
@@ -498,7 +529,7 @@ onMounted(() => {
   }
 
   .theme-toggle {
-    min-height: 38px;
+    min-height: 34px;
   }
 
   .theme-toggle span:first-child {
@@ -507,10 +538,10 @@ onMounted(() => {
 
   .profile-link {
     min-width: 0;
-    width: 42px;
-    height: 42px;
+    width: 36px;
+    height: 36px;
     justify-content: center;
-    padding: 8px;
+    padding: 6px;
   }
 
   .profile-link > div:not(.profile-avatar),
