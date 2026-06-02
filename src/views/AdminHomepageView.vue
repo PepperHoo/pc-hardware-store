@@ -144,12 +144,19 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
             </div>
           </div>
 
-          <label class="upload-zone">
+          <label v-if="canAddBanner" class="upload-zone">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M6 10l6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <p>{{ canAddBanner ? 'Click to upload banner images' : 'Banner limit reached' }}</p>
-            <span>{{ canAddBanner ? `${bannerSlotsLeft} slot(s) remaining` : `Maximum ${MAX_BANNERS} banners` }}</span>
+            <p>Click to upload banner images</p>
+            <span>{{ bannerSlotsLeft }} slot(s) remaining</span>
             <input type="file" accept="image/*" multiple @change="handleBannerUpload" :disabled="!canAddBanner" hidden />
           </label>
+          <div v-else class="limit-reached">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v8M5 7l4-4 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 15h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <div>
+              <p>Banner limit reached</p>
+              <span>Maximum {{ MAX_BANNERS }} banners</span>
+            </div>
+          </div>
         </div>
 
         <!-- Hot Selling -->
@@ -253,7 +260,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 .alert-box.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #6ee7b7; }
 .alert-box.error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.2);  color: #fca5a5; }
 
-.section-card { padding: 28px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 20px; }
+.section-card { padding: 24px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 18px; }
 .section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
 .section-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 800; color: #f1f5f9; margin: 0 0 6px; letter-spacing: 0.04em; }
 .section-sub { font-size: 13px; color: #475569; margin: 0; }
@@ -275,9 +282,9 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 .empty-state p { color: #334155; font-size: 14px; margin: 0; }
 
 /* Banner images */
-.img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; margin-bottom: 20px; }
+.img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 14px; margin-bottom: 16px; }
 .img-card { border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
-.img-preview { width: 100%; height: 160px; object-fit: cover; display: block; }
+.img-preview { width: 100%; height: 120px; object-fit: cover; display: block; }
 .img-footer { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; }
 .img-label { font-size: 12px; color: #60a5fa; font-weight: 700; }
 .btn-remove { padding: 6px 12px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
@@ -285,18 +292,30 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 
 .upload-zone {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  padding: 32px; border: 2px dashed rgba(59,130,246,0.25); border-radius: 18px;
+  padding: 22px; border: 2px dashed rgba(59,130,246,0.25); border-radius: 16px;
   color: #3b82f6; cursor: pointer; transition: all 0.3s; text-align: center;
 }
 .upload-zone:hover { background: rgba(59,130,246,0.05); border-color: rgba(59,130,246,0.5); }
 .upload-zone:has(input:disabled) { opacity: 0.55; cursor: not-allowed; border-style: solid; }
 .upload-zone p { font-size: 14px; font-weight: 600; margin: 0; }
 .upload-zone span { font-size: 12px; color: #334155; }
+.limit-reached {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(59,130,246,0.07);
+  border: 1px solid rgba(59,130,246,0.18);
+  color: #60a5fa;
+}
+.limit-reached p { margin: 0 0 2px; font-size: 13px; font-weight: 800; color: #93c5fd; }
+.limit-reached span { font-size: 11px; color: #64748b; font-weight: 700; }
 
 /* Product edit grid */
-.product-edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; }
-.product-edit-card { padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
-.pe-img { width: 100%; height: 120px; object-fit: contain; border-radius: 10px; background: radial-gradient(circle, rgba(59,130,246,0.06), rgba(3,7,18,0.5)); padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
+.product-edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 14px; }
+.product-edit-card { padding: 14px; border-radius: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+.pe-img { width: 100%; height: 92px; object-fit: contain; border-radius: 10px; background: radial-gradient(circle, rgba(59,130,246,0.06), rgba(3,7,18,0.5)); padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
 .pe-input { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #f1f5f9; font-size: 13px; outline: none; box-sizing: border-box; margin-bottom: 10px; }
 .pe-input:focus { border-color: #3b82f6; }
 .pe-input::placeholder { color: #334155; }

@@ -42,7 +42,7 @@ async function placeOrder() {
     userEmail:       user?.email ?? '',
     recipientName:   recipientName.value,
     phoneNumber:     phoneNumber.value,
-    address:         shippingAddress.value,
+    shippingAddress: shippingAddress.value,
     shippingMethod:  shippingMethod.value,
     paymentMethod:   paymentMethod.value,
     items: cart.items.map(i => ({ id: i.id, name: i.name, image: i.image, price: i.price, quantity: i.quantity })),

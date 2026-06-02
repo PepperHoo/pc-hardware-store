@@ -92,9 +92,9 @@ onMounted(loadOrders)
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 5 4-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 {{ order.shippingMethod }}
               </span>
-              <span class="meta-pill" v-if="order.address">
+              <span class="meta-pill" v-if="order.address || order.shippingAddress">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.067 1 2.5 2.567 2.5 4.5 2.5 7 6 11 6 11s3.5-4 3.5-6.5C9.5 2.567 7.933 1 6 1z" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1" fill="currentColor"/></svg>
-                {{ order.address }}
+                {{ order.address || order.shippingAddress }}
               </span>
             </div>
             <div class="order-right">
