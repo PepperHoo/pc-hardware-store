@@ -171,34 +171,7 @@ onMounted(async () => {
       <!-- Layout -->
       <div class="builder-layout">
 
-        <!-- Sidebar -->
-        <aside class="builder-sidebar">
-          <!-- Selected parts list -->
-          <div class="parts-panel glass">
-            <h2 class="parts-title">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="#3b82f6"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="#8b5cf6"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="#10b981"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="#f59e0b"/></svg>
-              Your Build
-            </h2>
-
-            <div class="parts-list">
-              <div v-for="cat in buildCategories" :key="cat.key" class="part-row">
-                <span class="part-icon" :style="{ color: cat.color }">{{ cat.icon }}</span>
-                <div class="part-info">
-                  <p class="part-cat">{{ cat.label }}</p>
-                  <p class="part-name" :class="getSelectedProduct(cat.key) ? 'selected' : 'empty'">
-                    {{ getSelectedProduct(cat.key)?.name || 'Not selected' }}
-                  </p>
-                </div>
-                <button v-if="getSelectedProduct(cat.key)" class="clear-btn" @click="clearPart(cat.key)" title="Remove">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </aside>
-
-        <!-- Component columns -->
+        <!-- Component columns (LEFT) -->
         <section class="builder-content">
           <div
             v-for="(cat, i) in buildCategories"
@@ -257,6 +230,33 @@ onMounted(async () => {
             </div>
           </div>
         </section>
+
+        <!-- Sidebar (RIGHT) -->
+        <aside class="builder-sidebar">
+          <!-- Selected parts list -->
+          <div class="parts-panel glass">
+            <h2 class="parts-title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="#3b82f6"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="#8b5cf6"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="#10b981"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="#f59e0b"/></svg>
+              Your Build
+            </h2>
+
+            <div class="parts-list">
+              <div v-for="cat in buildCategories" :key="cat.key" class="part-row">
+                <span class="part-icon" :style="{ color: cat.color }">{{ cat.icon }}</span>
+                <div class="part-info">
+                  <p class="part-cat">{{ cat.label }}</p>
+                  <p class="part-name" :class="getSelectedProduct(cat.key) ? 'selected' : 'empty'">
+                    {{ getSelectedProduct(cat.key)?.name || 'Not selected' }}
+                  </p>
+                </div>
+                <button v-if="getSelectedProduct(cat.key)" class="clear-btn" @click="clearPart(cat.key)" title="Remove">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </aside>
 
       </div>
 
@@ -362,7 +362,7 @@ onMounted(async () => {
 .add-build-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* Layout */
-.builder-layout { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
+.builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
 
 /* Sidebar */
 .builder-sidebar { position: sticky; top: 92px; display: flex; flex-direction: column; gap: 20px; }

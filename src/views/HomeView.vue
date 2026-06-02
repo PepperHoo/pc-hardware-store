@@ -605,6 +605,57 @@ onBeforeUnmount(() => {
   background: rgba(14,116,144,0.08);
 }
 
+/* ── Full light-mode overrides for HomeView ── */
+:global(:root[data-theme="light"]) .hero {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f4f8 50%, #ede9fe 100%);
+}
+:global(:root[data-theme="light"]) .hero-bg-gradient {
+  background:
+    linear-gradient(to right, #e0f2fe 30%, transparent 70%),
+    linear-gradient(to top, #f0f4f8 10%, transparent 50%);
+}
+:global(:root[data-theme="light"]) .hero-grid {
+  opacity: 0.3;
+  background-image:
+    linear-gradient(rgba(37,99,235,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,0.08) 1px, transparent 1px);
+}
+:global(:root[data-theme="light"]) .orb-1 { background: rgba(37,99,235,0.12); }
+:global(:root[data-theme="light"]) .orb-2 { background: rgba(124,58,237,0.1); }
+:global(:root[data-theme="light"]) .orb-3 { background: rgba(6,182,212,0.1); }
+
+:global(:root[data-theme="light"]) .hero-title,
+:global(:root[data-theme="light"]) .hero-title span { color: #0f172a !important; }
+:global(:root[data-theme="light"]) .hero-sub { color: #475569 !important; }
+:global(:root[data-theme="light"]) .scroll-cue span { color: #64748b !important; }
+
+:global(:root[data-theme="light"]) .section-title,
+:global(:root[data-theme="light"]) .cats-title,
+:global(:root[data-theme="light"]) .hot-title,
+:global(:root[data-theme="light"]) .latest-title,
+:global(:root[data-theme="light"]) .builder-cta-title { color: #0f172a !important; }
+
+:global(:root[data-theme="light"]) .section-sub,
+:global(:root[data-theme="light"]) .cats-sub { color: #64748b !important; }
+
+:global(:root[data-theme="light"]) .stat-val { color: #0f172a !important; }
+:global(:root[data-theme="light"]) .stat-num { color: #1d4ed8 !important; }
+
+:global(:root[data-theme="light"]) .builder-cta {
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8) !important;
+}
+:global(:root[data-theme="light"]) .builder-cta-sub { color: rgba(255,255,255,0.8) !important; }
+
+:global(:root[data-theme="light"]) .product-name { color: #0f172a !important; }
+:global(:root[data-theme="light"]) .product-price { color: #1d4ed8 !important; }
+:global(:root[data-theme="light"]) .product-tag { color: #2563eb !important; }
+:global(:root[data-theme="light"]) .product-img-wrap {
+  background: radial-gradient(circle, rgba(37,99,235,0.07), rgba(240,244,248,0.8) 70%) !important;
+}
+
+:global(:root[data-theme="light"]) .cat-name { color: #0f172a !important; }
+:global(:root[data-theme="light"]) .cat-count { color: #64748b !important; }
+
 :global(:root[data-theme="light"]) .product-img-wrap,
 :global(:root[data-theme="light"]) .visual-card {
   background: radial-gradient(circle at 50% 60%, rgba(14,116,144,0.09), rgba(226,232,240,0.78) 70%);

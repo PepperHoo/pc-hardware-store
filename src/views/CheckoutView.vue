@@ -4,10 +4,12 @@ import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCartStore } from '../stores/cart'
+import { useCartStore }     from '../stores/cart'
+import { useCurrencyStore } from '../stores/currency'
 
-const router = useRouter()
-const cart   = useCartStore()
+const router   = useRouter()
+const cart     = useCartStore()
+const currency = useCurrencyStore()
 const toastRef = ref(null)
 
 const recipientName   = ref('')
@@ -49,27 +51,30 @@ async function placeOrder() {
     date:   new Date().toISOString()
   }
   try {
-    const { create } = await import('../lib/api.js')
-    const saved = await create('orders', order)
-    // Send order confirmation email via EmailJS
+    const { createOrder } = await import('../lib/api.js')
+    await createOrder(order)
+    // Send order confirmation email (non-critical)
     try {
-      const itemsList = cart.items.map(i => `${i.name} × ${i.quantity} — RM ${(i.price*i.quantity).toFixed(2)}`).join('\n')
-      await window.emailjs.send('service_50rx02q', 'template_order_confirm', {
-        to_email:     user?.email ?? '',
-        recipient:    recipientName.value,
-        order_id:     saved?.id ?? 'N/A',
-        items_list:   itemsList,
-        total:        `RM ${total.value.toFixed(2)}`,
-        shipping:     shippingMethod.value,
-        payment:      paymentMethod.value,
-        address:      shippingAddress.value,
-      })
-    } catch (emailErr) { console.warn('Email failed (non-critical):', emailErr) }
-    toastRef.value.showToastMessage('Order placed! Confirmation email sent.', 'success')
+      if (window.emailjs) {
+        const itemsList = cart.items.map(i => `${i.name} × ${i.quantity} — RM ${(i.price*i.quantity).toFixed(2)}`).join('\n')
+        await window.emailjs.send('service_50rx02q', 'template_order_confirm', {
+          to_email:   user?.email ?? '',
+          recipient:  recipientName.value,
+          order_id:   'N/A',
+          items_list: itemsList,
+          total:      `RM ${total.value.toFixed(2)}`,
+          shipping:   shippingMethod.value,
+          payment:    paymentMethod.value,
+          address:    shippingAddress.value,
+        })
+      }
+    } catch (emailErr) { console.warn('Email non-critical:', emailErr) }
+    toastRef.value.showToastMessage('Order placed successfully!', 'success')
     cart.items = []
-    setTimeout(() => router.push('/orders'), 1800)
+    setTimeout(() => router.push('/orders'), 1500)
   } catch (err) {
-    toastRef.value.showToastMessage('Failed to place order. Please try again.', 'error')
+    console.error('Place order error:', err)
+    toastRef.value.showToastMessage('Failed to place order: ' + err.message, 'error')
   }
 }
 </script>
@@ -166,9 +171,9 @@ async function placeOrder() {
               </div>
               <div class="si-info">
                 <p class="si-name">{{ item.name }}</p>
-                <p class="si-unit">RM {{ Number(item.price).toFixed(2) }} each</p>
+                <p class="si-unit">{{ currency.format(item.price) }} each</p>
               </div>
-              <p class="si-price">RM {{ (item.price * item.quantity).toFixed(2) }}</p>
+              <p class="si-price">{{ currency.format(item.price * item.quantity) }}</p>
             </div>
           </div>
 
@@ -176,16 +181,16 @@ async function placeOrder() {
 
           <div class="summary-row">
             <span>Subtotal</span>
-            <span>RM {{ cart.totalPrice.toFixed(2) }}</span>
+            <span>{{ currency.format(cart.totalPrice) }}</span>
           </div>
           <div class="summary-row">
             <span>Shipping ({{ shippingMethod }})</span>
-            <span>RM {{ shippingCost.toFixed(2) }}</span>
+            <span>{{ currency.format(shippingCost) }}</span>
           </div>
 
           <div class="summary-total">
             <span>Total</span>
-            <span class="total-val grad-text">RM {{ total.toFixed(2) }}</span>
+            <span class="total-val grad-text">{{ currency.format(total) }}</span>
           </div>
 
           <button class="place-btn" @click="placeOrder">

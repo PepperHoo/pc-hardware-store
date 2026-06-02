@@ -68,6 +68,24 @@ export async function create(table, data) {
 }
 
 /**
+ * Insert an order using return=minimal to avoid RLS SELECT conflicts
+ */
+export async function createOrder(data) {
+  const res = await fetch(
+    `${BASE_URL}/orders`,
+    {
+      method:  'POST',
+      headers: { ...HEADERS, Prefer: 'return=minimal' },
+      body:    JSON.stringify(data)
+    }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Order insert failed ${res.status}: ${text}`)
+  }
+}
+
+/**
  * Update row(s) by id; returns the updated row
  */
 export async function update(table, id, data) {
