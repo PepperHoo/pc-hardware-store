@@ -21,6 +21,104 @@ async function loadOrders() {
   finally { loading.value = false }
 }
 
+function money(value) {
+  return `RM ${Number(value || 0).toFixed(2)}`
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function printOrder(order) {
+  if (!order) return
+
+  const itemRows = (order.items || []).map((item) => {
+    const quantity = Number(item.quantity || 0)
+    const subtotal = Number(item.price || 0) * quantity
+
+    return `
+      <tr>
+        <td>${escapeHtml(item.name || '-')}</td>
+        <td>${quantity}</td>
+        <td>${money(item.price)}</td>
+        <td>${money(subtotal)}</td>
+      </tr>
+    `
+  }).join('')
+
+  const receiptWindow = window.open('', '_blank', 'width=900,height=720')
+
+  if (!receiptWindow) {
+    window.print()
+    return
+  }
+
+  receiptWindow.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>Receipt Order #${escapeHtml(order.id)}</title>
+        <style>
+          body { margin: 36px; font-family: Arial, sans-serif; color: #111827; background: #fff; }
+          .receipt { max-width: 820px; margin: 0 auto; }
+          .header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 18px; margin-bottom: 22px; }
+          h1 { margin: 0 0 6px; font-size: 28px; }
+          .muted { margin: 0; color: #64748b; }
+          .status { display: inline-block; height: fit-content; padding: 8px 12px; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+          .box { border: 1px solid #dbe3ef; border-radius: 10px; padding: 14px; }
+          .label { display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+          table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+          th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+          th { background: #f1f5f9; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+          .total { margin-top: 24px; text-align: right; font-size: 26px; font-weight: 800; color: #2563eb; }
+          @media print { body { margin: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="header">
+            <div>
+              <h1>PC Hardware Receipt</h1>
+              <p class="muted">Order #${escapeHtml(order.id)}</p>
+              <p class="muted">${escapeHtml(order.userEmail || '-')}</p>
+            </div>
+            <span class="status">${escapeHtml(order.status || '-')}</span>
+          </div>
+
+          <div class="grid">
+            <div class="box"><span class="label">Payment Method</span>${escapeHtml(order.paymentMethod || '-')}</div>
+            <div class="box"><span class="label">Shipping Method</span>${escapeHtml(order.shippingMethod || '-')}</div>
+            <div class="box" style="grid-column:1/-1"><span class="label">Shipping Address</span>${escapeHtml(order.address || order.shippingAddress || '-')}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr>
+            </thead>
+            <tbody>${itemRows || '<tr><td colspan="4">No items</td></tr>'}</tbody>
+          </table>
+
+          <div class="total">Total: ${money(order.total)}</div>
+        </div>
+
+        <script>
+          window.onload = () => {
+            window.focus();
+            window.print();
+          };
+        <\/script>
+      </body>
+    </html>
+  `)
+  receiptWindow.document.close()
+}
+
 onMounted(loadOrders)
 </script>
 
@@ -99,7 +197,7 @@ onMounted(loadOrders)
             </div>
             <div class="order-right">
               <p class="order-total grad-text">RM {{ Number(order.total).toFixed(2) }}</p>
-              <button class="print-btn" @click="window.print()">🖨 Print</button>
+              <button class="print-btn" @click="printOrder(order)">🖨 Print</button>
             </div>
           </div>
         </div>

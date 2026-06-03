@@ -7,7 +7,7 @@ If the user asks for support outside PC hardware or store guidance, answer brief
 `.trim()
 
 const DEFAULT_GROQ_MODEL = 'llama-3.1-8b-instant'
-const DEFAULT_GOOGLE_MODEL = 'gemini-1.5-flash'
+const DEFAULT_GOOGLE_MODEL = 'gemini-2.5-flash'
 
 function sendJson(res, status, payload) {
   res.status(status).json(payload)
