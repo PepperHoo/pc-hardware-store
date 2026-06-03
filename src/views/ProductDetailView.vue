@@ -5,6 +5,7 @@ import Navbar          from '../components/Navbar.vue'
 import Footer          from '../components/Footer.vue'
 import Toast           from '../components/Toast.vue'
 import ProductReviews  from '../components/ProductReviews.vue'
+import ProductModelViewer from '../components/ProductModelViewer.vue'
 import { useCartStore }        from '../stores/cart'
 import { useWishlistStore }    from '../stores/wishlist'
 import { useCompareStore }     from '../stores/compare'
@@ -212,6 +213,9 @@ onMounted(loadProduct)
 
         </div>
       </div>
+
+      <!-- 3D Model Preview -->
+      <ProductModelViewer :product="product" />
 
       <!-- Reviews -->
       <ProductReviews :product-id="String(product.id)" />

@@ -22,6 +22,8 @@ if ('caches' in window) {
 const app = createApp(App)
 const pinia = createPinia()
 
+app.config.compilerOptions.isCustomElement = (tag) => tag === 'model-viewer'
+
 app.use(pinia)
 app.use(router)
 
