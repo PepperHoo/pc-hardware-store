@@ -134,7 +134,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
             <p class="empty-icon">🖼️</p>
             <p>No banner images yet. Upload some below.</p>
           </div>
-          <div v-else class="img-grid">
+          <div v-else class="img-grid banner-grid">
             <div v-for="(img, i) in bannerImages" :key="i" class="img-card">
               <img :src="img" class="img-preview" />
               <div class="img-footer">
@@ -283,8 +283,10 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 
 /* Banner images */
 .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,220px)); gap: 10px; margin-bottom: 8px; }
-.img-card { border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+.banner-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; width: 100%; }
+.img-card { min-width: 0; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
 .img-preview { width: 100%; height: 70px !important; object-fit: cover; display: block; }
+.banner-grid .img-preview { height: clamp(92px, 8.5vw, 136px) !important; }
 .img-footer { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; }
 .img-label { font-size: 12px; color: #60a5fa; font-weight: 700; }
 .btn-remove { padding: 6px 12px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
@@ -342,5 +344,7 @@ function removeLatestProduct(i)       { latestProducts.value.splice(i, 1) }
 .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .mini-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; animation: spin 0.8s linear infinite; }
 
+@media (max-width: 980px) { .banner-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
 @media (max-width: 768px) { .admin-main { margin-left: 0; padding: 20px; } .section-header { flex-direction: column; } }
+@media (max-width: 560px) { .banner-grid { grid-template-columns: 1fr !important; } }
 </style>
