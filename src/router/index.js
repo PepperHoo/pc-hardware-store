@@ -15,6 +15,7 @@ import AdminOrdersView    from '../views/AdminOrdersView.vue'
 import AdminUsersView     from '../views/AdminUsersView.vue'
 import AdminOrderDetailView from '../views/AdminOrderDetailView.vue'
 import AdminHomepageView  from '../views/AdminHomepageView.vue'
+import AdminProfileView   from '../views/AdminProfileView.vue'
 import CheckoutView       from '../views/CheckoutView.vue'
 import OrdersView         from '../views/OrdersView.vue'
 import PcBuilderView      from '../views/PcBuilderView.vue'
@@ -46,7 +47,7 @@ const routes = [
   { path: '/admin/orders/:id',   component: AdminOrderDetailView,meta: { requiresAdmin: true } },
   { path: '/admin/users',        component: AdminUsersView,      meta: { requiresAdmin: true } },
   { path: '/admin/homepage',     component: AdminHomepageView,   meta: { requiresAdmin: true } },
-  { path: '/admin/profile',      component: () => import('../views/AdminProfileView.vue'), meta: { requiresAdmin: true } },
+  { path: '/admin/profile',      component: AdminProfileView,    meta: { requiresAdmin: true } },
 
   // ── Catch-all 404 ────────────────────────────────────────────
   { path: '/:pathMatch(.*)*', redirect: '/' },
