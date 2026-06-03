@@ -154,24 +154,24 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
 .page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(22px,2.5vw,34px); font-weight: 900; color: #f1f5f9; margin: 6px 0 4px; line-height: 1.08; }
 .page-sub { color: #475569; font-size: 12px; margin: 0; }
 
-.stats-row { display: grid; grid-template-columns: repeat(3,minmax(160px,220px)); gap: 10px; margin-bottom: 10px; }
-.stat-pill { display: flex; align-items: center; gap: 9px; padding: 10px 12px !important; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); }
-.sp-icon { width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stats-row { display: grid; grid-template-columns: repeat(3,minmax(220px, 1fr)); gap: 16px; margin-bottom: 18px; justify-content: stretch; }
+.stat-pill { display: flex; align-items: center; gap: 14px; padding: 18px !important; border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); }
+.sp-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
-.sp-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; margin: 0; }
+.sp-val { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 900; margin: 0; }
 
 .search-bar {
   display: flex; align-items: center; gap: 12px;
   background: rgba(15,23,42,0.68);
   border: 1px solid rgba(96,165,250,0.18);
-  border-radius: 11px; padding: 8px 10px !important; margin-bottom: 10px; max-width: 430px;
+  border-radius: 14px; padding: 12px 14px !important; margin-bottom: 18px; max-width: 520px;
   box-shadow: 0 16px 34px rgba(2,8,23,0.18);
 }
 .search-bar:focus-within {
   border-color: rgba(45,212,191,0.42);
   box-shadow: 0 0 0 3px rgba(45,212,191,0.10), 0 16px 34px rgba(2,8,23,0.22);
 }
-.search-input { flex: 1; background: none !important; border: none !important; outline: none; color: #f1f5f9; font-size: 12px; padding: 0 !important; box-shadow: none !important; }
+.search-input { flex: 1; background: none !important; border: none !important; outline: none; color: #f1f5f9; font-size: 13px; padding: 0 !important; box-shadow: none !important; }
 .search-input::placeholder { color: #64748b; }
 .clear-search {
   width: 28px; height: 28px; border-radius: 9px;
@@ -195,24 +195,24 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
   border-color: rgba(14,116,144,0.18);
 }
 
-.table-card { border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
+.table-card { border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
 .table-scroll { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead tr { background: rgba(59,130,246,0.06); border-bottom: 1px solid rgba(255,255,255,0.07); }
-.data-table thead th { padding: 8px 12px !important; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
+.data-table thead th { padding: 14px 16px !important; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; }
 .data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
 .data-table tbody tr:hover { background: rgba(59,130,246,0.04); }
-.data-table td { padding: 8px 12px !important; vertical-align: middle; }
+.data-table td { padding: 14px 16px !important; vertical-align: middle; }
 .empty-row { text-align: center; color: #334155; padding: 18px !important; }
 
-.user-cell { display: flex; align-items: center; gap: 9px; }
+.user-cell { display: flex; align-items: center; gap: 12px; }
 .user-avatar {
-  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, #2563eb, #8b5cf6);
-  color: white; font-size: 13px; font-weight: 800;
+  color: white; font-size: 15px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
 }
-.user-name { font-size: 12px; font-weight: 700; color: #f1f5f9; margin: 0 0 1px; }
+.user-name { font-size: 13px; font-weight: 700; color: #f1f5f9; margin: 0 0 2px; }
 .user-id   { font-size: 10px; color: #334155; margin: 0; }
 .user-email { font-size: 12px; color: #94a3b8; }
 

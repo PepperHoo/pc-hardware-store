@@ -2214,7 +2214,7 @@ table {
   }
 }
 
-/* Center all admin page content within the available viewport */
+/* Center the admin page shell, but keep inner content aligned in a clean grid */
 .admin-page {
   display: block !important;
 }
@@ -2236,29 +2236,11 @@ table {
   width: 100%;
 }
 
-.admin-page .admin-main .stats-grid,
-.admin-page .admin-main .stats-row {
-  justify-content: center !important;
-}
-
 .admin-page .admin-main .charts-row,
 .admin-page .admin-main .bottom-grid,
 .admin-page .admin-main .products-layout,
 .admin-page .admin-main .profile-grid {
   width: 100%;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.admin-page .admin-main .table-card,
-.admin-page .admin-main .section-card,
-.admin-page .admin-main .chart-card,
-.admin-page .admin-main .activity-card {
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.admin-page .admin-main .search-bar {
   margin-left: auto !important;
   margin-right: auto !important;
 }
@@ -2273,5 +2255,67 @@ table {
   .admin-page .admin-main {
     width: 100% !important;
     max-width: 100% !important;
+  }
+}
+
+/* Dashboard: centered shell with predictable full-width rows */
+.admin-page .admin-main .page-header {
+  max-width: 100% !important;
+}
+
+.admin-page .admin-main .stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(190px, 1fr)) !important;
+  justify-content: stretch !important;
+  align-items: stretch !important;
+}
+
+.admin-page .admin-main .stats-grid .stat-card {
+  max-width: none !important;
+}
+
+.admin-page .admin-main .charts-row {
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, .9fr) !important;
+  align-items: stretch !important;
+}
+
+.admin-page .admin-main .chart-card,
+.admin-page .admin-main .activity-card,
+.admin-page .admin-main .chart-card--category,
+.admin-page .admin-main .table-card {
+  width: 100% !important;
+}
+
+.admin-page .admin-main .bottom-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: start !important;
+}
+
+/* Users: stats and search should start with the table, not float in the center */
+.admin-page .admin-main .stats-row {
+  justify-content: start !important;
+}
+
+.admin-page .admin-main .search-bar {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+@media (max-width: 1100px) {
+  .admin-page .admin-main .stats-grid,
+  .admin-page .admin-main .stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .admin-page .admin-main .charts-row,
+  .admin-page .admin-main .bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-page .admin-main .stats-grid,
+  .admin-page .admin-main .stats-row {
+    grid-template-columns: 1fr !important;
   }
 }
