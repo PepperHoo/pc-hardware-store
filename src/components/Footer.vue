@@ -57,7 +57,7 @@ const links = [
         <!-- Categories -->
         <div class="footer-col">
           <h4 class="col-heading">Shop</h4>
-          <nav class="col-links">
+          <nav class="col-links col-links--shop">
             <button v-for="cat in categories" :key="cat.path" @click="router.push(cat.path)" class="col-link">
               {{ cat.label }}
             </button>
@@ -130,6 +130,12 @@ const links = [
   letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b; margin: 0 0 18px;
 }
 .col-links { display: flex; flex-direction: column; gap: 4px; }
+.col-links--shop {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, max-content));
+  column-gap: 26px;
+  row-gap: 4px;
+}
 .col-link {
   background: none; border: none; text-align: left; cursor: pointer;
   color: #334155; font-size: 14px; font-weight: 500; padding: 6px 0;
@@ -151,5 +157,6 @@ const links = [
 }
 @media (max-width: 480px) {
   .footer-cols { grid-template-columns: 1fr; }
+  .col-links--shop { grid-template-columns: 1fr; }
 }
 </style>
