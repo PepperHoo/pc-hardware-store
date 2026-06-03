@@ -126,6 +126,11 @@ function addBuildToCart() {
 
 const totalPrice    = computed(() => buildCategories.reduce((t,c) => t + Number(getSelectedProduct(c.key)?.price || 0), 0))
 const selectedCount = computed(() => buildCategories.filter(c => getSelectedProduct(c.key)).length)
+const selectedProducts = computed(() => Object.fromEntries(
+  buildCategories
+    .map(c => [c.key, getSelectedProduct(c.key)])
+    .filter(([, product]) => Boolean(product))
+))
 const buildComplete = computed(() => selectedCount.value === buildCategories.length)
 const buildStatus   = computed(() => {
   if (selectedCount.value === 0) return 'Start by selecting a motherboard.'
@@ -234,7 +239,7 @@ onMounted(async () => {
 
         <!-- Sidebar (RIGHT) -->
         <aside class="builder-sidebar">
-          <PcViewer3D :selected-parts="selectedParts" />
+          <PcViewer3D :selected-parts="selectedParts" :selected-products="selectedProducts" />
 
           <!-- Selected parts list -->
           <div class="parts-panel glass">

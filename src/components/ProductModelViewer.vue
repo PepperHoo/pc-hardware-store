@@ -12,7 +12,6 @@ const isReady = ref(false)
 const canUseModelViewer = ref(false)
 
 const MODEL_VIEWER_SRC = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js'
-const DEFAULT_SKETCHFAB_MODEL_ID = '1a24273417534f69afa0f7c62b643ffc'
 
 function loadModelViewerApi() {
   if (customElements.get('model-viewer')) return Promise.resolve()
@@ -52,16 +51,26 @@ const rawModelUrl = computed(() =>
   ''
 )
 
+const imagePreviewUrl = computed(() =>
+  props.product?.image ||
+  props.product?.image_url ||
+  props.product?.imageUrl ||
+  props.product?.thumbnail ||
+  ''
+)
+
 const modelFileUrl = computed(() => {
   const url = String(rawModelUrl.value || '').trim()
   return /\.(glb|gltf|usdz)(\?|#|$)/i.test(url) ? url : ''
 })
 
 const sketchfabModelId = computed(() =>
-  extractSketchfabId(rawModelUrl.value) || DEFAULT_SKETCHFAB_MODEL_ID
+  extractSketchfabId(rawModelUrl.value)
 )
 
 const sketchfabEmbedUrl = computed(() => {
+  if (!sketchfabModelId.value) return ''
+
   const params = new URLSearchParams({
     autostart: '1',
     preload: '1',
@@ -74,11 +83,18 @@ const sketchfabEmbedUrl = computed(() => {
   return `https://sketchfab.com/models/${sketchfabModelId.value}/embed?${params.toString()}`
 })
 
-const viewerMode = computed(() =>
-  modelFileUrl.value && canUseModelViewer.value ? 'google-model-viewer' : 'sketchfab'
-)
+const viewerMode = computed(() => {
+  if (modelFileUrl.value && canUseModelViewer.value) return 'google-model-viewer'
+  if (sketchfabModelId.value) return 'sketchfab'
+  return 'product-image'
+})
 
 onMounted(async () => {
+  if (!modelFileUrl.value) {
+    isReady.value = true
+    return
+  }
+
   try {
     await loadModelViewerApi()
     canUseModelViewer.value = true
@@ -98,7 +114,7 @@ onMounted(async () => {
         <h2 class="viewer-title">Interactive Preview</h2>
       </div>
       <span class="viewer-source">
-        {{ viewerMode === 'google-model-viewer' ? 'Google Model Viewer' : 'Sketchfab' }}
+        {{ viewerMode === 'google-model-viewer' ? 'Google Model Viewer' : viewerMode === 'sketchfab' ? 'Sketchfab' : 'Product Image' }}
       </span>
     </div>
 
@@ -107,7 +123,7 @@ onMounted(async () => {
         v-if="viewerMode === 'google-model-viewer'"
         class="google-viewer"
         :src="modelFileUrl"
-        :poster="product.image"
+        :poster="imagePreviewUrl"
         camera-controls
         auto-rotate
         shadow-intensity="1"
@@ -118,7 +134,7 @@ onMounted(async () => {
       />
 
       <iframe
-        v-else
+        v-else-if="viewerMode === 'sketchfab'"
         class="sketchfab-viewer"
         :src="sketchfabEmbedUrl"
         title="3D product preview"
@@ -126,6 +142,15 @@ onMounted(async () => {
         allowfullscreen
         frameborder="0"
       />
+
+      <div v-else class="image-preview-model">
+        <img v-if="imagePreviewUrl" :src="imagePreviewUrl" :alt="product.name" />
+        <div v-else class="image-preview-missing">No product image available</div>
+        <div class="image-preview-note">
+          <span>Actual Product Image</span>
+          <p>Add a GLB, GLTF, USDZ, or Sketchfab URL for a true rotating 3D model.</p>
+        </div>
+      </div>
 
       <div v-if="!isReady" class="viewer-loading">
         <div class="viewer-spinner" />
@@ -199,6 +224,57 @@ onMounted(async () => {
   border: 0;
 }
 
+.image-preview-model {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 520px;
+  padding: 34px 24px 96px;
+}
+
+.image-preview-model img {
+  max-width: min(78%, 680px);
+  max-height: 380px;
+  object-fit: contain;
+  filter: drop-shadow(0 28px 36px rgba(0, 0, 0, 0.4));
+}
+
+.image-preview-missing {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.image-preview-note {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  background: rgba(2, 6, 23, 0.76);
+  backdrop-filter: blur(14px);
+}
+
+.image-preview-note span {
+  display: block;
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.image-preview-note p {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .viewer-loading {
   position: absolute;
   inset: 0;
@@ -237,6 +313,15 @@ onMounted(async () => {
   border-color: rgba(15, 23, 42, 0.1);
 }
 
+:global(:root[data-theme="light"]) .image-preview-note {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(37, 99, 235, 0.16);
+}
+
+:global(:root[data-theme="light"]) .image-preview-note p {
+  color: #64748b;
+}
+
 @media (max-width: 700px) {
   .product-3d {
     margin-top: 28px;
@@ -257,6 +342,16 @@ onMounted(async () => {
   .google-viewer,
   .sketchfab-viewer {
     height: 360px;
+  }
+
+  .image-preview-model {
+    min-height: 360px;
+    padding: 22px 16px 104px;
+  }
+
+  .image-preview-model img {
+    max-width: 88%;
+    max-height: 220px;
   }
 }
 </style>

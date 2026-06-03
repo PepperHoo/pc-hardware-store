@@ -1,8 +1,12 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   selectedParts: {
+    type: Object,
+    default: () => ({})
+  },
+  selectedProducts: {
     type: Object,
     default: () => ({})
   }
@@ -33,6 +37,38 @@ const categoryToSlot = {
   casing:      'casing',
   rgb:         'rgb'
 }
+
+const categoryLabels = {
+  motherboard: 'Motherboard',
+  processor: 'Processor',
+  ram: 'RAM',
+  gpu: 'Graphics Card',
+  storage: 'Storage',
+  psu: 'Power Supply',
+  cooler: 'CPU Cooler',
+  casing: 'PC Case',
+  rgb: 'RGB / Fans'
+}
+
+function categoryLabel(category) {
+  return categoryLabels[category] || category
+}
+
+function productImage(product) {
+  return product?.image || product?.image_url || product?.imageUrl || product?.thumbnail || ''
+}
+
+const selectedProductList = computed(() =>
+  Object.entries(props.selectedProducts || {})
+    .map(([category, product]) => ({
+      category,
+      product,
+      image: productImage(product)
+    }))
+    .filter(item => item.product && item.image)
+)
+
+const hasRealPreview = computed(() => selectedProductList.value.length > 0)
 
 // RGB colors per category for glow
 const glowColors = {
@@ -544,8 +580,8 @@ watch(() => props.selectedParts, updateVisibility, { deep: true })
 <template>
   <div class="viewer-wrap">
     <div class="viewer-label">
-      <span class="viewer-badge">3D Preview</span>
-      <span class="viewer-hint">Drag to rotate</span>
+      <span class="viewer-badge">Actual Product Preview</span>
+      <span class="viewer-hint">Drag case to rotate</span>
     </div>
 
     <canvas
@@ -554,6 +590,26 @@ watch(() => props.selectedParts, updateVisibility, { deep: true })
       @mousedown="onMouseDown"
       @touchstart.passive="onTouchStart"
     />
+
+    <div v-if="hasRealPreview" class="real-parts-overlay">
+      <article
+        v-for="item in selectedProductList"
+        :key="`${item.category}-${item.product.id || item.product.name}`"
+        class="real-part-card"
+      >
+        <div class="real-img-wrap">
+          <img :src="item.image" :alt="item.product.name" />
+        </div>
+        <div class="real-part-info">
+          <span>{{ categoryLabel(item.category) }}</span>
+          <p>{{ item.product.name }}</p>
+        </div>
+      </article>
+    </div>
+
+    <div v-else class="real-empty-overlay">
+      Select a component to show its real product image.
+    </div>
 
     <div class="viewer-legend">
       <div
@@ -572,7 +628,7 @@ watch(() => props.selectedParts, updateVisibility, { deep: true })
         :class="{ active: selectedParts[cat] }"
       >
         <span class="legend-dot" :style="{ background: color }" />
-        <span>{{ cat }}</span>
+        <span>{{ categoryLabel(cat) }}</span>
       </div>
     </div>
   </div>
@@ -590,6 +646,7 @@ watch(() => props.selectedParts, updateVisibility, { deep: true })
   background: linear-gradient(145deg, #0a0f1e, #0d1526);
   border: 1px solid rgba(59,130,246,0.25);
   box-shadow: 0 24px 52px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  isolation: isolate;
 }
 
 .viewer-label {
@@ -624,6 +681,115 @@ watch(() => props.selectedParts, updateVisibility, { deep: true })
 
 .viewer-canvas:active {
   cursor: grabbing;
+}
+
+.real-parts-overlay {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 76px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 172px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.real-parts-overlay::-webkit-scrollbar {
+  width: 5px;
+}
+
+.real-parts-overlay::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.35);
+}
+
+.real-part-card {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  background: rgba(2, 6, 23, 0.82);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  transform: perspective(780px) rotateY(-5deg);
+}
+
+.real-part-card:first-child {
+  grid-column: span 2;
+  grid-template-columns: 76px 1fr;
+}
+
+.real-img-wrap {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 5px;
+  border-radius: 9px;
+  background: radial-gradient(circle at 50% 38%, rgba(96, 165, 250, 0.22), rgba(15, 23, 42, 0.92) 70%);
+}
+
+.real-part-card:first-child .real-img-wrap {
+  height: 64px;
+}
+
+.real-img-wrap img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
+}
+
+.real-part-info {
+  min-width: 0;
+}
+
+.real-part-info span {
+  display: block;
+  color: #60a5fa;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.real-part-info p {
+  display: -webkit-box;
+  margin: 3px 0 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.real-empty-overlay {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 92px;
+  z-index: 2;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(96, 165, 250, 0.24);
+  background: rgba(2, 6, 23, 0.56);
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  backdrop-filter: blur(10px);
 }
 
 .viewer-legend {
@@ -665,5 +831,22 @@ watch(() => props.selectedParts, updateVisibility, { deep: true })
 .legend-item.active .legend-dot {
   opacity: 1;
   box-shadow: 0 0 6px currentColor;
+}
+
+@media (max-width: 600px) {
+  .real-parts-overlay {
+    grid-template-columns: 1fr;
+    bottom: 82px;
+    max-height: 150px;
+  }
+
+  .real-part-card:first-child {
+    grid-column: auto;
+    grid-template-columns: 52px 1fr;
+  }
+
+  .real-part-card:first-child .real-img-wrap {
+    height: 46px;
+  }
 }
 </style>
