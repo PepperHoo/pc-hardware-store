@@ -7,7 +7,7 @@ You receive the store's real product catalog and the customer's currently select
 Recommend only products from the provided catalog. Never invent product IDs.
 Prioritize a complete, functioning PC build: CPU socket and motherboard platform, RAM generation, GPU fit, PSU wattage, storage support, cooler suitability, case clearance, and balanced performance.
 If exact specs are missing, infer carefully from product names and descriptions, then choose conservative compatible options.
-Return only valid JSON.
+Return only valid compact JSON. If unsure for one category, return an empty array for that category.
 `.trim()
 
 function sendJson(res, status, payload) {
@@ -89,6 +89,7 @@ function normalizeSelectedParts(selectedParts, catalogById) {
 }
 
 function buildPrompt({ products, categories, selectedParts }) {
+  const categoryKeys = categories.map((category) => category.key)
   const compactCatalog = products.map((product) => ({
     id: product.id,
     category: product.category,
@@ -100,15 +101,9 @@ function buildPrompt({ products, categories, selectedParts }) {
 
   return JSON.stringify({
     task: 'Return AI API recommendations for remaining PC build components.',
-    requiredJsonSchema: {
-      recommendations: {
-        category_key: ['product_id_1', 'product_id_2', 'product_id_3']
-      },
-      reasons: {
-        category_key: {
-          product_id: 'short reason under 90 characters'
-        }
-      }
+    expectedOutputShape: {
+      recommendations: Object.fromEntries(categoryKeys.map((key) => [key, ['catalog_product_id']])),
+      reasons: Object.fromEntries(categoryKeys.map((key) => [key, { catalog_product_id: 'short reason under 90 characters' }]))
     },
     rules: [
       'Return every unselected category key.',
@@ -124,6 +119,42 @@ function buildPrompt({ products, categories, selectedParts }) {
     selectedParts,
     catalog: compactCatalog
   })
+}
+
+function buildGeminiResponseSchema(categories) {
+  const recommendationProperties = Object.fromEntries(
+    categories.map((category) => [
+      category.key,
+      {
+        type: 'ARRAY',
+        items: { type: 'STRING' }
+      }
+    ])
+  )
+  const reasonProperties = Object.fromEntries(
+    categories.map((category) => [
+      category.key,
+      {
+        type: 'OBJECT'
+      }
+    ])
+  )
+
+  return {
+    type: 'OBJECT',
+    properties: {
+      recommendations: {
+        type: 'OBJECT',
+        properties: recommendationProperties,
+        required: categories.map((category) => category.key)
+      },
+      reasons: {
+        type: 'OBJECT',
+        properties: reasonProperties
+      }
+    },
+    required: ['recommendations']
+  }
 }
 
 function extractJson(text) {
@@ -229,7 +260,7 @@ async function callGroq(prompt) {
   }
 }
 
-async function callGoogle(prompt) {
+async function callGoogle(prompt, categories) {
   const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
   const model = process.env.GOOGLE_AI_MODEL || process.env.GEMINI_MODEL || DEFAULT_GOOGLE_MODEL
 
@@ -251,7 +282,8 @@ async function callGoogle(prompt) {
         generationConfig: {
           temperature: 0.15,
           maxOutputTokens: 3000,
-          responseMimeType: 'application/json'
+          responseMimeType: 'application/json',
+          responseSchema: buildGeminiResponseSchema(categories)
         }
       })
     }
@@ -308,14 +340,14 @@ export default async function handler(req, res) {
 
     if (provider === 'google') {
       if (!hasGoogle) throw new Error('GOOGLE_API_KEY or GEMINI_API_KEY is not configured.')
-      result = await callGoogle(prompt)
+      result = await callGoogle(prompt, categories)
     } else if (provider === 'groq') {
       if (!hasGroq) throw new Error('GROQ_API_KEY is not configured.')
       result = await callGroq(prompt)
     } else if (hasGroq) {
       result = await callGroq(prompt)
     } else if (hasGoogle) {
-      result = await callGoogle(prompt)
+      result = await callGoogle(prompt, categories)
     } else {
       return sendJson(res, 500, {
         error: 'Recommendation API key is not configured. Add GROQ_API_KEY or GOOGLE_API_KEY in Vercel environment variables.'
