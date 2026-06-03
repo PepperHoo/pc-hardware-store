@@ -1,12 +1,15 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AiChatWidget from './components/AiChatWidget.vue'
 import CompareBar from './components/CompareBar.vue'
 import { useCurrencyStore } from './stores/currency'
 import { useWishlistStore } from './stores/wishlist'
 
+const route = useRoute()
 const currency = useCurrencyStore()
 const wishlist = useWishlistStore()
+const showAiChat = computed(() => !route.path.startsWith('/admin'))
 
 onMounted(() => {
   // Apply saved theme immediately
@@ -22,5 +25,5 @@ onMounted(() => {
 <template>
   <router-view />
   <CompareBar />
-  <AiChatWidget />
+  <AiChatWidget v-if="showAiChat" />
 </template>

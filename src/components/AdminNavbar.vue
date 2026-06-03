@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route  = useRoute()
+const router = useRouter()
 const isDark = ref(true)
 
 const navItems = [
@@ -38,6 +39,27 @@ function toggleTheme() {
 
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
+}
+
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null')
+  } catch {
+    localStorage.removeItem('user')
+    return null
+  }
+}
+
+function goAdminProfile() {
+  const user = getStoredUser()
+  const role = String(user?.role || '').trim().toLowerCase()
+
+  if (!user) {
+    router.push('/login')
+    return
+  }
+
+  router.push(role === 'admin' ? '/admin/profile' : '/profile')
 }
 
 onMounted(() => {
@@ -104,7 +126,7 @@ onMounted(() => {
         </span>
       </button>
 
-      <router-link to="/admin/profile" class="profile-link">
+      <button type="button" class="profile-link" @click="goAdminProfile">
         <div class="profile-avatar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="5" r="3" stroke="#93c5fd" stroke-width="1.5"/>
@@ -118,7 +140,7 @@ onMounted(() => {
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="profile-arrow">
           <path d="M5 3l4 4-4 4" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-      </router-link>
+      </button>
 
     </div>
   </aside>
@@ -233,9 +255,13 @@ onMounted(() => {
 
 .profile-link {
   display: flex; align-items: center; gap: 10px;
+  width: 100%;
   padding: 12px; border-radius: 14px;
   background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  color: inherit;
+  text-align: left;
   text-decoration: none; transition: all 0.2s;
+  cursor: pointer;
 }
 .profile-link:hover { background: rgba(59,130,246,0.07); border-color: rgba(59,130,246,0.2); }
 .profile-avatar {
