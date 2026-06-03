@@ -1281,19 +1281,19 @@ body {
   font-size: 12px !important;
 }
 
-/* Keep admin summary cards compact horizontally */
+/* Let each admin page decide the stat-card row width. */
 .admin-main .stats-grid,
 .admin-main .stats-row {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 238px)) !important;
-  justify-content: start !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  justify-content: stretch !important;
   align-items: stretch !important;
 }
 
 .admin-main .stat-card,
 .admin-main .stat-pill {
   width: 100% !important;
-  max-width: 238px !important;
+  max-width: none !important;
 }
 
 @media (max-width: 768px) {
@@ -1649,7 +1649,7 @@ textarea {
   min-height: 82px !important;
   padding: 16px 18px !important;
   gap: 14px !important;
-  max-width: 270px !important;
+  max-width: none !important;
 }
 
 .admin-page .admin-main .stat-icon,

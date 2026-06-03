@@ -165,7 +165,7 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
   display: flex; align-items: center; gap: 12px;
   background: rgba(15,23,42,0.68);
   border: 1px solid rgba(96,165,250,0.18);
-  border-radius: 14px; padding: 12px 14px !important; margin-bottom: 18px; max-width: 520px;
+  border-radius: 14px; padding: 12px 14px !important; margin-bottom: 18px; width: 100%; max-width: none;
   box-shadow: 0 16px 34px rgba(2,8,23,0.18);
 }
 .search-bar:focus-within {
