@@ -164,11 +164,26 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
 .page-sub { color: #475569; font-size: 12px; margin: 0; }
 
 /* Stats row */
-.stats-row { display: grid; grid-template-columns: repeat(4,minmax(150px,210px)); gap: 10px; margin-bottom: 10px; }
-.stat-pill { display: flex; align-items: center; gap: 9px; padding: 10px 12px !important; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); }
-.sp-icon { width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100% !important;
+  max-width: none !important;
+  padding: 18px !important;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.sp-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
-.sp-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; margin: 0; }
+.sp-val { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; margin: 0; }
 
 /* Table */
 .table-card { border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
@@ -246,6 +261,7 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
 .btn-del:hover  { background: rgba(239,68,68,0.22); }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-@media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
 @media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; } }
+@media (max-width: 520px)  { .stats-row { grid-template-columns: 1fr !important; } }
 </style>
