@@ -64,6 +64,18 @@ async function fetchApiRecommendations() {
   if (!products.value.length) return
 
   const requestId = ++recommendationRequestId
+  const hasSelectedParts = Object.keys(selectedParts.value).length > 0
+
+  if (!hasSelectedParts) {
+    recommendations.value = {}
+    recommendationReasons.value = {}
+    recommendationSource.value = ''
+    recommendationModel.value = ''
+    recommendationsError.value = ''
+    recommendationsLoading.value = false
+    return
+  }
+
   recommendationsLoading.value = true
   recommendationsError.value = ''
 
@@ -105,7 +117,17 @@ async function fetchApiRecommendations() {
   }
 }
 
+function getStarterChoices(cat) {
+  const categoryProducts = getProductsByCategory(cat)
+  const inStockProducts = categoryProducts.filter((product) => Number(product.stock ?? 1) > 0)
+  return (inStockProducts.length ? inStockProducts : categoryProducts).slice(0, 3)
+}
+
 function getRecommendations(cat) {
+  if (selectedCount.value === 0) {
+    return getStarterChoices(cat)
+  }
+
   const ids = recommendations.value[cat] || []
   const categoryProducts = getProductsByCategory(cat)
 
@@ -210,7 +232,7 @@ onMounted(async () => {
           <span v-if="recommendationsLoading">Calling PC recommendation API...</span>
           <span v-else-if="recommendationsError">{{ recommendationsError }}</span>
           <span v-else-if="recommendationLabel">Recommendations powered by {{ recommendationLabel }}</span>
-          <span v-else>Waiting for recommendation API...</span>
+          <span v-else>Select any first component to start the real recommendation API.</span>
         </div>
       </div>
 
@@ -235,7 +257,7 @@ onMounted(async () => {
                 </div>
               </div>
               <span v-if="getSelectedProduct(cat.key)" class="cat-badge selected-badge">Selected</span>
-              <span v-else class="cat-badge suggest-badge">AI API</span>
+              <span v-else class="cat-badge suggest-badge">{{ selectedCount === 0 ? 'Catalog' : 'AI API' }}</span>
             </div>
 
             <!-- Selected state -->
@@ -259,7 +281,7 @@ onMounted(async () => {
                 {{ recommendationsError }}
               </div>
               <div v-else-if="getRecommendations(cat.key).length === 0" class="no-reco">
-                No API recommendations returned for this category yet.
+                {{ selectedCount === 0 ? 'No products available for this category yet.' : 'No API recommendations returned for this category yet.' }}
               </div>
               <button
                 v-for="p in getRecommendations(cat.key)"
@@ -271,7 +293,7 @@ onMounted(async () => {
                 <div class="reco-img-wrap">
                   <img :src="p.image" :alt="p.name" class="reco-img" />
                 </div>
-                <span class="reco-badge">API Recommended</span>
+                <span class="reco-badge">{{ selectedCount === 0 ? 'Start Choice' : 'API Recommended' }}</span>
                 <p class="reco-name">{{ p.name }}</p>
                 <p v-if="getRecommendationReason(cat.key, p.id)" class="reco-reason">
                   {{ getRecommendationReason(cat.key, p.id) }}

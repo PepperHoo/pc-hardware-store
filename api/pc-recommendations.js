@@ -117,6 +117,7 @@ function buildPrompt({ products, categories, selectedParts }) {
       'Do not return selected product IDs.',
       'Avoid out-of-stock products unless no in-stock option exists.',
       'Use compatibility and balanced build reasoning, not just lowest price.',
+      'Use compact JSON with double-quoted keys and string values.',
       'Return JSON only, no markdown.'
     ],
     categories,
@@ -126,16 +127,30 @@ function buildPrompt({ products, categories, selectedParts }) {
 }
 
 function extractJson(text) {
-  const value = sanitizeText(text, 20000)
+  const value = String(text || '').trim()
 
-  try {
-    return JSON.parse(value)
-  } catch {
-    const start = value.indexOf('{')
-    const end = value.lastIndexOf('}')
+  if (!value) {
+    throw new Error('AI recommendation API returned an empty response.')
+  }
 
-    if (start >= 0 && end > start) {
-      return JSON.parse(value.slice(start, end + 1))
+  const unfenced = value
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim()
+
+  const attempts = [unfenced]
+  const start = unfenced.indexOf('{')
+  const end = unfenced.lastIndexOf('}')
+
+  if (start >= 0 && end > start) {
+    attempts.push(unfenced.slice(start, end + 1))
+  }
+
+  for (const attempt of attempts) {
+    try {
+      return JSON.parse(attempt)
+    } catch {
+      // Try the next extraction strategy.
     }
   }
 
@@ -192,7 +207,7 @@ async function callGroq(prompt) {
     body: JSON.stringify({
       model,
       temperature: 0.15,
-      max_tokens: 1200,
+      max_tokens: 3000,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -235,7 +250,7 @@ async function callGoogle(prompt) {
         ],
         generationConfig: {
           temperature: 0.15,
-          maxOutputTokens: 1200,
+          maxOutputTokens: 3000,
           responseMimeType: 'application/json'
         }
       })
@@ -274,11 +289,16 @@ export default async function handler(req, res) {
     const catalogById = new Map(products.map((product) => [product.id, product]))
     const categories = normalizeCategories(body.categories, products)
     const selectedParts = normalizeSelectedParts(body.selectedParts, catalogById)
-    const prompt = buildPrompt({ products, categories, selectedParts })
 
     if (products.length === 0 || categories.length === 0) {
       return sendJson(res, 400, { error: 'Product catalog and categories are required.' })
     }
+
+    if (Object.keys(selectedParts).length === 0) {
+      return sendJson(res, 400, { error: 'Select at least one component before requesting AI recommendations.' })
+    }
+
+    const prompt = buildPrompt({ products, categories, selectedParts })
 
     const provider = String(process.env.AI_PROVIDER || '').toLowerCase()
     const hasGroq = Boolean(process.env.GROQ_API_KEY)
