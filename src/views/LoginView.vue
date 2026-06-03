@@ -26,10 +26,14 @@ async function login() {
       toastRef.value.showToastMessage('Invalid email or password', 'error')
       return
     }
-    localStorage.setItem('user', JSON.stringify(user))
+    const normalizedUser = {
+      ...user,
+      role: String(user.role || 'user').trim().toLowerCase()
+    }
+    localStorage.setItem('user', JSON.stringify(normalizedUser))
     toastRef.value.showToastMessage('Login Successful!', 'success')
     setTimeout(() => {
-      router.push(user.role === 'admin' ? '/admin' : '/profile')
+      router.push(normalizedUser.role === 'admin' ? '/admin' : '/profile')
     }, 1200)
   } catch (error) {
     console.log(error)

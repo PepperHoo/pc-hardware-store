@@ -52,6 +52,19 @@ const routes = [
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null')
+  } catch {
+    localStorage.removeItem('user')
+    return null
+  }
+}
+
+function getRole(user) {
+  return String(user?.role || '').trim().toLowerCase()
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes,
@@ -59,23 +72,24 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  const user = getStoredUser()
+  const role = getRole(user)
 
-  if (user?.role === 'admin' && !to.path.startsWith('/admin')) {
+  if (role === 'admin' && !to.path.startsWith('/admin')) {
     return '/admin'
   }
 
   // Admin-only routes
   if (to.meta.requiresAdmin) {
     if (!user)              return '/login'
-    if (user.role !== 'admin') return '/profile'
+    if (role !== 'admin') return '/profile'
   }
 
   // Auth-required routes
   if (to.meta.requiresAuth && !user) return '/login'
 
   // Guest-only routes (login/register redirect if already logged in)
-  if (to.meta.guestOnly && user) return user.role === 'admin' ? '/admin' : '/profile'
+  if (to.meta.guestOnly && user) return role === 'admin' ? '/admin' : '/profile'
 
   return true
 })
