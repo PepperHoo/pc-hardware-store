@@ -246,7 +246,7 @@ onMounted(async () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   Details
                 </button>
-                <button class="btn-primary" @click="addToCart(product)" :disabled="product.stock === 0">
+                <button class="btn-primary btn-cart-compact" @click="addToCart(product)" :disabled="product.stock === 0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                   {{ product.stock === 0 ? 'Sold Out' : 'Add to Cart' }}
                 </button>
@@ -505,7 +505,7 @@ onMounted(async () => {
 .qty-val { font-size: 15px; font-weight: 700; min-width: 24px; text-align: center; color: #e2e8f0; }
 
 /* Actions */
-.p-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+.p-actions { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; flex-wrap: wrap; width: fit-content; max-width: 100%; }
 .btn-ghost {
   display: flex; align-items: center; gap: 6px;
   padding: 9px 14px; border-radius: 10px; flex: 0 0 auto;
@@ -523,8 +523,18 @@ onMounted(async () => {
 }
 .btn-primary:hover { box-shadow: 0 8px 20px rgba(59,130,246,0.35); transform: translateY(-1px); }
 
-.p-list .btn-primary {
-  min-width: 170px;
+.btn-cart-compact {
+  flex: 0 0 158px !important;
+  width: 158px !important;
+  min-width: 158px !important;
+  max-width: 158px !important;
+}
+
+.p-list .btn-cart-compact {
+  flex-basis: 170px !important;
+  width: 170px !important;
+  min-width: 170px !important;
+  max-width: 170px !important;
 }
 
 /* Empty */
@@ -670,6 +680,7 @@ onMounted(async () => {
 
   .p-actions {
     flex-direction: column;
+    width: 100%;
   }
 
   .btn-ghost,
@@ -679,6 +690,13 @@ onMounted(async () => {
     min-height: 34px;
     padding: 8px;
     font-size: 10px;
+  }
+
+  .btn-cart-compact {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
   }
 
   .card-quick-actions {
