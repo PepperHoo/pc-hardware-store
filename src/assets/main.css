@@ -2213,3 +2213,65 @@ table {
     justify-content: flex-start !important;
   }
 }
+
+/* Center all admin page content within the available viewport */
+.admin-page {
+  display: block !important;
+}
+
+.admin-page .admin-main {
+  width: min(100%, 1440px) !important;
+  max-width: 1440px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.admin-page .admin-main > div:not(.state-screen),
+.admin-page .admin-main > section,
+.admin-page .admin-main > form {
+  width: 100%;
+}
+
+.admin-page .admin-main .page-header {
+  width: 100%;
+}
+
+.admin-page .admin-main .stats-grid,
+.admin-page .admin-main .stats-row {
+  justify-content: center !important;
+}
+
+.admin-page .admin-main .charts-row,
+.admin-page .admin-main .bottom-grid,
+.admin-page .admin-main .products-layout,
+.admin-page .admin-main .profile-grid {
+  width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.admin-page .admin-main .table-card,
+.admin-page .admin-main .section-card,
+.admin-page .admin-main .chart-card,
+.admin-page .admin-main .activity-card {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.admin-page .admin-main .search-bar {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (min-width: 1500px) {
+  .admin-page .admin-main {
+    max-width: 1380px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-page .admin-main {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
