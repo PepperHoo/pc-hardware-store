@@ -67,7 +67,7 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
         </div>
 
         <!-- Stats -->
-        <div class="stats-row">
+        <div class="stats-row orders-stats-row">
           <div class="stat-pill glass">
             <div class="sp-icon" style="color:#60a5fa">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 2h2.5l2 7h7l1.5-4H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="14" cy="16" r="1.5" fill="currentColor"/></svg>
@@ -170,6 +170,10 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
   gap: 16px;
   margin-bottom: 18px;
   width: 100%;
+}
+.orders-stats-row {
+  justify-content: stretch !important;
+  align-items: stretch !important;
 }
 .stat-pill {
   display: flex;
