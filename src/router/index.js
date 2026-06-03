@@ -9,6 +9,7 @@ import RegisterView       from '../views/RegisterView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import ApproveResetView   from '../views/ApproveResetView.vue'
 import ResetPasswordView  from '../views/ResetPasswordView.vue'
+import ProductDetailView  from '../views/ProductDetailView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminProductsView  from '../views/AdminProductsView.vue'
 import AdminOrdersView    from '../views/AdminOrdersView.vue'
@@ -25,7 +26,7 @@ const routes = [
   { path: '/',                    component: HomeView },
   { path: '/products',            component: ProductsView },
   { path: '/products/:category',  component: ProductsView },
-  { path: '/product/:id',         component: () => import('../views/ProductDetailView.vue') },
+  { path: '/product/:id',         component: ProductDetailView },
   { path: '/pc-builder',          component: PcBuilderView },
   { path: '/login',               component: LoginView,    meta: { guestOnly: true } },
   { path: '/register',            component: RegisterView, meta: { guestOnly: true } },

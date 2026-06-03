@@ -505,7 +505,7 @@ onMounted(async () => {
 .qty-val { font-size: 15px; font-weight: 700; min-width: 24px; text-align: center; color: #e2e8f0; }
 
 /* Actions */
-.p-actions { display: flex; gap: 8px; margin-top: auto; }
+.p-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; flex-wrap: wrap; }
 .btn-ghost {
   display: flex; align-items: center; gap: 6px;
   padding: 9px 14px; border-radius: 10px; flex: 0 0 auto;
@@ -516,12 +516,16 @@ onMounted(async () => {
 .btn-ghost:hover { background: rgba(255,255,255,0.08); color: #cbd5e1; }
 .btn-primary {
   display: flex; align-items: center; gap: 6px;
-  flex: 1; padding: 10px 16px; border-radius: 10px; border: none;
+  flex: 0 0 auto; min-width: 150px; padding: 10px 18px; border-radius: 10px; border: none;
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: white; font-size: 12px; font-weight: 700;
   cursor: pointer; justify-content: center; transition: all 0.25s;
 }
 .btn-primary:hover { box-shadow: 0 8px 20px rgba(59,130,246,0.35); transform: translateY(-1px); }
+
+.p-list .btn-primary {
+  min-width: 170px;
+}
 
 /* Empty */
 .empty-state {
@@ -671,6 +675,7 @@ onMounted(async () => {
   .btn-ghost,
   .btn-primary {
     width: 100%;
+    min-width: 0;
     min-height: 34px;
     padding: 8px;
     font-size: 10px;
