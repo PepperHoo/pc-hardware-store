@@ -449,6 +449,23 @@ onMounted(() => {
   color: var(--profile-badge-text) !important;
 }
 
+:global([data-theme="light"]) .profile-page .sidebar-name,
+:global([data-theme="light"]) .profile-page .info-val {
+  color: #172033 !important;
+}
+
+:global([data-theme="light"]) .profile-page .sidebar-email,
+:global([data-theme="light"]) .profile-page .info-key,
+:global([data-theme="light"]) .profile-page .stat-label {
+  color: #52657d !important;
+}
+
+:global([data-theme="light"]) .profile-page .role-badge {
+  background: rgba(37, 99, 235, 0.12) !important;
+  border-color: rgba(37, 99, 235, 0.32) !important;
+  color: #2563eb !important;
+}
+
 .address-display p { font-size: 14px; color: #94a3b8; margin: 0 0 6px; line-height: 1.6; }
 .address-display p:last-child { margin: 0; }
 
