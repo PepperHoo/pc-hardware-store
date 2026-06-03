@@ -2,7 +2,7 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
 import { useRouter } from 'vue-router'
@@ -15,6 +15,13 @@ const products  = ref([])
 const loading   = ref(true)
 const errorMsg  = ref('')
 const selectedParts = ref({})
+const recommendations = ref({})
+const recommendationReasons = ref({})
+const recommendationSource = ref('')
+const recommendationModel = ref('')
+const recommendationsLoading = ref(false)
+const recommendationsError = ref('')
+let recommendationRequestId = 0
 
 
 
@@ -33,70 +40,84 @@ const buildCategories = [
 function getProductsByCategory(cat) { return products.value.filter(p => p.category === cat) }
 function getSelectedProduct(cat)    { const id = selectedParts.value[cat]; return id ? products.value.find(p => p.id === id) : null }
 
-function getCpuPlatform(p) {
-  if (!p) return ''
-  const n = p.name.toLowerCase()
-  if (n.includes('9900') || n.includes('9950') || n.includes('9700')) return 'amd-am5'
-  if (n.includes('5950')) return 'amd-am4'
-  if (n.includes('ultra'))  return 'intel-lga1851'
-  if (n.includes('14900') || n.includes('14700') || n.includes('12600')) return 'intel-lga1700'
-  return ''
+function compactProduct(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    price: Number(p.price || 0),
+    stock: Number(p.stock ?? 0),
+    description: p.description || p.details || ''
+  }
 }
-function getMotherboardPlatform(p) {
-  if (!p) return ''
-  const n = p.name.toLowerCase()
-  if (n.includes('z890')) return 'intel-lga1851'
-  if (n.includes('b850') || n.includes('x870') || n.includes('b650')) return 'amd-am5'
-  return ''
+
+function getSelectedPayload() {
+  return Object.fromEntries(
+    buildCategories
+      .map((cat) => [cat.key, getSelectedProduct(cat.key)])
+      .filter(([, product]) => Boolean(product))
+      .map(([key, product]) => [key, compactProduct(product)])
+  )
 }
-function getGpuTier(p) {
-  if (!p || p.category !== 'gpu') return 0
-  const n = p.name.toLowerCase()
-  if (n.includes('5090') || n.includes('pro 6000')) return 5
-  if (n.includes('4090') || n.includes('5080'))     return 4
-  if (n.includes('9070') || n.includes('7900'))     return 3
-  if (n.includes('9060') || n.includes('5060'))     return 2
-  return 1
+
+async function fetchApiRecommendations() {
+  if (!products.value.length) return
+
+  const requestId = ++recommendationRequestId
+  recommendationsLoading.value = true
+  recommendationsError.value = ''
+
+  try {
+    const response = await fetch('/api/pc-recommendations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        categories: buildCategories.map((cat) => ({ key: cat.key, label: cat.label })),
+        selectedParts: getSelectedPayload(),
+        products: products.value.map(compactProduct)
+      })
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      throw new Error(data.error || 'PC recommendation API failed.')
+    }
+
+    if (requestId !== recommendationRequestId) return
+
+    recommendations.value = data.recommendations || {}
+    recommendationReasons.value = data.reasons || {}
+    recommendationSource.value = data.provider || data.source || 'api'
+    recommendationModel.value = data.model || ''
+  } catch (error) {
+    if (requestId !== recommendationRequestId) return
+
+    recommendations.value = {}
+    recommendationReasons.value = {}
+    recommendationSource.value = ''
+    recommendationModel.value = ''
+    recommendationsError.value = error?.message || 'PC recommendation API unavailable.'
+  } finally {
+    if (requestId === recommendationRequestId) {
+      recommendationsLoading.value = false
+    }
+  }
 }
-function getCpuTier(p) {
-  if (!p || p.category !== 'processor') return 0
-  const n = p.name.toLowerCase()
-  if (n.includes('9950') || n.includes('14900'))  return 5
-  if (n.includes('9900') || n.includes('5950') || n.includes('14700')) return 4
-  if (n.includes('9700') || n.includes('ultra 7')) return 3
-  if (n.includes('12600')) return 2
-  return 1
-}
-function getPsuWatts(p) { if (!p) return 0; const m = p.name.match(/(\d{3,4})w/i); return m ? Number(m[1]) : 0 }
-function getRecommendedPsuWatts() {
-  const g = getGpuTier(getSelectedProduct('gpu')), c = getCpuTier(getSelectedProduct('processor'))
-  if (g >= 5 || c >= 5) return 1000
-  if (g >= 4 || c >= 4) return 850
-  if (g >= 3 || c >= 3) return 750
-  return 650
-}
-function isCompatible(p) {
-  const cpu = getSelectedProduct('processor'), mb = getSelectedProduct('motherboard'), gpu = getSelectedProduct('gpu')
-  if (p.category === 'processor'   && mb)  return getCpuPlatform(p) === getMotherboardPlatform(mb)
-  if (p.category === 'motherboard' && cpu) return getMotherboardPlatform(p) === getCpuPlatform(cpu)
-  if (p.category === 'psu')    return getPsuWatts(p) >= getRecommendedPsuWatts()
-  if (p.category === 'cooler'  && getCpuTier(cpu) >= 4) return Number(p.price || 0) >= 700
-  if (p.category === 'casing'  && getGpuTier(gpu) >= 4) return Number(p.price || 0) >= 350
-  return true
-}
-function getScore(p) {
-  let s = 100000 - Number(p.price || 0)
-  const n = p.name.toLowerCase()
-  if (p.category === 'motherboard' && (n.includes('x870') || n.includes('b850') || n.includes('z890'))) s += 3500
-  if (p.category === 'ram'     && n.includes('cl30')) s += 2500
-  if (p.category === 'storage' && n.includes('990'))  s += 1800
-  if (p.category === 'psu')    s += getPsuWatts(p)
-  if (p.category === 'cooler'  && Number(p.price || 0) >= 700) s += 1800
-  if (p.category === 'casing'  && Number(p.price || 0) >= 350) s += 1200
-  return s
-}
+
 function getRecommendations(cat) {
-  return getProductsByCategory(cat).filter(p => p.id !== selectedParts.value[cat]).filter(isCompatible).sort((a,b) => getScore(b)-getScore(a)).slice(0, 3)
+  const ids = recommendations.value[cat] || []
+  const categoryProducts = getProductsByCategory(cat)
+
+  return ids
+    .map((id) => categoryProducts.find((product) => String(product.id) === String(id)))
+    .filter(Boolean)
+    .filter((product) => String(product.id) !== String(selectedParts.value[cat]))
+    .slice(0, 3)
+}
+
+function getRecommendationReason(cat, id) {
+  return recommendationReasons.value?.[cat]?.[id] || ''
 }
 function selectPart(p) {
   selectedParts.value = { ...selectedParts.value, [p.category]: p.id }
@@ -134,11 +155,23 @@ const buildStatus   = computed(() => {
   return `${buildCategories.length - selectedCount.value} component(s) remaining.`
 })
 
+const recommendationLabel = computed(() => {
+  if (!recommendationSource.value) return ''
+  return recommendationModel.value
+    ? `${recommendationSource.value} (${recommendationModel.value})`
+    : recommendationSource.value
+})
+
+watch(selectedParts, () => {
+  fetchApiRecommendations()
+})
+
 onMounted(async () => {
   currency.fetchRates()
   try {
     const { getAll } = await import('../lib/api.js')
     products.value = await getAll('products')
+    await fetchApiRecommendations()
   } catch (e) { console.log(e); errorMsg.value = 'Failed to load PC builder.' }
   finally { loading.value = false }
 })
@@ -167,8 +200,18 @@ onMounted(async () => {
         <span class="kicker">Custom Build</span>
         <h1 class="builder-title">PC <span class="grad-text">Builder</span></h1>
         <p class="builder-sub">
-          Pick a motherboard first — the builder will intelligently suggest compatible components for your platform.
+          Pick one component and the builder will call a real AI API to recommend compatible remaining parts from your store catalog.
         </p>
+        <div
+          class="api-status glass"
+          :class="{ loading: recommendationsLoading, error: recommendationsError }"
+        >
+          <span class="api-dot"></span>
+          <span v-if="recommendationsLoading">Calling PC recommendation API...</span>
+          <span v-else-if="recommendationsError">{{ recommendationsError }}</span>
+          <span v-else-if="recommendationLabel">Recommendations powered by {{ recommendationLabel }}</span>
+          <span v-else>Waiting for recommendation API...</span>
+        </div>
       </div>
 
       <!-- Layout -->
@@ -192,7 +235,7 @@ onMounted(async () => {
                 </div>
               </div>
               <span v-if="getSelectedProduct(cat.key)" class="cat-badge selected-badge">Selected</span>
-              <span v-else class="cat-badge suggest-badge">Suggestions</span>
+              <span v-else class="cat-badge suggest-badge">AI API</span>
             </div>
 
             <!-- Selected state -->
@@ -209,8 +252,14 @@ onMounted(async () => {
 
             <!-- Recommendation grid -->
             <div v-else class="reco-grid">
-              <div v-if="getRecommendations(cat.key).length === 0" class="no-reco">
-                No compatible components found for this category yet.
+              <div v-if="recommendationsLoading" class="no-reco">
+                Calling real recommendation API...
+              </div>
+              <div v-else-if="recommendationsError" class="no-reco api-error">
+                {{ recommendationsError }}
+              </div>
+              <div v-else-if="getRecommendations(cat.key).length === 0" class="no-reco">
+                No API recommendations returned for this category yet.
               </div>
               <button
                 v-for="p in getRecommendations(cat.key)"
@@ -222,8 +271,11 @@ onMounted(async () => {
                 <div class="reco-img-wrap">
                   <img :src="p.image" :alt="p.name" class="reco-img" />
                 </div>
-                <span class="reco-badge">Recommended</span>
+                <span class="reco-badge">API Recommended</span>
                 <p class="reco-name">{{ p.name }}</p>
+                <p v-if="getRecommendationReason(cat.key, p.id)" class="reco-reason">
+                  {{ getRecommendationReason(cat.key, p.id) }}
+                </p>
                 <p class="reco-price">{{ currency.format(p.price) }}</p>
                 <div class="reco-add">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -325,6 +377,39 @@ onMounted(async () => {
   margin: 14px 0 10px; line-height: 1.05;
 }
 .builder-sub { color: #475569; font-size: 15px; max-width: 680px; line-height: 1.7; margin: 0; }
+.api-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-top: 16px;
+  padding: 9px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(96,165,250,0.22);
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.api-status.error {
+  border-color: rgba(248,113,113,0.32);
+  background: rgba(127,29,29,0.18) !important;
+  color: #fca5a5;
+}
+.api-status.loading { color: #67e8f9; }
+.api-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 14px currentColor;
+  flex-shrink: 0;
+}
+.api-status.loading .api-dot { animation: apiPulse 1s ease-in-out infinite; }
+@keyframes apiPulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.55; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
 
 /* Summary bar — full width under the builder selection area */
 .summary-bar {
@@ -450,6 +535,7 @@ onMounted(async () => {
 /* Reco grid */
 .reco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .no-reco { color: #334155; font-size: 14px; padding: 20px 0; grid-column: 1/-1; text-align: center; }
+.no-reco.api-error { color: #fca5a5; }
 
 .reco-card {
   position: relative; overflow: hidden;
@@ -477,6 +563,7 @@ onMounted(async () => {
   align-self: flex-start;
 }
 .reco-name { font-size: 13px; font-weight: 700; color: #f1f5f9; margin: 0; line-height: 1.4; flex: 1; }
+.reco-reason { font-size: 11px; font-weight: 600; color: #94a3b8; line-height: 1.45; margin: 0; }
 .reco-price { font-size: 17px; font-weight: 900; color: #60a5fa; margin: 0; }
 .reco-add {
   display: flex; align-items: center; gap: 6px;
