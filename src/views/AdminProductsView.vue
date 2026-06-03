@@ -291,6 +291,25 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
   background: #111827;
   color: #f8fafc;
 }
+select.field-input,
+.filter-select {
+  appearance: none;
+  background-color: #111827;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%2393c5fd' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+select.field-input option,
+.filter-select option {
+  background-color: #111827 !important;
+  color: #f8fafc !important;
+}
+select.field-input option:checked,
+.filter-select option:checked {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
 .field-textarea { resize: vertical; min-height: 54px; }
 
 .upload-label {
@@ -331,6 +350,18 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
 .filter-select option {
   background: #111827;
   color: #f8fafc;
+}
+select.field-input,
+.filter-select {
+  background-color: #111827;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%2393c5fd' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+}
+select.field-input option,
+.filter-select option {
+  background-color: #111827 !important;
+  color: #f8fafc !important;
 }
 .filter-count { font-size: 12px; color: #334155; flex-shrink: 0; }
 
@@ -377,6 +408,15 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
   color-scheme: light;
 }
 
+:global(:root[data-theme="light"]) select.field-input,
+:global(:root[data-theme="light"]) .filter-select {
+  background-color: #ffffff !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%23172333' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  color: #172033 !important;
+}
+
 :global(:root[data-theme="light"]) .field-input::placeholder {
   color: #94a3b8 !important;
 }
@@ -385,5 +425,11 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
 :global(:root[data-theme="light"]) .filter-select option {
   background: #ffffff !important;
   color: #172033 !important;
+}
+
+:global(:root[data-theme="light"]) .field-input option:checked,
+:global(:root[data-theme="light"]) .filter-select option:checked {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
 }
 </style>

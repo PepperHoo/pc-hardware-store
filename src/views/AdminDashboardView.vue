@@ -1,6 +1,6 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useCurrencyStore } from '../stores/currency'
 
 const totalProducts  = ref(0)
@@ -19,6 +19,42 @@ const errorMessage   = ref('')
 const revenueCanvas  = ref(null)
 const statusCanvas   = ref(null)
 const categoryCanvas = ref(null)
+let revenueChart = null
+let statusChart = null
+let categoryChart = null
+
+const monthlyIncome = computed(() => {
+  const now = new Date()
+  return allOrders.value
+    .filter(order => {
+      const date = getRecordDate(order)
+      return date && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+    })
+    .reduce((sum, order) => sum + Number(order.total || 0), 0)
+})
+
+function getRecordDate(record) {
+  const dateValue = record?.created_at || record?.createdAt || record?.updated_at || record?.date || record?.orderDate
+  const parsedDate = dateValue ? new Date(dateValue) : null
+  if (parsedDate && !Number.isNaN(parsedDate.getTime())) return parsedDate
+
+  const idText = String(record?.id || '')
+  const timestamp = parseInt(idText.slice(0, 8), 36)
+  if (Number.isFinite(timestamp) && timestamp > 946684800000) return new Date(timestamp)
+
+  return null
+}
+
+function newestFirst(rows) {
+  return rows
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const timeA = getRecordDate(a.item)?.getTime() || 0
+      const timeB = getRecordDate(b.item)?.getTime() || 0
+      return (timeB - timeA) || (b.index - a.index)
+    })
+    .map(entry => entry.item)
+}
 
 async function loadDashboard() {
   try {
@@ -29,8 +65,8 @@ async function loadDashboard() {
     totalOrders.value    = orders.length
     totalUsers.value     = users.length
     totalIncome.value    = orders.reduce((s, o) => s + Number(o.total || 0), 0)
-    latestProducts.value = products.slice(-5).reverse()
-    latestOrders.value   = orders.slice(-5).reverse()
+    latestProducts.value = newestFirst(products).slice(0, 5)
+    latestOrders.value   = newestFirst(orders).slice(0, 5)
     allOrders.value      = orders
     allProducts.value    = products
     await nextTick()
@@ -54,6 +90,7 @@ function buildCharts() {
 
 function renderCharts() {
   const Chart = window.Chart
+  if (!Chart) return
 
   // ── Revenue by month (last 6 months) ───────────────────────────────
   const now     = new Date()
@@ -63,12 +100,16 @@ function renderCharts() {
   })
   const revenueByMonth = months.map(m =>
     allOrders.value
-      .filter(o => { const d = new Date(o.date || o.created_at || 0); return d.getFullYear() === m.year && d.getMonth() === m.month })
+      .filter(o => {
+        const d = getRecordDate(o)
+        return d && d.getFullYear() === m.year && d.getMonth() === m.month
+      })
       .reduce((s, o) => s + Number(o.total || 0), 0)
   )
 
   if (revenueCanvas.value) {
-    new Chart(revenueCanvas.value, {
+    revenueChart?.destroy()
+    revenueChart = new Chart(revenueCanvas.value, {
       type: 'line',
       data: {
         labels: months.map(m => m.label),
@@ -97,7 +138,8 @@ function renderCharts() {
   const statusCounts = statuses.map(s => allOrders.value.filter(o => o.status === s).length)
 
   if (statusCanvas.value) {
-    new Chart(statusCanvas.value, {
+    statusChart?.destroy()
+    statusChart = new Chart(statusCanvas.value, {
       type: 'doughnut',
       data: {
         labels: statuses,
@@ -120,7 +162,8 @@ function renderCharts() {
   const catColors  = ['rgba(59,130,246,0.8)','rgba(139,92,246,0.8)','rgba(245,158,11,0.8)','rgba(168,85,247,0.8)','rgba(6,182,212,0.8)','rgba(239,68,68,0.8)','rgba(56,189,248,0.8)','rgba(148,163,184,0.8)']
 
   if (categoryCanvas.value) {
-    new Chart(categoryCanvas.value, {
+    categoryChart?.destroy()
+    categoryChart = new Chart(categoryCanvas.value, {
       type: 'bar',
       data: {
         labels: categories.map(c => c.charAt(0).toUpperCase() + c.slice(1)),
@@ -141,6 +184,10 @@ function renderCharts() {
 onMounted(() => {
   currencyStore.fetchRates()
   loadDashboard()
+})
+
+watch(() => currencyStore.current, () => {
+  if (!loading.value) nextTick(renderCharts)
 })
 </script>
 
@@ -218,9 +265,19 @@ onMounted(() => {
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M11 6v10M8 8.5C8 7.12 9.34 6 11 6s3 1.12 3 2.5c0 1.5-1.5 2-3 2.5-1.5.5-3 1-3 2.5C8 14.88 9.34 16 11 16s3-1.12 3-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
             <div class="stat-body">
-              <p class="stat-label">Revenue</p>
+              <p class="stat-label">Monthly Revenue</p>
+              <p class="stat-val grad-text">{{ currencyStore.format(monthlyIncome) }}</p>
+              <p class="stat-hint">This month's sales</p>
+            </div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-icon" style="background:rgba(45,212,191,0.15);color:#2dd4bf">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 17V7m5 10V4m5 13v-6m5 6V9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M2 19h20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Total Revenue</p>
               <p class="stat-val grad-text">{{ currencyStore.format(totalIncome) }}</p>
-              <p class="stat-hint">Total sales income</p>
+              <p class="stat-hint">All time sales income</p>
             </div>
           </div>
         </div>
@@ -309,7 +366,7 @@ onMounted(() => {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   justify-content: stretch;
   gap: 16px;
   margin-bottom: 18px;
@@ -343,7 +400,7 @@ onMounted(() => {
 .ac-name { flex: 1; font-size: 12px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ac-price { font-size: 12px; font-weight: 700; color: #60a5fa; flex-shrink: 0; }
 
-@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, minmax(190px, 250px)); } .charts-row { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .charts-row { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr; } }
 @media (max-width: 768px) { .admin-main { margin-left: 0; padding: 20px; max-width: 100%; } .page-header { flex-direction: column; } .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

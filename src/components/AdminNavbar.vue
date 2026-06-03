@@ -85,7 +85,7 @@ onMounted(() => {
     <div class="sidebar-bar" />
 
     <!-- Logo -->
-    <div class="sidebar-logo">
+    <router-link to="/admin" class="sidebar-logo" aria-label="Go to admin dashboard">
       <div class="logo-icon">
         <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
           <rect x="2" y="6" width="24" height="16" rx="3" stroke="#3b82f6" stroke-width="2"/>
@@ -97,7 +97,7 @@ onMounted(() => {
         <p class="logo-name">PC<span class="logo-accent">Admin</span></p>
         <p class="logo-sub">Hardware Dashboard</p>
       </div>
-    </div>
+    </router-link>
 
     <!-- Divider -->
     <div class="sidebar-divider" />
@@ -201,6 +201,8 @@ onMounted(() => {
 .sidebar-logo {
   display: flex; align-items: center; gap: 12px;
   padding: 22px 20px 18px;
+  color: inherit;
+  text-decoration: none;
 }
 .logo-icon {
   width: 42px; height: 42px; border-radius: 12px;
@@ -292,7 +294,7 @@ onMounted(() => {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  min-width: 150px;
+  min-width: 180px;
   padding: 6px;
   border-radius: 12px;
   border: 1px solid rgba(96,165,250,0.20);
@@ -493,8 +495,8 @@ onMounted(() => {
   min-height: 58px;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
-  padding: 7px 16px;
+  gap: 14px;
+  padding: 8px 18px;
   border-right: none;
   border-bottom: 1px solid rgba(96,165,250,0.14);
   background: rgba(2,8,23,0.92);
@@ -513,7 +515,8 @@ onMounted(() => {
 
 .sidebar-logo {
   padding: 0;
-  min-width: 184px;
+  flex: 0 0 230px;
+  min-width: 230px;
 }
 
 .logo-icon {
@@ -536,7 +539,7 @@ onMounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 7px;
   padding: 0;
 }
 
@@ -560,8 +563,13 @@ onMounted(() => {
   flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
-  gap: 7px;
+  justify-content: flex-end;
+  gap: 8px;
   padding: 0;
+}
+
+.admin-currency-wrap {
+  flex: 0 0 118px;
 }
 
 .theme-toggle {
@@ -603,6 +611,10 @@ onMounted(() => {
   box-shadow: 0 14px 30px rgba(15,23,42,0.10) !important;
 }
 
+:global(:root[data-theme="light"]) .sidebar-logo {
+  color: #172033 !important;
+}
+
 :global(:root[data-theme="light"]) .admin-currency-btn {
   background: rgba(37,99,235,0.08) !important;
   border-color: rgba(37,99,235,0.18) !important;
@@ -638,7 +650,8 @@ onMounted(() => {
   }
 
   .sidebar-logo {
-    min-width: 160px;
+    flex: 0 0 170px;
+    min-width: 170px;
   }
 
   .sidebar-menu {
@@ -686,6 +699,10 @@ onMounted(() => {
   .admin-currency-btn {
     width: 42px;
     padding: 8px;
+  }
+
+  .admin-currency-wrap {
+    flex: 0 0 42px;
   }
 
   .admin-currency-menu {
