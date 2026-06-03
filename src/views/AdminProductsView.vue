@@ -2,8 +2,10 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted, computed } from 'vue'
+import { useCurrencyStore } from '../stores/currency'
 
 const products = ref([])
+const currencyStore = useCurrencyStore()
 const name = ref(''); const price = ref(''); const stock = ref('')
 const category = ref(''); const image = ref(''); const details = ref('')
 const editingId = ref(null); const showEditModal = ref(false)
@@ -19,7 +21,10 @@ async function loadProducts() {
   const { getAll } = await import('../lib/api.js')
   products.value = await getAll('products')
 }
-onMounted(loadProducts)
+onMounted(() => {
+  currencyStore.fetchRates()
+  loadProducts()
+})
 
 async function addProduct() {
   if (!name.value || !price.value || !category.value) {
@@ -126,7 +131,7 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
           </div>
           <div class="field-row">
             <div class="field-group">
-              <label class="field-label">Price (RM) *</label>
+              <label class="field-label">Price (MYR) *</label>
               <input v-model="price" type="number" placeholder="0.00" class="field-input" />
             </div>
             <div class="field-group">
@@ -181,7 +186,7 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
               <div class="prod-info">
                 <span class="prod-cat">{{ product.category }}</span>
                 <p class="prod-name">{{ product.name }}</p>
-                <p class="prod-price">RM {{ Number(product.price).toFixed(2) }}</p>
+                <p class="prod-price">{{ currencyStore.format(product.price) }}</p>
                 <div class="prod-stock" :class="product.stock <= 5 ? 'low' : 'ok'">
                   <span class="stock-dot" />
                   Stock: {{ product.stock }}
@@ -211,7 +216,7 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
           </div>
           <div class="field-row">
             <div class="field-group">
-              <label class="field-label">Price (RM)</label>
+              <label class="field-label">Price (MYR)</label>
               <input v-model="editPrice" type="number" class="field-input" />
             </div>
             <div class="field-group">
@@ -278,9 +283,14 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 9px; color: #f1f5f9; font-size: 12px; outline: none;
   transition: all 0.2s; box-sizing: border-box; font-family: inherit;
+  color-scheme: dark;
 }
 .field-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 .field-input::placeholder { color: #334155; }
+.field-input option {
+  background: #111827;
+  color: #f8fafc;
+}
 .field-textarea { resize: vertical; min-height: 54px; }
 
 .upload-label {
@@ -306,7 +316,22 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
   display: flex; align-items: center; gap: 8px; padding: 8px 10px !important;
   border-radius: 11px; border: 1px solid rgba(255,255,255,0.07);
 }
-.filter-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #f1f5f9; font-size: 13px; padding: 8px 12px; outline: none; cursor: pointer; flex: 1; }
+.filter-select {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: #f1f5f9;
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+  color-scheme: dark;
+}
+.filter-select option {
+  background: #111827;
+  color: #f8fafc;
+}
 .filter-count { font-size: 12px; color: #334155; flex-shrink: 0; }
 
 /* Product grid */
@@ -343,4 +368,22 @@ const lowStockCount = computed(() => products.value.filter(p => p.stock <= 5).le
 
 @media (max-width: 1100px) { .products-layout { grid-template-columns: 1fr; } .add-form { position: relative; top: 0; } }
 @media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; } }
+
+:global(:root[data-theme="light"]) .field-input,
+:global(:root[data-theme="light"]) .filter-select {
+  background: rgba(255,255,255,0.94) !important;
+  border-color: rgba(71,85,105,0.20) !important;
+  color: #172033 !important;
+  color-scheme: light;
+}
+
+:global(:root[data-theme="light"]) .field-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+:global(:root[data-theme="light"]) .field-input option,
+:global(:root[data-theme="light"]) .filter-select option {
+  background: #ffffff !important;
+  color: #172033 !important;
+}
 </style>

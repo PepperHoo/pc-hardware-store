@@ -1,8 +1,10 @@
 <script setup>
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { useCurrencyStore } from '../stores/currency'
 
 const totalProducts  = ref(0)
+const currencyStore  = useCurrencyStore()
 const totalOrders    = ref(0)
 const totalUsers     = ref(0)
 const totalIncome    = ref(0)
@@ -71,7 +73,7 @@ function renderCharts() {
       data: {
         labels: months.map(m => m.label),
         datasets: [{
-          label: 'Revenue (RM)',
+          label: `Revenue (${currencyStore.current})`,
           data: revenueByMonth,
           borderColor: '#3b82f6',
           backgroundColor: 'rgba(59,130,246,0.1)',
@@ -84,7 +86,7 @@ function renderCharts() {
         plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } },
         scales: {
           x: { ticks: { color: '#475569' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-          y: { ticks: { color: '#475569', callback: v => 'RM ' + v }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          y: { ticks: { color: '#475569', callback: v => currencyStore.format(v) }, grid: { color: 'rgba(255,255,255,0.05)' } }
         }
       }
     })
@@ -136,7 +138,10 @@ function renderCharts() {
   }
 }
 
-onMounted(loadDashboard)
+onMounted(() => {
+  currencyStore.fetchRates()
+  loadDashboard()
+})
 </script>
 
 <template>
@@ -214,7 +219,7 @@ onMounted(loadDashboard)
             </div>
             <div class="stat-body">
               <p class="stat-label">Revenue</p>
-              <p class="stat-val grad-text">RM {{ totalIncome.toFixed(0) }}</p>
+              <p class="stat-val grad-text">{{ currencyStore.format(totalIncome) }}</p>
               <p class="stat-hint">Total sales income</p>
             </div>
           </div>
@@ -261,7 +266,7 @@ onMounted(loadDashboard)
             <div v-for="p in latestProducts" :key="p.id" class="ac-row">
               <div class="ac-dot" style="background:#3b82f6" />
               <span class="ac-name">{{ p.name }}</span>
-              <span class="ac-price">RM {{ Number(p.price).toFixed(0) }}</span>
+              <span class="ac-price">{{ currencyStore.format(p.price) }}</span>
             </div>
           </div>
 
@@ -274,7 +279,7 @@ onMounted(loadDashboard)
             <div v-for="o in latestOrders" :key="o.id" class="ac-row">
               <div class="ac-dot" style="background:#f59e0b" />
               <span class="ac-name">Order #{{ o.id }}</span>
-              <span class="ac-price" style="color:#fcd34d">RM {{ Number(o.total).toFixed(0) }}</span>
+              <span class="ac-price" style="color:#fcd34d">{{ currencyStore.format(o.total) }}</span>
             </div>
           </div>
         </div>

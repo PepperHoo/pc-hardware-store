@@ -2,8 +2,10 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted, computed } from 'vue'
+import { useCurrencyStore } from '../stores/currency'
 
 const orders = ref([])
+const currencyStore = useCurrencyStore()
 const loading = ref(true)
 const errorMessage = ref('')
 const savingOrderId = ref(null)
@@ -20,7 +22,10 @@ async function loadOrders() {
   } finally { loading.value = false }
 }
 
-onMounted(loadOrders)
+onMounted(() => {
+  currencyStore.fetchRates()
+  loadOrders()
+})
 
 async function updateStatus(order) {
   try {
@@ -45,7 +50,7 @@ async function deleteOrder(id) {
   } finally { deletingOrderId.value = null }
 }
 
-const totalRevenue    = computed(() => orders.value.reduce((s,o) => s+Number(o.total||0),0).toFixed(2))
+const totalRevenue    = computed(() => orders.value.reduce((s,o) => s+Number(o.total||0),0))
 const pendingOrders   = computed(() => orders.value.filter(o => o.status==='Pending').length)
 const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Delivered').length)
 </script>
@@ -90,7 +95,7 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
             <div class="sp-icon" style="color:#c4b5fd">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 5v8M6.5 7.5C6.5 6.12 7.62 5 9 5s2.5.95 2.5 2.5c0 1.5-1.5 1.8-2.5 2.5-1 .7-2.5 1.2-2.5 3h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
-            <div><p class="sp-label">Revenue</p><p class="sp-val grad-text">RM {{ totalRevenue }}</p></div>
+            <div><p class="sp-label">Revenue</p><p class="sp-val grad-text">{{ currencyStore.format(totalRevenue) }}</p></div>
           </div>
         </div>
 
@@ -114,7 +119,7 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
                   <td><span class="order-id">#{{ order.id }}</span></td>
                   <td><span class="customer-email">{{ order.userEmail }}</span></td>
                   <td><span class="items-count">{{ order.items?.length || 0 }} items</span></td>
-                  <td><span class="price-val">RM {{ Number(order.total||0).toFixed(2) }}</span></td>
+                  <td><span class="price-val">{{ currencyStore.format(order.total || 0) }}</span></td>
                   <td>
                     <div class="status-cell">
                       <span :class="['status-badge', `s-${order.status?.toLowerCase()}`]">{{ order.status }}</span>
@@ -227,14 +232,15 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
   cursor: pointer;
   outline: none;
   appearance: none;
-  box-shadow: 0 8px 18px rgba(2,8,23,0.22);
+  color-scheme: dark;
+  box-shadow: 0 2px 8px rgba(2,8,23,0.10);
 }
 .status-select:focus {
   border-color: rgba(45,212,191,0.55);
-  box-shadow: 0 0 0 3px rgba(45,212,191,0.14);
+  box-shadow: 0 0 0 2px rgba(45,212,191,0.12);
 }
 .status-select option {
-  background: #0f172a;
+  background: #111827;
   color: #f8fafc;
   font-weight: 700;
 }
@@ -245,11 +251,15 @@ const deliveredOrders = computed(() => orders.value.filter(o => o.status==='Deli
     url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' fill='none' stroke='%230f766e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center !important;
   border-color: rgba(14,116,144,0.26) !important;
   color: #172033 !important;
-  box-shadow: 0 8px 18px rgba(15,23,42,0.10) !important;
+  color-scheme: light;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.06) !important;
+}
+:global(:root[data-theme="light"]) .status-select:focus {
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.10) !important;
 }
 :global(:root[data-theme="light"]) .status-select option {
-  background: #ffffff;
-  color: #172033;
+  background: #ffffff !important;
+  color: #172033 !important;
 }
 
 .action-btns { display: flex; gap: 5px; }

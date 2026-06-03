@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useCurrencyStore } from '../stores/currency'
 
 const route  = useRoute()
 const router = useRouter()
+const currency = useCurrencyStore()
 const isDark = ref(true)
+const showCurrency = ref(false)
 
 const navItems = [
   {
@@ -41,6 +44,11 @@ function toggleTheme() {
   localStorage.setItem('theme', theme)
 }
 
+function selectCurrency(code) {
+  currency.setCurrency(code)
+  showCurrency.value = false
+}
+
 function getStoredUser() {
   try {
     return JSON.parse(localStorage.getItem('user') || 'null')
@@ -67,6 +75,7 @@ onMounted(() => {
 
   isDark.value = saved !== 'light'
   document.documentElement.setAttribute('data-theme', saved)
+  currency.fetchRates()
 })
 </script>
 
@@ -116,6 +125,26 @@ onMounted(() => {
 
     <!-- Bottom -->
     <div class="sidebar-bottom">
+      <div class="admin-currency-wrap">
+        <button class="admin-currency-btn" type="button" @click="showCurrency = !showCurrency" :title="`Currency: ${currency.current}`">
+          <span class="currency-symbol">{{ currency.symbol }}</span>
+          <span class="currency-code">{{ currency.current }}</span>
+        </button>
+        <div v-if="showCurrency" class="admin-currency-menu">
+          <button
+            v-for="code in currency.currencies"
+            :key="code"
+            class="admin-currency-option"
+            :class="{ active: currency.current === code }"
+            type="button"
+            @click="selectCurrency(code)"
+          >
+            <span>{{ currency.symbols[code] }}</span>
+            <strong>{{ code }}</strong>
+          </button>
+        </div>
+      </div>
+
       <button class="theme-toggle" @click="toggleTheme">
         <span>
           {{ isDark ? 'Light Mode' : 'Dark Mode' }}
@@ -222,6 +251,76 @@ onMounted(() => {
 
 /* Bottom */
 .sidebar-bottom { padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+
+.admin-currency-wrap {
+  position: relative;
+}
+
+.admin-currency-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(96,165,250,0.18);
+  background: rgba(59,130,246,0.08);
+  color: #93c5fd;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-currency-btn:hover {
+  border-color: rgba(96,165,250,0.36);
+  background: rgba(59,130,246,0.14);
+}
+
+.currency-symbol {
+  color: #60a5fa;
+}
+
+.currency-code {
+  letter-spacing: 0.04em;
+}
+
+.admin-currency-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 150px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(96,165,250,0.20);
+  background: rgba(15,23,42,0.98);
+  box-shadow: 0 18px 34px rgba(2,6,23,0.36);
+  z-index: 20;
+}
+
+.admin-currency-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-currency-option:hover,
+.admin-currency-option.active {
+  background: rgba(59,130,246,0.14);
+  color: #93c5fd;
+}
 
 .theme-toggle {
   display: flex;
@@ -504,6 +603,32 @@ onMounted(() => {
   box-shadow: 0 14px 30px rgba(15,23,42,0.10) !important;
 }
 
+:global(:root[data-theme="light"]) .admin-currency-btn {
+  background: rgba(37,99,235,0.08) !important;
+  border-color: rgba(37,99,235,0.18) !important;
+  color: #1d4ed8 !important;
+}
+
+:global(:root[data-theme="light"]) .currency-symbol {
+  color: #2563eb !important;
+}
+
+:global(:root[data-theme="light"]) .admin-currency-menu {
+  background: rgba(255,255,255,0.98) !important;
+  border-color: rgba(37,99,235,0.18) !important;
+  box-shadow: 0 18px 34px rgba(15,23,42,0.14) !important;
+}
+
+:global(:root[data-theme="light"]) .admin-currency-option {
+  color: #334155 !important;
+}
+
+:global(:root[data-theme="light"]) .admin-currency-option:hover,
+:global(:root[data-theme="light"]) .admin-currency-option.active {
+  background: rgba(37,99,235,0.10) !important;
+  color: #1d4ed8 !important;
+}
+
 @media (max-width: 1100px) {
   .admin-sidebar {
     flex-wrap: wrap;
@@ -556,6 +681,19 @@ onMounted(() => {
 
   .theme-toggle {
     min-height: 34px;
+  }
+
+  .admin-currency-btn {
+    width: 42px;
+    padding: 8px;
+  }
+
+  .admin-currency-menu {
+    right: -46px;
+  }
+
+  .currency-code {
+    display: none;
   }
 
   .theme-toggle span:first-child {

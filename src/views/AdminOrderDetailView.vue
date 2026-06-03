@@ -2,9 +2,11 @@
 import AdminNavbar from '../components/AdminNavbar.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useCurrencyStore } from '../stores/currency'
 
 const route  = useRoute()
 const router = useRouter()
+const currencyStore = useCurrencyStore()
 const order  = ref(null)
 const loading = ref(true)
 const errorMessage = ref('')
@@ -25,7 +27,7 @@ async function loadOrder() {
 }
 
 function money(value) {
-  return `RM ${Number(value || 0).toFixed(2)}`
+  return currencyStore.format(value || 0)
 }
 
 function receiptText() {
@@ -135,7 +137,10 @@ function emailReceipt() {
   window.location.href = `mailto:${to}?subject=${subject}&body=${body}`
 }
 
-onMounted(loadOrder)
+onMounted(() => {
+  currencyStore.fetchRates()
+  loadOrder()
+})
 </script>
 
 <template>
@@ -222,7 +227,7 @@ onMounted(loadOrder)
             </div>
             <div class="info-item">
               <span class="info-label">Order Total</span>
-              <span class="info-val total-val grad-text">RM {{ Number(order.total || 0).toFixed(2) }}</span>
+              <span class="info-val total-val grad-text">{{ money(order.total) }}</span>
             </div>
           </div>
         </div>
@@ -257,7 +262,7 @@ onMounted(loadOrder)
                 <div class="item-stats">
                   <div class="stat-row">
                     <span class="stat-key">Unit Price</span>
-                    <span class="stat-val">RM {{ Number(item.price || 0).toFixed(2) }}</span>
+                    <span class="stat-val">{{ money(item.price) }}</span>
                   </div>
                   <div class="stat-row">
                     <span class="stat-key">Quantity</span>
@@ -266,7 +271,7 @@ onMounted(loadOrder)
                   <div class="stat-row subtotal-row">
                     <span class="stat-key">Subtotal</span>
                     <span class="stat-val subtotal-val grad-text">
-                      RM {{ (Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2) }}
+                      {{ money(Number(item.price || 0) * Number(item.quantity || 0)) }}
                     </span>
                   </div>
                 </div>
@@ -283,12 +288,12 @@ onMounted(loadOrder)
           <div class="total-bar-inner">
             <div class="total-row">
               <span>Items ({{ (order.items || []).length }})</span>
-              <span>RM {{ Number(order.total || 0).toFixed(2) }}</span>
+              <span>{{ money(order.total) }}</span>
             </div>
             <div class="total-divider" />
             <div class="total-row total-final">
               <span>Order Total</span>
-              <span class="grad-text">RM {{ Number(order.total || 0).toFixed(2) }}</span>
+              <span class="grad-text">{{ money(order.total) }}</span>
             </div>
           </div>
 
