@@ -1,7 +1,7 @@
 <script setup>
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
-import { computed } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWishlistStore } from '../stores/wishlist'
 import { useCartStore } from '../stores/cart'
@@ -20,6 +20,10 @@ function addToCart(product) {
 function removeItem(id) {
   wishlist.remove(id, user?.email)
 }
+
+onMounted(() => {
+  if (user?.email) wishlist.load(user.email)
+})
 </script>
 
 <template>

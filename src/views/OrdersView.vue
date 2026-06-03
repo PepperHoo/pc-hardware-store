@@ -1,13 +1,17 @@
 <script setup>
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCurrencyStore } from '../stores/currency'
 
 const router = useRouter()
+const currency = useCurrencyStore()
 const user   = ref(JSON.parse(localStorage.getItem('user')))
 const orders = ref([])
 const loading = ref(true)
+const printableOrder = ref(null)
+const isPrinting = ref(false)
 
 
 
@@ -21,109 +25,43 @@ async function loadOrders() {
   finally { loading.value = false }
 }
 
-function money(value) {
-  return `RM ${Number(value || 0).toFixed(2)}`
+function formatMoney(value) {
+  return currency.format(value)
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+function clearPrintState() {
+  isPrinting.value = false
+  printableOrder.value = null
 }
 
-function printOrder(order) {
+async function printOrder(order) {
   if (!order) return
 
-  const itemRows = (order.items || []).map((item) => {
-    const quantity = Number(item.quantity || 0)
-    const subtotal = Number(item.price || 0) * quantity
+  printableOrder.value = order
+  isPrinting.value = true
+  await nextTick()
 
-    return `
-      <tr>
-        <td>${escapeHtml(item.name || '-')}</td>
-        <td>${quantity}</td>
-        <td>${money(item.price)}</td>
-        <td>${money(subtotal)}</td>
-      </tr>
-    `
-  }).join('')
-
-  const receiptWindow = window.open('', '_blank', 'width=900,height=720')
-
-  if (!receiptWindow) {
-    window.print()
-    return
+  const cleanup = () => {
+    window.removeEventListener('afterprint', cleanup)
+    clearPrintState()
   }
 
-  receiptWindow.document.write(`
-    <!doctype html>
-    <html>
-      <head>
-        <title>Receipt Order #${escapeHtml(order.id)}</title>
-        <style>
-          body { margin: 36px; font-family: Arial, sans-serif; color: #111827; background: #fff; }
-          .receipt { max-width: 820px; margin: 0 auto; }
-          .header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 18px; margin-bottom: 22px; }
-          h1 { margin: 0 0 6px; font-size: 28px; }
-          .muted { margin: 0; color: #64748b; }
-          .status { display: inline-block; height: fit-content; padding: 8px 12px; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-          .box { border: 1px solid #dbe3ef; border-radius: 10px; padding: 14px; }
-          .label { display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-          table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-          th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-          th { background: #f1f5f9; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-          .total { margin-top: 24px; text-align: right; font-size: 26px; font-weight: 800; color: #2563eb; }
-          @media print { body { margin: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <div>
-              <h1>PC Hardware Receipt</h1>
-              <p class="muted">Order #${escapeHtml(order.id)}</p>
-              <p class="muted">${escapeHtml(order.userEmail || '-')}</p>
-            </div>
-            <span class="status">${escapeHtml(order.status || '-')}</span>
-          </div>
+  window.addEventListener('afterprint', cleanup, { once: true })
+  window.print()
 
-          <div class="grid">
-            <div class="box"><span class="label">Payment Method</span>${escapeHtml(order.paymentMethod || '-')}</div>
-            <div class="box"><span class="label">Shipping Method</span>${escapeHtml(order.shippingMethod || '-')}</div>
-            <div class="box" style="grid-column:1/-1"><span class="label">Shipping Address</span>${escapeHtml(order.address || order.shippingAddress || '-')}</div>
-          </div>
-
-          <table>
-            <thead>
-              <tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr>
-            </thead>
-            <tbody>${itemRows || '<tr><td colspan="4">No items</td></tr>'}</tbody>
-          </table>
-
-          <div class="total">Total: ${money(order.total)}</div>
-        </div>
-
-        <script>
-          window.onload = () => {
-            window.focus();
-            window.print();
-          };
-        <\/script>
-      </body>
-    </html>
-  `)
-  receiptWindow.document.close()
+  window.setTimeout(() => {
+    if (isPrinting.value) cleanup()
+  }, 20_000)
 }
 
-onMounted(loadOrders)
+onMounted(() => {
+  currency.fetchRates()
+  loadOrders()
+})
 </script>
 
 <template>
-  <div class="orders-page">
+  <div class="orders-page" :class="{ printing: isPrinting }">
     <Navbar />
 
     <main class="orders-main section-inner">
@@ -175,7 +113,7 @@ onMounted(loadOrders)
                 <p class="item-name">{{ item.name }}</p>
                 <p class="item-qty">Qty: {{ item.quantity }}</p>
               </div>
-              <p class="item-price">RM {{ (item.price * item.quantity).toFixed(2) }}</p>
+              <p class="item-price">{{ formatMoney(Number(item.price || 0) * Number(item.quantity || 0)) }}</p>
             </div>
           </div>
 
@@ -196,7 +134,7 @@ onMounted(loadOrders)
               </span>
             </div>
             <div class="order-right">
-              <p class="order-total grad-text">RM {{ Number(order.total).toFixed(2) }}</p>
+              <p class="order-total grad-text">{{ formatMoney(order.total) }}</p>
               <button class="print-btn" @click="printOrder(order)">🖨 Print</button>
             </div>
           </div>
@@ -206,6 +144,56 @@ onMounted(loadOrders)
     </main>
 
     <Footer />
+
+    <section v-if="printableOrder" class="print-receipt">
+      <header class="receipt-head">
+        <div>
+          <h1>PC Hardware Receipt</h1>
+          <p>Order #{{ printableOrder.id }}</p>
+          <p>{{ printableOrder.userEmail }}</p>
+        </div>
+        <span class="receipt-status">{{ printableOrder.status || '-' }}</span>
+      </header>
+
+      <div class="receipt-grid">
+        <div class="receipt-box">
+          <span>Payment Method</span>
+          <strong>{{ printableOrder.paymentMethod || '-' }}</strong>
+        </div>
+        <div class="receipt-box">
+          <span>Shipping Method</span>
+          <strong>{{ printableOrder.shippingMethod || '-' }}</strong>
+        </div>
+        <div class="receipt-box receipt-box--full">
+          <span>Shipping Address</span>
+          <strong>{{ printableOrder.address || printableOrder.shippingAddress || '-' }}</strong>
+        </div>
+      </div>
+
+      <table class="receipt-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in (printableOrder.items || [])" :key="item.id || index">
+            <td>{{ item.name || '-' }}</td>
+            <td>{{ Number(item.quantity || 0) }}</td>
+            <td>{{ formatMoney(item.price) }}</td>
+            <td>{{ formatMoney(Number(item.price || 0) * Number(item.quantity || 0)) }}</td>
+          </tr>
+          <tr v-if="!(printableOrder.items || []).length">
+            <td colspan="4">No items</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="receipt-total">Total: {{ formatMoney(printableOrder.total) }}</p>
+    </section>
   </div>
 </template>
 
@@ -312,14 +300,125 @@ onMounted(loadOrders)
 .print-btn { padding: 6px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .print-btn:hover { background: rgba(255,255,255,0.09); color: #94a3b8; }
 
+.print-receipt {
+  display: none;
+}
+
 @media print {
-  .orders-header, .state-box, .print-btn { display: none !important; }
-  .orders-page { background: #fff !important; }
-  .order-card  { background: #fff !important; border: 1px solid #ddd !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 24px; }
-  .order-id, .order-email { color: #000 !important; }
-  .item-name, .item-qty { color: #000 !important; }
-  .item-price, .order-total { color: #000 !important; background: none !important; -webkit-text-fill-color: #000 !important; }
-  .status-badge { border: 1px solid #999 !important; color: #333 !important; background: #eee !important; }
+  .orders-page {
+    background: #fff !important;
+    color: #111827 !important;
+  }
+
+  .orders-page > :not(.print-receipt),
+  .orders-page.printing :deep(.nav),
+  .orders-page.printing :deep(.footer),
+  .orders-page.printing .orders-main {
+    display: none !important;
+  }
+
+  .print-receipt {
+    display: block !important;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff !important;
+    color: #111827 !important;
+    font-family: Arial, sans-serif;
+  }
+
+  .receipt-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+  }
+
+  .receipt-head h1 {
+    margin: 0 0 6px;
+    font-size: 28px;
+    color: #111827 !important;
+  }
+
+  .receipt-head p {
+    margin: 0 0 4px;
+    color: #64748b !important;
+  }
+
+  .receipt-status {
+    display: inline-block;
+    height: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .receipt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .receipt-box {
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .receipt-box--full {
+    grid-column: 1 / -1;
+  }
+
+  .receipt-box span {
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b !important;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .receipt-box strong {
+    color: #111827 !important;
+  }
+
+  .receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+  }
+
+  .receipt-table th,
+  .receipt-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    color: #111827 !important;
+  }
+
+  .receipt-table th {
+    background: #f1f5f9 !important;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .receipt-total {
+    margin-top: 24px;
+    text-align: right;
+    font-size: 26px;
+    font-weight: 800;
+    color: #2563eb !important;
+  }
+
   * { print-color-adjust: exact !important; }
 }
 

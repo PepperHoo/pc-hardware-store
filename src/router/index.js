@@ -10,6 +10,7 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import ApproveResetView   from '../views/ApproveResetView.vue'
 import ResetPasswordView  from '../views/ResetPasswordView.vue'
 import ProductDetailView  from '../views/ProductDetailView.vue'
+import WishlistView       from '../views/WishlistView.vue'
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminProductsView  from '../views/AdminProductsView.vue'
 import AdminOrdersView    from '../views/AdminOrdersView.vue'
@@ -39,7 +40,7 @@ const routes = [
   { path: '/checkout',  component: CheckoutView, meta: { requiresAuth: true } },
   { path: '/orders',    component: OrdersView,   meta: { requiresAuth: true } },
   { path: '/profile',   component: ProfileView,  meta: { requiresAuth: true } },
-  { path: '/wishlist',  component: () => import('../views/WishlistView.vue'), meta: { requiresAuth: true } },
+  { path: '/wishlist',  component: WishlistView, meta: { requiresAuth: true } },
 
   // ── Admin-only ───────────────────────────────────────────────
   { path: '/admin',              component: AdminDashboardView,  meta: { requiresAdmin: true } },

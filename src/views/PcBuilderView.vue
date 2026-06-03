@@ -2,7 +2,6 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-import PcViewer3D from '../components/PcViewer3D.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useRouter } from 'vue-router'
@@ -126,11 +125,6 @@ function addBuildToCart() {
 
 const totalPrice    = computed(() => buildCategories.reduce((t,c) => t + Number(getSelectedProduct(c.key)?.price || 0), 0))
 const selectedCount = computed(() => buildCategories.filter(c => getSelectedProduct(c.key)).length)
-const selectedProducts = computed(() => Object.fromEntries(
-  buildCategories
-    .map(c => [c.key, getSelectedProduct(c.key)])
-    .filter(([, product]) => Boolean(product))
-))
 const buildComplete = computed(() => selectedCount.value === buildCategories.length)
 const buildStatus   = computed(() => {
   if (selectedCount.value === 0) return 'Start by selecting a motherboard.'
@@ -239,8 +233,6 @@ onMounted(async () => {
 
         <!-- Sidebar (RIGHT) -->
         <aside class="builder-sidebar">
-          <PcViewer3D :selected-parts="selectedParts" :selected-products="selectedProducts" />
-
           <!-- Selected parts list -->
           <div class="parts-panel glass">
             <h2 class="parts-title">
@@ -375,15 +367,6 @@ onMounted(async () => {
 /* Sidebar */
 .builder-sidebar { position: sticky; top: 92px; display: flex; flex-direction: column; gap: 20px; }
 
-:deep(.builder-sidebar .viewer-wrap) {
-  position: static;
-}
-
-:deep(.builder-sidebar .viewer-canvas) {
-  height: 300px;
-}
-
-
 .parts-panel { padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); }
 .parts-title {
   display: flex; align-items: center; gap: 8px;
@@ -502,7 +485,6 @@ onMounted(async () => {
 @media (max-width: 1200px) {
   .builder-layout { grid-template-columns: 1fr; }
   .builder-sidebar { position: relative; top: 0; }
-  :deep(.builder-sidebar .viewer-canvas) { height: 360px; }
 }
 @media (max-width: 900px) {
   .builder-header { flex-direction: column; }
@@ -514,6 +496,5 @@ onMounted(async () => {
   .reco-grid { grid-template-columns: 1fr; }
   .selected-card { grid-template-columns: 1fr; text-align: center; justify-items: center; }
   .cat-header { flex-direction: column; align-items: flex-start; }
-  :deep(.builder-sidebar .viewer-canvas) { height: 300px; }
 }
 </style>

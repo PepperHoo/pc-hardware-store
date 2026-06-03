@@ -604,8 +604,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     right: 0;
   }
 
-  .currency-wrap,
-  .nav-right > .nav-icon-btn[aria-label="Wishlist"] {
+  .currency-wrap {
     display: none;
   }
 
@@ -638,7 +637,13 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 @media (max-width: 640px) {
   .nav {
+    background: rgba(3, 7, 18, 0.94);
+    border-bottom-color: rgba(96,165,250,0.14);
+  }
+
+  :global(:root[data-theme="light"]) .nav {
     background: rgba(248,250,252,0.96);
+    border-bottom-color: rgba(15,23,42,0.08);
   }
 
   .nav-inner {
@@ -654,7 +659,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   .nav-left {
     order: 1;
     flex: 1 1 auto;
-    max-width: calc(100% - 116px);
+    max-width: calc(100% - 152px);
   }
 
   .nav-logo {
@@ -676,10 +681,18 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   .search-box.focused {
     width: 100%;
     height: 38px;
+    background: rgba(15,23,42,0.82);
+    border-color: rgba(96,165,250,0.14);
+  }
+
+  :global(:root[data-theme="light"]) .search-box,
+  :global(:root[data-theme="light"]) .search-box.focused {
     background: rgba(255,255,255,0.78);
+    border-color: rgba(15,23,42,0.12);
   }
 
   .theme-btn,
+  .nav-right > .nav-icon-btn[aria-label="Wishlist"],
   .nav-right > .nav-icon-btn[aria-label="Cart"],
   .nav-right > .nav-icon-btn[aria-label="Profile"] {
     order: 2;
@@ -733,7 +746,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 @media (max-width: 380px) {
   .nav-left {
-    max-width: calc(100% - 104px);
+    max-width: calc(100% - 142px);
   }
 
   .nav-logo span {
