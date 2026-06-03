@@ -158,7 +158,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
                   <img :src="product.image" :alt="product.name" class="dropdown-img" />
                   <div>
                     <div class="dropdown-name">{{ product.name }}</div>
-                    <div class="dropdown-price">RM {{ Number(product.price).toFixed(2) }}</div>
+                    <div class="dropdown-price">{{ currency.format(product.price) }}</div>
                   </div>
                 </button>
               </div>
@@ -368,7 +368,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 .search-box {
   display: flex; align-items: center; gap: 8px;
-  padding: 0 14px; height: 40px; width: 260px;
+  padding: 0 14px; height: 40px; width: clamp(300px, 24vw, 380px);
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px; transition: all 0.25s;
@@ -377,7 +377,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   background: rgba(255,255,255,0.08);
   border-color: rgba(59,130,246,0.4);
   box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-  width: 320px;
+  width: clamp(340px, 28vw, 430px);
 }
 .search-icon { color: #475569; flex-shrink: 0; }
 .search-input {

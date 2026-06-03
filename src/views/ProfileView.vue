@@ -3,8 +3,10 @@ import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCurrencyStore } from '../stores/currency'
 
 const router = useRouter()
+const currency = useCurrencyStore()
 const user = ref(JSON.parse(localStorage.getItem('user')))
 const orders = ref([])
 const loading = ref(true)
@@ -39,8 +41,12 @@ async function loadOrders() {
 }
 
 const totalOrders   = computed(() => orders.value.length)
-const totalSpent    = computed(() => orders.value.reduce((s, o) => s + Number(o.total || 0), 0).toFixed(2))
+const totalSpent    = computed(() => orders.value.reduce((s, o) => s + Number(o.total || 0), 0))
 const pendingOrders = computed(() => orders.value.filter(o => o.status === 'Pending').length)
+
+function formatMoney(value) {
+  return currency.format(value)
+}
 
 function logout() {
   localStorage.removeItem('user')
@@ -96,7 +102,10 @@ function saveAddress() {
   showAddressModal.value = false
 }
 
-onMounted(loadOrders)
+onMounted(() => {
+  currency.fetchRates()
+  loadOrders()
+})
 </script>
 
 <template>
@@ -166,7 +175,7 @@ onMounted(loadOrders)
             </div>
             <div class="stat-card glass">
               <p class="stat-label">Total Spent</p>
-              <p class="stat-value grad-text">RM {{ totalSpent }}</p>
+              <p class="stat-value grad-text">{{ formatMoney(totalSpent) }}</p>
             </div>
             <div class="stat-card glass">
               <p class="stat-label">Pending</p>
@@ -217,7 +226,7 @@ onMounted(loadOrders)
                   <p class="ro-date">{{ o.userEmail }}</p>
                 </div>
                 <span :class="['status-badge', `s-${o.status?.toLowerCase()}`]">{{ o.status }}</span>
-                <span class="ro-total">RM {{ Number(o.total).toFixed(2) }}</span>
+                <span class="ro-total">{{ formatMoney(o.total) }}</span>
               </div>
             </div>
           </div>

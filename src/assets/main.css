@@ -3,10 +3,14 @@
   --bg-base:   #030712;
   --bg-card:   rgba(255,255,255,0.04);
   --text-main: #f1f5f9;
-  --text-muted:#475569;
-  --text-dim:  #334155;
+  --text-muted:#a9b7c8;
+  --text-dim:  #64748b;
   --border:    rgba(255,255,255,0.07);
   --accent:    #3b82f6;
+  --read-heading: #f8fafc;
+  --read-body:    #dbe4ef;
+  --read-muted:   #a9b7c8;
+  --read-dim:     #748198;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -20,6 +24,10 @@
   --text-dim:  #64748b;
   --border:    rgba(0,0,0,0.08);
   --accent:    #2563eb;
+  --read-heading: #172033;
+  --read-body:    #334155;
+  --read-muted:   #52657d;
+  --read-dim:     #64748b;
 }
 
 /* Page backgrounds */
@@ -2393,4 +2401,102 @@ table {
   .admin-page .admin-main .banner-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* Final theme readability pass for user and admin screens. */
+body {
+  color: var(--read-body) !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.hero-title,
+.section-title,
+.page-title,
+.cart-title,
+.orders-title,
+.builder-title,
+.wishlist-title,
+.products-page-title,
+.detail-title,
+.profile-title,
+.product-name,
+.p-name,
+.item-name,
+.summary-title,
+.info-card-title,
+.sidebar-name,
+.ro-id,
+.sc-name,
+.reco-name,
+.part-name.selected,
+.admin-page .page-title,
+.admin-page .section-title,
+.admin-page .chart-title,
+.admin-page .ac-title,
+.admin-page .form-title,
+.admin-page .table-title {
+  color: var(--read-heading) !important;
+}
+
+.hero-sub,
+.section-sub,
+.page-sub,
+.cart-subtitle,
+.orders-sub,
+.builder-sub,
+.auth-sub,
+.empty-desc,
+.cat-desc,
+.cart-card .item-subtotal,
+.line-name,
+.line-qty,
+.profile-email,
+.sidebar-email,
+.info-key,
+.address-display p,
+.orders-empty,
+.orders-loading,
+.part-cat,
+.cat-hint,
+.admin-page .page-sub,
+.admin-page .section-sub,
+.admin-page .form-sub,
+.admin-page .sp-label,
+.admin-page .stat-sub,
+.admin-page .table-meta {
+  color: var(--read-muted) !important;
+}
+
+.product-tag,
+.p-tag,
+.item-category,
+.part-name.empty,
+.meta-pill,
+.dropdown-name,
+.data-table td,
+.data-table th,
+.admin-page .data-table td,
+.admin-page .data-table th {
+  color: var(--read-body) !important;
+}
+
+.search-icon,
+.search-input::placeholder,
+input::placeholder,
+textarea::placeholder,
+.admin-page input::placeholder,
+.admin-page textarea::placeholder {
+  color: var(--read-dim) !important;
+}
+
+input,
+textarea,
+select,
+.search-input,
+.modal-input,
+.field-input,
+.admin-page input,
+.admin-page textarea,
+.admin-page select {
+  color: var(--read-heading) !important;
 }

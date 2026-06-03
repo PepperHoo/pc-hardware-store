@@ -5,14 +5,23 @@ import Toast from '../components/Toast.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
+import { useCurrencyStore } from '../stores/currency'
 
 const router = useRouter()
 const cart   = useCartStore()
+const currency = useCurrencyStore()
 const toastRef = ref(null)
 const user   = ref(JSON.parse(localStorage.getItem('user')))
 const checkingOut = ref(false)
+const shippingCost = 10
 
+function formatMoney(value) {
+  return currency.format(value)
+}
 
+onMounted(() => {
+  currency.fetchRates()
+})
 
 function checkout() {
   if (!user.value) {
@@ -73,14 +82,14 @@ function checkout() {
             <div class="item-info">
               <p class="item-category">{{ item.category || 'PC Component' }}</p>
               <h3 class="item-name">{{ item.name }}</h3>
-              <p class="item-price">RM {{ Number(item.price).toFixed(2) }}</p>
+              <p class="item-price">{{ formatMoney(item.price) }}</p>
 
               <!-- Qty row -->
               <div class="qty-row">
                 <button class="qty-btn" @click="cart.decreaseQty(item.id)">−</button>
                 <span class="qty-num">{{ item.quantity }}</span>
                 <button class="qty-btn" @click="cart.increaseQty(item.id)">+</button>
-                <span class="item-subtotal">= RM {{ (item.price * item.quantity).toFixed(2) }}</span>
+                <span class="item-subtotal">= {{ formatMoney(item.price * item.quantity) }}</span>
               </div>
             </div>
 
@@ -103,7 +112,7 @@ function checkout() {
           <div class="summary-lines">
             <div v-for="item in cart.items" :key="item.id" class="summary-line">
               <span class="line-name">{{ item.name }} <span class="line-qty">×{{ item.quantity }}</span></span>
-              <span class="line-price">RM {{ (item.price * item.quantity).toFixed(2) }}</span>
+              <span class="line-price">{{ formatMoney(item.price * item.quantity) }}</span>
             </div>
           </div>
 
@@ -111,16 +120,16 @@ function checkout() {
 
           <div class="summary-row">
             <span>Subtotal</span>
-            <span>RM {{ Number(cart.totalPrice).toFixed(2) }}</span>
+            <span>{{ formatMoney(cart.totalPrice) }}</span>
           </div>
           <div class="summary-row">
             <span>Shipping</span>
-            <span class="ship-badge">RM 10.00</span>
+            <span class="ship-badge">{{ formatMoney(shippingCost) }}</span>
           </div>
 
           <div class="summary-total">
             <span>Total</span>
-            <span class="total-amount grad-text">RM {{ (cart.totalPrice + 10).toFixed(2) }}</span>
+            <span class="total-amount grad-text">{{ formatMoney(cart.totalPrice + shippingCost) }}</span>
           </div>
 
           <button class="btn-primary btn-checkout" @click="checkout" :disabled="checkingOut">

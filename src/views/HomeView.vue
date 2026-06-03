@@ -5,9 +5,11 @@ import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { useCardTilt } from '../composables/useCardTilt'
+import { useCurrencyStore } from '../stores/currency'
 
 const router = useRouter()
 const tilt   = useCardTilt(8)
+const currency = useCurrencyStore()
 useScrollAnimation()
 
 const loading        = ref(true)
@@ -15,15 +17,9 @@ const bannerImages   = ref([])
 const hotSelling     = ref([])
 const latestProducts = ref([])
 const allProducts    = ref([])
-const activeBanner   = ref(0)
 const heroOffset     = ref(0)
-let   bannerTimer    = null
 
 function onScroll() { heroOffset.value = window.scrollY * 0.35 }
-function nextBanner() { activeBanner.value = (activeBanner.value + 1) % bannerImages.value.length }
-function prevBanner() { activeBanner.value = (activeBanner.value - 1 + bannerImages.value.length) % bannerImages.value.length }
-function goToBanner(i) { activeBanner.value = i }
-function startCarousel() { bannerTimer = setInterval(nextBanner, 5000) }
 
 const categories = [
   { key: 'processor',   label: 'Processors',    icon: '⬡', color: '#3b82f6', desc: 'Intel & AMD latest gen' },
@@ -40,6 +36,7 @@ const featuredProducts = computed(() =>
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
+  currency.fetchRates()
   try {
     const { getAll } = await import('../lib/api.js')
     const [hpData, products] = await Promise.all([getAll('homepage'), getAll('products')])
@@ -50,7 +47,6 @@ onMounted(async () => {
       hotSelling.value     = hp.hotSelling     || []
       latestProducts.value = hp.latestProducts || []
     }
-    startCarousel()
   } catch (e) {
     console.error(e)
   } finally {
@@ -59,7 +55,6 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  clearInterval(bannerTimer)
   window.removeEventListener('scroll', onScroll)
 })
 </script>
@@ -71,7 +66,7 @@ onBeforeUnmount(() => {
     <!-- ══ HERO ══════════════════════════════════════════════════════════ -->
     <section class="hero">
       <div class="hero-bg" :style="{ transform: `translateY(${heroOffset}px)` }">
-        <img v-if="bannerImages[activeBanner]" :src="bannerImages[activeBanner]" class="hero-bg-img" alt="" />
+        <img v-if="bannerImages[0]" :src="bannerImages[0]" class="hero-bg-img" alt="" />
         <div class="hero-bg-gradient" />
       </div>
       <div class="orb orb-1" />
@@ -99,17 +94,7 @@ onBeforeUnmount(() => {
             PC Builder
           </button>
         </div>
-        <div v-if="bannerImages.length > 1" class="banner-dots">
-          <button v-for="(_, i) in bannerImages" :key="i" class="dot" :class="{ active: i === activeBanner }" @click="goToBanner(i)" />
-        </div>
       </div>
-
-      <button v-if="bannerImages.length > 1" class="hero-arrow hero-arrow--left"  @click="prevBanner">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <button v-if="bannerImages.length > 1" class="hero-arrow hero-arrow--right" @click="nextBanner">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
 
       <div class="scroll-cue">
         <div class="scroll-cue-line" />
@@ -180,7 +165,7 @@ onBeforeUnmount(() => {
               <span class="product-tag">{{ product.category }}</span>
               <h3 class="product-name">{{ product.name }}</h3>
               <div class="product-footer">
-                <span class="product-price">RM {{ Number(product.price).toFixed(2) }}</span>
+                <span class="product-price">{{ currency.format(product.price) }}</span>
                 <button class="product-btn" @click.stop="router.push(`/product/${product.id}`)">View</button>
               </div>
             </div>
@@ -210,7 +195,7 @@ onBeforeUnmount(() => {
               <span class="product-tag">{{ product.category }}</span>
               <h3 class="product-name">{{ product.name }}</h3>
               <div class="product-footer">
-                <span class="product-price">RM {{ Number(product.price).toFixed(2) }}</span>
+                <span class="product-price">{{ currency.format(product.price) }}</span>
                 <button class="product-btn" @click.stop="router.push(`/product/${product.id}`)">View</button>
               </div>
             </div>
@@ -266,7 +251,7 @@ onBeforeUnmount(() => {
               <span class="product-tag">{{ product.category }}</span>
               <h3 class="product-name">{{ product.name }}</h3>
               <div class="product-footer">
-                <span class="product-price">RM {{ Number(product.price).toFixed(2) }}</span>
+                <span class="product-price">{{ currency.format(product.price) }}</span>
                 <button class="product-btn" @click.stop="router.push(`/product/${product.id}`)">View</button>
               </div>
             </div>

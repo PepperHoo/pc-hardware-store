@@ -4,9 +4,11 @@ import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useCartStore } from '../stores/cart'
+import { useCurrencyStore } from '../stores/currency'
 import { useRouter } from 'vue-router'
 
 const cart   = useCartStore()
+const currency = useCurrencyStore()
 const router = useRouter()
 const toastRef  = ref(null)
 const products  = ref([])
@@ -133,6 +135,7 @@ const buildStatus   = computed(() => {
 })
 
 onMounted(async () => {
+  currency.fetchRates()
   try {
     const { getAll } = await import('../lib/api.js')
     products.value = await getAll('products')
@@ -199,7 +202,7 @@ onMounted(async () => {
               </div>
               <div class="sc-info">
                 <p class="sc-name">{{ getSelectedProduct(cat.key).name }}</p>
-                <p class="sc-price">RM {{ Number(getSelectedProduct(cat.key).price).toFixed(2) }}</p>
+                <p class="sc-price">{{ currency.format(getSelectedProduct(cat.key).price) }}</p>
               </div>
               <button class="change-btn" @click="clearPart(cat.key)">Change</button>
             </div>
@@ -221,7 +224,7 @@ onMounted(async () => {
                 </div>
                 <span class="reco-badge">Recommended</span>
                 <p class="reco-name">{{ p.name }}</p>
-                <p class="reco-price">RM {{ Number(p.price).toFixed(2) }}</p>
+                <p class="reco-price">{{ currency.format(p.price) }}</p>
                 <div class="reco-add">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                   Select
@@ -273,7 +276,7 @@ onMounted(async () => {
 
           <div class="sb-price">
             <span class="price-label">Build Total</span>
-            <span class="price-val grad-text">RM {{ totalPrice.toFixed(2) }}</span>
+            <span class="price-val grad-text">{{ currency.format(totalPrice) }}</span>
           </div>
 
           <button class="add-build-btn" @click="addBuildToCart" :disabled="selectedCount === 0">
