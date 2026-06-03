@@ -7,7 +7,9 @@ You receive the store's real product catalog and the customer's currently select
 Recommend only products from the provided catalog. Never invent product IDs.
 Prioritize a complete, functioning PC build: CPU socket and motherboard platform, RAM generation, GPU fit, PSU wattage, storage support, cooler suitability, case clearance, and balanced performance.
 If exact specs are missing, infer carefully from product names and descriptions, then choose conservative compatible options.
-Return only valid compact JSON. If unsure for one category, return an empty array for that category.
+Return only valid compact JSON in this exact shape:
+{"items":[{"category":"category_key","productIds":["catalog_id"],"reasons":["short reason"]}]}
+If unsure for one category, return that category with an empty productIds array.
 `.trim()
 
 function sendJson(res, status, payload) {
@@ -89,7 +91,6 @@ function normalizeSelectedParts(selectedParts, catalogById) {
 }
 
 function buildPrompt({ products, categories, selectedParts }) {
-  const categoryKeys = categories.map((category) => category.key)
   const compactCatalog = products.map((product) => ({
     id: product.id,
     category: product.category,
@@ -102,17 +103,23 @@ function buildPrompt({ products, categories, selectedParts }) {
   return JSON.stringify({
     task: 'Return AI API recommendations for remaining PC build components.',
     expectedOutputShape: {
-      recommendations: Object.fromEntries(categoryKeys.map((key) => [key, ['catalog_product_id']])),
-      reasons: Object.fromEntries(categoryKeys.map((key) => [key, { catalog_product_id: 'short reason under 90 characters' }]))
+      items: [
+        {
+          category: 'processor',
+          productIds: ['catalog_product_id_1', 'catalog_product_id_2'],
+          reasons: ['short reason for product 1', 'short reason for product 2']
+        }
+      ]
     },
     rules: [
-      'Return every unselected category key.',
-      'For each unselected category, return up to 3 product IDs from the catalog only.',
+      'Return one item for every unselected category key.',
+      'For each item, return up to 3 product IDs from the catalog only.',
       'Do not return products from the wrong category.',
       'Do not return selected product IDs.',
       'Avoid out-of-stock products unless no in-stock option exists.',
       'Use compatibility and balanced build reasoning, not just lowest price.',
-      'Use compact JSON with double-quoted keys and string values.',
+      'The reasons array must match the productIds order.',
+      'Use compact JSON with double-quoted keys and string values only.',
       'Return JSON only, no markdown.'
     ],
     categories,
@@ -122,38 +129,36 @@ function buildPrompt({ products, categories, selectedParts }) {
 }
 
 function buildGeminiResponseSchema(categories) {
-  const recommendationProperties = Object.fromEntries(
-    categories.map((category) => [
-      category.key,
-      {
-        type: 'array',
-        items: { type: 'string' }
-      }
-    ])
-  )
-  const reasonProperties = Object.fromEntries(
-    categories.map((category) => [
-      category.key,
-      {
-        type: 'object'
-      }
-    ])
-  )
-
   return {
     type: 'object',
     properties: {
-      recommendations: {
-        type: 'object',
-        properties: recommendationProperties,
-        required: categories.map((category) => category.key)
-      },
-      reasons: {
-        type: 'object',
-        properties: reasonProperties
+      items: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            category: {
+              type: 'string',
+              enum: categories.map((category) => category.key)
+            },
+            productIds: {
+              type: 'array',
+              items: { type: 'string' },
+              maxItems: 3
+            },
+            reasons: {
+              type: 'array',
+              items: { type: 'string' },
+              maxItems: 3
+            }
+          },
+          required: ['category', 'productIds', 'reasons'],
+          additionalProperties: false
+        }
       }
     },
-    required: ['recommendations', 'reasons']
+    required: ['items'],
+    additionalProperties: false
   }
 }
 
@@ -188,12 +193,38 @@ function extractJson(text) {
   throw new Error('AI recommendation API returned invalid JSON.')
 }
 
+function getGeminiText(data) {
+  return (data?.candidates || [])
+    .flatMap((candidate) => candidate?.content?.parts || [])
+    .map((part) => part?.text || '')
+    .filter(Boolean)
+    .join('\n')
+}
+
 function validateAiResult(raw, { categories, catalogById, selectedParts }) {
   const selectedIds = new Set(Object.values(selectedParts).map((product) => product.id))
   const recommendations = {}
   const reasons = {}
-  const rawRecommendations = raw?.recommendations || {}
-  const rawReasons = raw?.reasons || {}
+  const rawRecommendations = {}
+  const rawReasons = {}
+
+  if (Array.isArray(raw?.items)) {
+    for (const item of raw.items) {
+      const categoryKey = normalizeCategory(item?.category)
+      const ids = Array.isArray(item?.productIds) ? item.productIds : []
+      const itemReasons = Array.isArray(item?.reasons) ? item.reasons : []
+
+      rawRecommendations[categoryKey] = ids
+      rawReasons[categoryKey] = {}
+
+      ids.forEach((id, index) => {
+        rawReasons[categoryKey][String(id || '')] = itemReasons[index] || ''
+      })
+    }
+  } else {
+    Object.assign(rawRecommendations, raw?.recommendations || {})
+    Object.assign(rawReasons, raw?.reasons || {})
+  }
 
   for (const category of categories) {
     const categoryKey = category.key
@@ -294,13 +325,17 @@ async function callGoogle(prompt, categories) {
     throw new Error(data?.error?.message || `Google recommendation request failed with status ${response.status}`)
   }
 
-  const rawText = data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n') || ''
+  const rawText = getGeminiText(data)
   let raw
 
   try {
     raw = extractJson(rawText)
   } catch {
-    raw = await repairGoogleJson({ endpoint, model, prompt, rawText, categories })
+    try {
+      raw = await repairGoogleJson({ endpoint, model, prompt, rawText, categories })
+    } catch {
+      raw = await retryGoogleJson({ endpoint, model, prompt, rawText, categories })
+    }
   }
 
   return {
@@ -343,9 +378,49 @@ async function repairGoogleJson({ endpoint, model, prompt, rawText, categories }
     throw new Error(data?.error?.message || `Google JSON repair request failed with status ${response.status}`)
   }
 
-  const repairedText = data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n') || ''
+  const repairedText = getGeminiText(data)
   try {
     return extractJson(repairedText)
+  } catch {
+    throw new Error(`AI recommendation API returned invalid JSON from ${model}.`)
+  }
+}
+
+async function retryGoogleJson({ endpoint, model, prompt, rawText, categories }) {
+  const retryPrompt = JSON.stringify({
+    task: 'Return only one valid JSON object for PC part recommendations. No markdown, no explanation.',
+    shape: { items: [{ category: 'category_key', productIds: ['catalog_id'], reasons: ['short reason'] }] },
+    allowedCategories: categories.map((category) => category.key),
+    originalRequest: JSON.parse(prompt),
+    previousInvalidResponse: String(rawText || '').slice(0, 6000)
+  })
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: retryPrompt }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: 2200,
+        responseMimeType: 'application/json'
+      }
+    })
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `Google JSON retry request failed with status ${response.status}`)
+  }
+
+  try {
+    return extractJson(getGeminiText(data))
   } catch {
     throw new Error(`AI recommendation API returned invalid JSON from ${model}.`)
   }
