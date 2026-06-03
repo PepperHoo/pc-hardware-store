@@ -126,8 +126,8 @@ function buildGeminiResponseSchema(categories) {
     categories.map((category) => [
       category.key,
       {
-        type: 'ARRAY',
-        items: { type: 'STRING' }
+        type: 'array',
+        items: { type: 'string' }
       }
     ])
   )
@@ -135,25 +135,25 @@ function buildGeminiResponseSchema(categories) {
     categories.map((category) => [
       category.key,
       {
-        type: 'OBJECT'
+        type: 'object'
       }
     ])
   )
 
   return {
-    type: 'OBJECT',
+    type: 'object',
     properties: {
       recommendations: {
-        type: 'OBJECT',
+        type: 'object',
         properties: recommendationProperties,
         required: categories.map((category) => category.key)
       },
       reasons: {
-        type: 'OBJECT',
+        type: 'object',
         properties: reasonProperties
       }
     },
-    required: ['recommendations']
+    required: ['recommendations', 'reasons']
   }
 }
 
@@ -263,31 +263,30 @@ async function callGroq(prompt) {
 async function callGoogle(prompt, categories) {
   const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
   const model = process.env.GOOGLE_AI_MODEL || process.env.GEMINI_MODEL || DEFAULT_GOOGLE_MODEL
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+  const generationConfig = {
+    temperature: 0.15,
+    maxOutputTokens: 3000,
+    responseMimeType: 'application/json',
+    responseJsonSchema: buildGeminiResponseSchema(categories)
+  }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.15,
-          maxOutputTokens: 3000,
-          responseMimeType: 'application/json',
-          responseSchema: buildGeminiResponseSchema(categories)
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }]
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
         }
-      })
-    }
-  )
+      ],
+      generationConfig
+    })
+  })
 
   const data = await response.json().catch(() => ({}))
 
@@ -295,10 +294,60 @@ async function callGoogle(prompt, categories) {
     throw new Error(data?.error?.message || `Google recommendation request failed with status ${response.status}`)
   }
 
+  const rawText = data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n') || ''
+  let raw
+
+  try {
+    raw = extractJson(rawText)
+  } catch {
+    raw = await repairGoogleJson({ endpoint, model, prompt, rawText, categories })
+  }
+
   return {
     provider: 'google',
     model,
-    raw: extractJson(data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n') || '')
+    raw
+  }
+}
+
+async function repairGoogleJson({ endpoint, model, prompt, rawText, categories }) {
+  const repairPrompt = JSON.stringify({
+    task: 'Repair the previous AI response into valid JSON only.',
+    originalRequest: JSON.parse(prompt),
+    previousResponse: String(rawText || '').slice(0, 12000),
+    requiredOutput: buildGeminiResponseSchema(categories)
+  })
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: repairPrompt }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: 3000,
+        responseMimeType: 'application/json',
+        responseJsonSchema: buildGeminiResponseSchema(categories)
+      }
+    })
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `Google JSON repair request failed with status ${response.status}`)
+  }
+
+  const repairedText = data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n') || ''
+  try {
+    return extractJson(repairedText)
+  } catch {
+    throw new Error(`AI recommendation API returned invalid JSON from ${model}.`)
   }
 }
 
