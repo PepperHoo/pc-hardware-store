@@ -33,11 +33,16 @@ async function saveProfile() {
     toastRef.value.showToastMessage('Name and email are required', 'error'); return
   }
   const updatedUser = { ...user.value, username: editName.value, email: editEmail.value }
+  const dbUser = {
+    username: editName.value,
+    email: editEmail.value,
+    role: updatedUser.role || 'admin'
+  }
   try {
     saving.value = true
     if (updatedUser.id) {
       const { update } = await import('../lib/api.js')
-      await update('users', updatedUser.id, updatedUser)
+      await update('users', updatedUser.id, dbUser)
     }
     user.value = updatedUser
     localStorage.setItem('user', JSON.stringify(updatedUser))
@@ -45,7 +50,8 @@ async function saveProfile() {
     localStorage.setItem('adminTitle', editTitle.value)
     toastRef.value.showToastMessage('Profile saved!', 'success')
   } catch (e) {
-    toastRef.value.showToastMessage('Failed to save profile', 'error')
+    console.error(e)
+    toastRef.value.showToastMessage(`Failed to save profile: ${e.message}`, 'error')
   } finally { saving.value = false }
 }
 
@@ -123,7 +129,7 @@ onMounted(() => {
           <button class="save-btn" @click="saveProfile" :disabled="saving">
             <svg v-if="!saving" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 8l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <div v-else class="mini-spin" />
-            {{ saving ? 'Saving…' : 'Save Profile' }}
+            {{ saving ? 'Saving...' : 'Save Profile' }}
           </button>
         </div>
       </div>

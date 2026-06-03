@@ -399,6 +399,48 @@ select.field-input option,
 
 @media (max-width: 1100px) { .products-layout { grid-template-columns: 1fr; } .add-form { position: relative; top: 0; } }
 @media (max-width: 768px)  { .admin-main { margin-left: 0; padding: 20px; } }
+@media (max-width: 640px) {
+  .admin-main { padding: 16px 12px; }
+  .stats-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-bar { align-items: center; }
+  .filter-select { min-width: 0; font-size: 12px; }
+  .filter-count { font-size: 11px; white-space: nowrap; }
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .prod-img-wrap { height: 86px !important; padding: 6px; }
+  .prod-info { padding: 8px !important; }
+  .prod-cat { font-size: 9px; }
+  .prod-name {
+    min-height: 34px;
+    font-size: 10px;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .prod-price { font-size: 12px; }
+  .prod-stock { font-size: 9px; }
+  .prod-actions {
+    gap: 5px;
+    padding: 0 8px 8px !important;
+  }
+  .btn-edit,
+  .btn-del {
+    min-height: 32px;
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .product-grid { gap: 8px; }
+  .prod-img-wrap { height: 78px !important; }
+  .btn-edit,
+  .btn-del { font-size: 9px; }
+}
 
 :global(:root[data-theme="light"]) .field-input,
 :global(:root[data-theme="light"]) .filter-select {

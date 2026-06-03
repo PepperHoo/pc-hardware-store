@@ -573,9 +573,62 @@ onMounted(() => {
 }
 
 @media (max-width: 520px) {
-  .product-edit-grid { grid-template-columns: 1fr; }
+  .admin-main { padding: 16px 12px; }
+  .section-card { padding: 14px 12px !important; }
+  .product-edit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .product-edit-card {
+    min-height: 220px;
+    border-radius: 12px;
+  }
+  .pe-img-wrap {
+    height: 88px;
+    padding: 7px;
+  }
+  .pe-copy {
+    padding: 8px;
+  }
+  .pe-category {
+    margin-bottom: 4px;
+    font-size: 9px;
+  }
+  .pe-name {
+    min-height: 32px;
+    font-size: 10px;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pe-price {
+    font-size: 11px;
+  }
+  .pe-description {
+    font-size: 10px;
+    -webkit-line-clamp: 2;
+  }
+  .pe-actions {
+    gap: 6px;
+    padding: 0 8px 8px;
+  }
+  .btn-sm-edit,
+  .btn-sm-del {
+    min-height: 32px;
+    padding: 6px 4px;
+    font-size: 10px;
+  }
   .modal-actions { flex-direction: column; }
   .modal-save,
   .btn-ghost { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 360px) {
+  .product-edit-grid { gap: 8px; }
+  .pe-img-wrap { height: 80px; }
+  .btn-sm-edit,
+  .btn-sm-del { font-size: 9px; }
 }
 </style>
