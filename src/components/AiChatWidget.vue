@@ -434,6 +434,86 @@ function handleKeydown(event) {
   color: #be123c;
 }
 
+:global([data-theme="light"]) .ai-chat-panel {
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 40%),
+    linear-gradient(145deg, #ffffff, #eef6ff) !important;
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.18) !important;
+  color: #172033 !important;
+}
+
+:global([data-theme="light"]) .ai-chat-header,
+:global([data-theme="light"]) .ai-chat-form {
+  border-color: rgba(71, 85, 105, 0.14) !important;
+  background: rgba(255, 255, 255, 0.56) !important;
+}
+
+:global([data-theme="light"]) .ai-chat-messages {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.28), rgba(239, 246, 255, 0.44)) !important;
+}
+
+:global([data-theme="light"]) .ai-eyebrow {
+  color: #2563eb !important;
+}
+
+:global([data-theme="light"]) .ai-chat-header h2 {
+  color: #172033 !important;
+}
+
+:global([data-theme="light"]) .ai-icon-btn {
+  background: rgba(15, 23, 42, 0.04) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #334155 !important;
+}
+
+:global([data-theme="light"]) .ai-message--assistant {
+  background: #ffffff !important;
+  border-color: rgba(71, 85, 105, 0.16) !important;
+  color: #334155 !important;
+}
+
+:global([data-theme="light"]) .ai-message--assistant p {
+  color: #334155 !important;
+}
+
+:global([data-theme="light"]) .ai-message--user {
+  border-color: rgba(37, 99, 235, 0.32) !important;
+  background: linear-gradient(135deg, #2563eb, #38bdf8) !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .ai-message--user p {
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .ai-chip {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  color: #1d4ed8 !important;
+}
+
+:global([data-theme="light"]) .ai-error {
+  background: #fff1f2 !important;
+  border-color: rgba(244, 63, 94, 0.24) !important;
+  color: #be123c !important;
+}
+
+:global([data-theme="light"]) .ai-chat-input {
+  background: #ffffff !important;
+  border-color: rgba(71, 85, 105, 0.2) !important;
+  color: #172033 !important;
+}
+
+:global([data-theme="light"]) .ai-chat-input::placeholder {
+  color: #64748b !important;
+}
+
+:global([data-theme="light"]) .ai-send-btn {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
 .ai-panel-enter-active,
 .ai-panel-leave-active {
   transition: opacity 0.18s ease, transform 0.18s ease;
