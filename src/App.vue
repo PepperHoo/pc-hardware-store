@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
+import AiChatWidget from './components/AiChatWidget.vue'
 import CompareBar from './components/CompareBar.vue'
 import { useCurrencyStore } from './stores/currency'
 import { useWishlistStore } from './stores/wishlist'
@@ -21,4 +22,5 @@ onMounted(() => {
 <template>
   <router-view />
   <CompareBar />
+  <AiChatWidget />
 </template>
