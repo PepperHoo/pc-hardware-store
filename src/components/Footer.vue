@@ -12,7 +12,10 @@ const categories = [
   { label: 'Motherboards',  path: '/products/motherboard' },
   { label: 'RAM',           path: '/products/ram' },
   { label: 'Storage',       path: '/products/storage' },
+  { label: 'Power Supply',  path: '/products/psu' },
+  { label: 'CPU Cooler',    path: '/products/cooler' },
   { label: 'PC Cases',      path: '/products/casing' },
+  { label: 'RGB / Fans',    path: '/products/rgb' },
 ]
 
 const links = [
