@@ -10,6 +10,11 @@ const props = defineProps({
 
 const isReady = ref(false)
 const canUseModelViewer = ref(false)
+const imageZoom = ref(1)
+const imageRotateX = ref(0)
+const imageRotateY = ref(0)
+const isInspecting = ref(false)
+const imagePointer = ref({ x: 0, y: 0 })
 
 const MODEL_VIEWER_SRC = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js'
 
@@ -89,6 +94,50 @@ const viewerMode = computed(() => {
   return 'product-image'
 })
 
+const imageTransformStyle = computed(() => ({
+  transform: `perspective(900px) rotateX(${imageRotateX.value}deg) rotateY(${imageRotateY.value}deg) scale(${imageZoom.value})`
+}))
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function onImagePointerDown(event) {
+  if (!imagePreviewUrl.value) return
+  isInspecting.value = true
+  imagePointer.value = { x: event.clientX, y: event.clientY }
+  event.currentTarget?.setPointerCapture?.(event.pointerId)
+}
+
+function onImagePointerMove(event) {
+  if (!isInspecting.value) return
+
+  const dx = event.clientX - imagePointer.value.x
+  const dy = event.clientY - imagePointer.value.y
+  imageRotateY.value = clamp(imageRotateY.value + dx * 0.16, -28, 28)
+  imageRotateX.value = clamp(imageRotateX.value - dy * 0.16, -18, 18)
+  imagePointer.value = { x: event.clientX, y: event.clientY }
+}
+
+function onImagePointerUp(event) {
+  isInspecting.value = false
+  event.currentTarget?.releasePointerCapture?.(event.pointerId)
+}
+
+function onImageWheel(event) {
+  imageZoom.value = clamp(Number((imageZoom.value + (event.deltaY < 0 ? 0.08 : -0.08)).toFixed(2)), 0.85, 1.8)
+}
+
+function zoomImage(delta) {
+  imageZoom.value = clamp(Number((imageZoom.value + delta).toFixed(2)), 0.85, 1.8)
+}
+
+function resetImageView() {
+  imageZoom.value = 1
+  imageRotateX.value = 0
+  imageRotateY.value = 0
+}
+
 onMounted(async () => {
   if (!modelFileUrl.value) {
     isReady.value = true
@@ -143,12 +192,36 @@ onMounted(async () => {
         frameborder="0"
       />
 
-      <div v-else class="image-preview-model">
-        <img v-if="imagePreviewUrl" :src="imagePreviewUrl" :alt="product.name" />
+      <div
+        v-else
+        class="image-preview-model"
+        :class="{ inspecting: isInspecting }"
+        @pointerdown="onImagePointerDown"
+        @pointermove="onImagePointerMove"
+        @pointerup="onImagePointerUp"
+        @pointercancel="onImagePointerUp"
+        @wheel.prevent="onImageWheel"
+      >
+        <div v-if="imagePreviewUrl" class="image-stage">
+          <img
+            :src="imagePreviewUrl"
+            :alt="product.name"
+            class="interactive-product-img"
+            :style="imageTransformStyle"
+            draggable="false"
+          />
+        </div>
         <div v-else class="image-preview-missing">No product image available</div>
+
+        <div v-if="imagePreviewUrl" class="image-tools" @pointerdown.stop>
+          <button type="button" class="image-tool-btn" @click="zoomImage(-0.12)" aria-label="Zoom out">-</button>
+          <button type="button" class="image-tool-btn" @click="resetImageView" aria-label="Reset preview">Reset</button>
+          <button type="button" class="image-tool-btn" @click="zoomImage(0.12)" aria-label="Zoom in">+</button>
+        </div>
+
         <div class="image-preview-note">
           <span>Actual Product Image</span>
-          <p>Add a GLB, GLTF, USDZ, or Sketchfab URL for a true rotating 3D model.</p>
+          <p>Drag to tilt and scroll to zoom. Add a GLB, GLTF, USDZ, or Sketchfab URL for a true rotating 3D model.</p>
         </div>
       </div>
 
@@ -232,13 +305,71 @@ onMounted(async () => {
   width: 100%;
   min-height: 520px;
   padding: 34px 24px 96px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
 
-.image-preview-model img {
+.image-preview-model.inspecting {
+  cursor: grabbing;
+}
+
+.image-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 380px;
+  transform-style: preserve-3d;
+}
+
+.interactive-product-img {
   max-width: min(78%, 680px);
   max-height: 380px;
   object-fit: contain;
   filter: drop-shadow(0 28px 36px rgba(0, 0, 0, 0.4));
+  transition: transform 0.18s ease, filter 0.18s ease;
+  will-change: transform;
+}
+
+.image-preview-model.inspecting .interactive-product-img {
+  transition: none;
+  filter: drop-shadow(0 34px 42px rgba(0, 0, 0, 0.48));
+}
+
+.image-tools {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.image-tool-btn {
+  min-width: 36px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.image-tool-btn:hover {
+  border-color: rgba(96, 165, 250, 0.46);
+  background: rgba(59, 130, 246, 0.24);
+  transform: translateY(-1px);
 }
 
 .image-preview-missing {
@@ -322,6 +453,17 @@ onMounted(async () => {
   color: #64748b;
 }
 
+:global(:root[data-theme="light"]) .image-tools {
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(37, 99, 235, 0.16);
+}
+
+:global(:root[data-theme="light"]) .image-tool-btn {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.18);
+  color: #2563eb;
+}
+
 @media (max-width: 700px) {
   .product-3d {
     margin-top: 28px;
@@ -349,9 +491,18 @@ onMounted(async () => {
     padding: 22px 16px 104px;
   }
 
-  .image-preview-model img {
+  .image-stage {
+    min-height: 230px;
+  }
+
+  .interactive-product-img {
     max-width: 88%;
     max-height: 220px;
+  }
+
+  .image-tools {
+    top: 10px;
+    right: 10px;
   }
 }
 </style>
