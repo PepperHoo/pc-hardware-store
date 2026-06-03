@@ -2325,6 +2325,21 @@ table {
 }
 
 /* Orders page: summary cards should fill the same width as the orders table. */
+.admin-page .admin-main .users-stats-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  justify-content: stretch !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+
+.admin-page .admin-main .users-stats-row .stat-pill,
+.admin-page .admin-main .orders-stats-row .stat-pill {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
 .admin-page .admin-main .orders-stats-row {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
@@ -2333,19 +2348,15 @@ table {
   width: 100% !important;
 }
 
-.admin-page .admin-main .orders-stats-row .stat-pill {
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0 !important;
-}
-
 @media (max-width: 1100px) {
+  .admin-page .admin-main .users-stats-row,
   .admin-page .admin-main .orders-stats-row {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
 @media (max-width: 640px) {
+  .admin-page .admin-main .users-stats-row,
   .admin-page .admin-main .orders-stats-row {
     grid-template-columns: 1fr !important;
   }

@@ -64,7 +64,7 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
         </div>
 
         <!-- Stats -->
-        <div class="stats-row">
+        <div class="stats-row users-stats-row">
           <div class="stat-pill glass">
             <div class="sp-icon" style="color:#60a5fa">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 17c0-4.142 3.358-7.5 7.5-7.5s7.5 3.358 7.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -154,7 +154,8 @@ function getInitial(name) { return name ? name.charAt(0).toUpperCase() : '?' }
 .page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(22px,2.5vw,34px); font-weight: 900; color: #f1f5f9; margin: 6px 0 4px; line-height: 1.08; }
 .page-sub { color: #475569; font-size: 12px; margin: 0; }
 
-.stats-row { display: grid; grid-template-columns: repeat(3,minmax(220px, 1fr)); gap: 16px; margin-bottom: 18px; justify-content: stretch; }
+.stats-row { display: grid; grid-template-columns: repeat(3,minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; justify-content: stretch; width: 100%; }
+.users-stats-row .stat-pill { width: 100% !important; max-width: none !important; min-width: 0; }
 .stat-pill { display: flex; align-items: center; gap: 14px; padding: 18px !important; border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); }
 .sp-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #334155; margin: 0 0 4px; }
