@@ -95,7 +95,7 @@ async function placeOrder() {
       }
     } catch (emailErr) { console.warn('Email non-critical:', emailErr) }
     toastRef.value.showToastMessage('Order placed successfully!', 'success')
-    cart.items = []
+    await cart.clear()
     setTimeout(() => router.push('/orders'), 1500)
   } catch (err) {
     console.error('Place order error:', err)

@@ -3,8 +3,12 @@ import AdminNavbar from '../components/AdminNavbar.vue'
 import Toast from '../components/Toast.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
 
 const router = useRouter()
+const cart = useCartStore()
+const wishlist = useWishlistStore()
 const toastRef = ref(null)
 const user = ref(JSON.parse(localStorage.getItem('user')))
 
@@ -67,7 +71,12 @@ async function saveProfile() {
   } finally { saving.value = false }
 }
 
-function logout() { localStorage.removeItem('user'); router.push('/login') }
+function logout() {
+  localStorage.removeItem('user')
+  cart.reset()
+  wishlist.reset()
+  router.push('/login')
+}
 
 onMounted(() => {
   if (!user.value || String(user.value.role).toLowerCase() !== 'admin') {

@@ -41,6 +41,27 @@ provider is temporarily unavailable.
 The request contains five forex symbols. Check that your Twelve Data plan has enough API
 credits for your expected traffic and refresh frequency.
 
+## Supabase Cart And Wishlist Storage
+
+The user cart and wishlist are stored in Supabase so they remain available after refresh,
+sign-out, or login on another device.
+
+Run the following file once in **Supabase Dashboard > SQL Editor**:
+
+```text
+supabase-cart-wishlist-tables.sql
+```
+
+This creates the `cart_items` and `wishlist_items` tables. Each row contains the user email,
+product ID, and a JSON product snapshot. Cart rows also contain the selected quantity.
+
+After running the SQL, add a component to the cart or wishlist and confirm it appears in
+**Supabase Dashboard > Table Editor**.
+
+The current website uses a custom users table instead of Supabase Auth, so the included RLS
+policies allow the public website client to read and write these rows. For production security,
+migrate login to Supabase Auth and restrict each policy to the authenticated user's ID.
+
 ### Compile and Hot-Reload for Development
 
 ```sh

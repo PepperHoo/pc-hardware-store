@@ -4,8 +4,12 @@ import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
 
 const router = useRouter()
+const cart = useCartStore()
+const wishlist = useWishlistStore()
 const toastRef = ref(null)
 const email = ref('')
 const password = ref('')
@@ -31,6 +35,15 @@ async function login() {
       role: String(user.role || 'user').trim().toLowerCase()
     }
     localStorage.setItem('user', JSON.stringify(normalizedUser))
+    if (normalizedUser.role === 'admin') {
+      cart.reset()
+      wishlist.reset()
+    } else {
+      await Promise.all([
+        cart.load(normalizedUser.email, { mergeCurrent: true }),
+        wishlist.load(normalizedUser.email)
+      ])
+    }
     toastRef.value.showToastMessage('Login Successful!', 'success')
     setTimeout(() => {
       router.push(normalizedUser.role === 'admin' ? '/admin' : '/profile')

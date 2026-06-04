@@ -52,6 +52,21 @@ export async function getWhere(table, field, value) {
 }
 
 /**
+ * Fetch rows matching multiple equality filters.
+ * e.g. getWhereMany('cart_items', { user_email: 'foo@bar.com', product_id: 'abc' })
+ */
+export async function getWhereMany(table, filters) {
+  const query = Object.entries(filters)
+    .map(([field, value]) => `${field}=eq.${encodeURIComponent(value)}`)
+    .join('&')
+  const res = await fetch(
+    `${BASE_URL}/${table}?select=*&${query}`,
+    { headers: HEADERS }
+  )
+  return handleRes(res)
+}
+
+/**
  * Insert a new row; returns the created row
  */
 export async function create(table, data) {
@@ -60,6 +75,23 @@ export async function create(table, data) {
     {
       method:  'POST',
       headers: { ...HEADERS, Prefer: 'return=representation' },
+      body:    JSON.stringify(data)
+    }
+  )
+  const rows = await handleRes(res)
+  return Array.isArray(rows) ? rows[0] : rows
+}
+
+/**
+ * Insert or update a row using a Supabase unique constraint.
+ * e.g. upsert('cart_items', row, 'user_email,product_id')
+ */
+export async function upsert(table, data, conflictFields = 'id') {
+  const res = await fetch(
+    `${BASE_URL}/${table}?on_conflict=${encodeURIComponent(conflictFields)}`,
+    {
+      method:  'POST',
+      headers: { ...HEADERS, Prefer: 'resolution=merge-duplicates,return=representation' },
       body:    JSON.stringify(data)
     }
   )
@@ -185,6 +217,27 @@ export async function uploadImage(bucket, file, folder = '') {
 export async function removeWhere(table, field, value) {
   const res = await fetch(
     `${BASE_URL}/${table}?${field}=eq.${encodeURIComponent(value)}`,
+    {
+      method:  'DELETE',
+      headers: HEADERS
+    }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Supabase error ${res.status}: ${text}`)
+  }
+}
+
+/**
+ * Delete rows matching multiple equality filters.
+ * e.g. removeWhereMany('wishlist_items', { user_email: 'foo@bar.com', product_id: 'abc' })
+ */
+export async function removeWhereMany(table, filters) {
+  const query = Object.entries(filters)
+    .map(([field, value]) => `${field}=eq.${encodeURIComponent(value)}`)
+    .join('&')
+  const res = await fetch(
+    `${BASE_URL}/${table}?${query}`,
     {
       method:  'DELETE',
       headers: HEADERS

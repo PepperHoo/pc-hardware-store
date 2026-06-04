@@ -3,10 +3,14 @@ import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
+import { useWishlistStore } from '../stores/wishlist'
 
 const router = useRouter()
+const cart = useCartStore()
 const currency = useCurrencyStore()
+const wishlist = useWishlistStore()
 const user = ref(JSON.parse(localStorage.getItem('user')))
 const orders = ref([])
 const loading = ref(true)
@@ -57,6 +61,8 @@ function formatMoney(value) {
 
 function logout() {
   localStorage.removeItem('user')
+  cart.reset()
+  wishlist.reset()
   user.value = null
   router.push('/login')
 }
