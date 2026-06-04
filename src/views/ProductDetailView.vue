@@ -396,7 +396,7 @@ onMounted(loadProduct)
 }
 .qty-btn:hover { background: rgba(59,130,246,0.12); color: #60a5fa; }
 .qty-val {
-  min-width: 52px; text-align: center; font-size: 16px; font-weight: 800; color: #f1f5f9;
+  min-width: 52px; text-align: center; font-size: 16px; font-weight: 800; color: var(--read-heading);
   border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06);
   padding: 0 4px;
 }

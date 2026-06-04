@@ -502,7 +502,7 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 .qty-btn:hover { background: #3b82f6; color: white; }
-.qty-val { font-size: 15px; font-weight: 700; min-width: 24px; text-align: center; color: #e2e8f0; }
+.qty-val { font-size: 15px; font-weight: 700; min-width: 24px; text-align: center; color: var(--read-heading); }
 
 /* Actions */
 .p-actions { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; flex-wrap: wrap; width: fit-content; max-width: 100%; }

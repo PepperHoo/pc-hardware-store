@@ -236,7 +236,7 @@ function checkout() {
   transition: all 0.2s;
 }
 .qty-btn:hover { background: rgba(59,130,246,0.3); color: white; }
-.qty-num { font-size: 16px; font-weight: 700; color: #f1f5f9; min-width: 24px; text-align: center; }
+.qty-num { font-size: 16px; font-weight: 700; color: var(--read-heading); min-width: 24px; text-align: center; }
 .item-subtotal { font-size: 14px; color: #64748b; margin-left: 6px; }
 
 /* Remove */

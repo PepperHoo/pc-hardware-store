@@ -2519,3 +2519,13 @@ select,
   border-color: rgba(37,99,235,0.32) !important;
   color: #2563eb !important;
 }
+
+/* Light mode quantity controls: keep values readable on pale cards. */
+[data-theme="light"] .cart-page .qty-num,
+[data-theme="light"] .products-layout .qty-val,
+[data-theme="light"] .detail-wrap .qty-val {
+  color: #172033 !important;
+  opacity: 1 !important;
+  font-weight: 800 !important;
+  text-shadow: none !important;
+}
