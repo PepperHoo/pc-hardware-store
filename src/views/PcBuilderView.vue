@@ -2,7 +2,7 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import Toast from '../components/Toast.vue'
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
 import { useRouter } from 'vue-router'
@@ -22,8 +22,8 @@ const recommendationModel = ref('')
 const recommendationsLoading = ref(false)
 const recommendationsError = ref('')
 let recommendationRequestId = 0
-
-
+let recommendationRetryTimer = null
+let recommendationDebounceTimer = null
 
 const buildCategories = [
   { key: 'motherboard', label: 'Motherboard',   icon: '🔲', color: '#3b82f6' },
@@ -60,9 +60,10 @@ function getSelectedPayload() {
   )
 }
 
-async function fetchApiRecommendations() {
+async function fetchSmartRecommendations() {
   if (!products.value.length) return
 
+  clearTimeout(recommendationRetryTimer)
   const requestId = ++recommendationRequestId
   const hasSelectedParts = Object.keys(selectedParts.value).length > 0
 
@@ -93,23 +94,35 @@ async function fetchApiRecommendations() {
     const data = await response.json().catch(() => ({}))
 
     if (!response.ok) {
-      throw new Error(data.error || 'PC recommendation API failed.')
+      const requestError = new Error(data.error || 'PC recommendation service failed.')
+      requestError.status = response.status
+      requestError.retryAfter = Number(data.retryAfter || 0)
+      throw requestError
     }
 
     if (requestId !== recommendationRequestId) return
 
     recommendations.value = data.recommendations || {}
     recommendationReasons.value = data.reasons || {}
-    recommendationSource.value = data.provider || data.source || 'api'
+    recommendationSource.value = data.provider || data.source || 'smart engine'
     recommendationModel.value = data.model || ''
+    recommendationsError.value = ''
   } catch (error) {
     if (requestId !== recommendationRequestId) return
 
-    recommendations.value = {}
-    recommendationReasons.value = {}
-    recommendationSource.value = ''
-    recommendationModel.value = ''
-    recommendationsError.value = error?.message || 'PC recommendation API unavailable.'
+    if (error?.status !== 429) {
+      recommendations.value = {}
+      recommendationReasons.value = {}
+      recommendationSource.value = ''
+      recommendationModel.value = ''
+    }
+
+    recommendationsError.value = error?.message || 'PC recommendation service unavailable.'
+
+    if (error?.status === 429) {
+      const retrySeconds = Math.min(Math.max(Number(error.retryAfter || 15), 5), 60)
+      recommendationRetryTimer = setTimeout(fetchSmartRecommendations, retrySeconds * 1000)
+    }
   } finally {
     if (requestId === recommendationRequestId) {
       recommendationsLoading.value = false
@@ -185,7 +198,8 @@ const recommendationLabel = computed(() => {
 })
 
 watch(selectedParts, () => {
-  fetchApiRecommendations()
+  clearTimeout(recommendationDebounceTimer)
+  recommendationDebounceTimer = setTimeout(fetchSmartRecommendations, 500)
 })
 
 onMounted(async () => {
@@ -193,9 +207,14 @@ onMounted(async () => {
   try {
     const { getAll } = await import('../lib/api.js')
     products.value = await getAll('products')
-    await fetchApiRecommendations()
+    await fetchSmartRecommendations()
   } catch (e) { console.log(e); errorMsg.value = 'Failed to load PC builder.' }
   finally { loading.value = false }
+})
+
+onUnmounted(() => {
+  clearTimeout(recommendationRetryTimer)
+  clearTimeout(recommendationDebounceTimer)
 })
 </script>
 
@@ -222,17 +241,17 @@ onMounted(async () => {
         <span class="kicker">Custom Build</span>
         <h1 class="builder-title">PC <span class="grad-text">Builder</span></h1>
         <p class="builder-sub">
-          Pick one component and the builder will call a real AI API to recommend compatible remaining parts from your store catalog.
+          Pick one component and the builder will use smart recommendations for compatible remaining parts from your store catalog.
         </p>
         <div
-          class="api-status glass"
+          class="rec-status glass"
           :class="{ loading: recommendationsLoading, error: recommendationsError }"
         >
-          <span class="api-dot"></span>
-          <span v-if="recommendationsLoading">Calling PC recommendation API...</span>
+          <span class="rec-dot"></span>
+          <span v-if="recommendationsLoading">Finding compatible recommendations...</span>
           <span v-else-if="recommendationsError">{{ recommendationsError }}</span>
           <span v-else-if="recommendationLabel">Recommendations powered by {{ recommendationLabel }}</span>
-          <span v-else>Select any first component to start the real recommendation API.</span>
+          <span v-else>Select any first component to start smart recommendations.</span>
         </div>
       </div>
 
@@ -257,7 +276,7 @@ onMounted(async () => {
                 </div>
               </div>
               <span v-if="getSelectedProduct(cat.key)" class="cat-badge selected-badge">Selected</span>
-              <span v-else class="cat-badge suggest-badge">{{ selectedCount === 0 ? 'Catalog' : 'AI API' }}</span>
+              <span v-else class="cat-badge suggest-badge">{{ selectedCount === 0 ? 'Catalog' : 'Smart' }}</span>
             </div>
 
             <!-- Selected state -->
@@ -274,14 +293,14 @@ onMounted(async () => {
 
             <!-- Recommendation grid -->
             <div v-else class="reco-grid">
-              <div v-if="recommendationsLoading" class="no-reco">
-                Calling real recommendation API...
+              <div v-if="recommendationsLoading && getRecommendations(cat.key).length === 0" class="no-reco">
+                Finding smart recommendations...
               </div>
-              <div v-else-if="recommendationsError" class="no-reco api-error">
+              <div v-else-if="recommendationsError && getRecommendations(cat.key).length === 0" class="no-reco rec-error">
                 {{ recommendationsError }}
               </div>
               <div v-else-if="getRecommendations(cat.key).length === 0" class="no-reco">
-                {{ selectedCount === 0 ? 'No products available for this category yet.' : 'No API recommendations returned for this category yet.' }}
+                {{ selectedCount === 0 ? 'No products available for this category yet.' : 'No smart recommendations returned for this category yet.' }}
               </div>
               <button
                 v-for="p in getRecommendations(cat.key)"
@@ -293,7 +312,7 @@ onMounted(async () => {
                 <div class="reco-img-wrap">
                   <img :src="p.image" :alt="p.name" class="reco-img" />
                 </div>
-                <span class="reco-badge">{{ selectedCount === 0 ? 'Start Choice' : 'API Recommended' }}</span>
+                <span class="reco-badge">{{ selectedCount === 0 ? 'Start Choice' : 'Recommended' }}</span>
                 <p class="reco-name">{{ p.name }}</p>
                 <p v-if="getRecommendationReason(cat.key, p.id)" class="reco-reason">
                   {{ getRecommendationReason(cat.key, p.id) }}
@@ -399,7 +418,7 @@ onMounted(async () => {
   margin: 14px 0 10px; line-height: 1.05;
 }
 .builder-sub { color: #475569; font-size: 15px; max-width: 680px; line-height: 1.7; margin: 0; }
-.api-status {
+.rec-status {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -413,13 +432,13 @@ onMounted(async () => {
   font-weight: 800;
   line-height: 1.4;
 }
-.api-status.error {
+.rec-status.error {
   border-color: rgba(248,113,113,0.32);
   background: rgba(127,29,29,0.18) !important;
   color: #fca5a5;
 }
-.api-status.loading { color: #67e8f9; }
-.api-dot {
+.rec-status.loading { color: #67e8f9; }
+.rec-dot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -427,8 +446,8 @@ onMounted(async () => {
   box-shadow: 0 0 14px currentColor;
   flex-shrink: 0;
 }
-.api-status.loading .api-dot { animation: apiPulse 1s ease-in-out infinite; }
-@keyframes apiPulse {
+.rec-status.loading .rec-dot { animation: recPulse 1s ease-in-out infinite; }
+@keyframes recPulse {
   0%, 100% { transform: scale(0.8); opacity: 0.55; }
   50% { transform: scale(1.15); opacity: 1; }
 }
@@ -557,7 +576,7 @@ onMounted(async () => {
 /* Reco grid */
 .reco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .no-reco { color: #334155; font-size: 14px; padding: 20px 0; grid-column: 1/-1; text-align: center; }
-.no-reco.api-error { color: #fca5a5; }
+.no-reco.rec-error { color: #fca5a5; }
 
 .reco-card {
   position: relative; overflow: hidden;

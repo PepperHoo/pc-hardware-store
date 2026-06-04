@@ -144,25 +144,25 @@ export default async function handler(req, res) {
       return sendJson(res, 400, { error: 'Please send at least one user message.' })
     }
 
-    const provider = String(process.env.AI_PROVIDER || '').toLowerCase()
+    const provider = String(process.env.CHAT_PROVIDER || 'google').toLowerCase()
     const hasGroq = Boolean(process.env.GROQ_API_KEY)
     const hasGoogle = Boolean(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY)
 
     let result
 
     if (provider === 'google') {
-      if (!hasGoogle) throw new Error('GOOGLE_API_KEY or GEMINI_API_KEY is not configured.')
+      if (!hasGoogle) throw new Error('Google chat key is not configured.')
       result = await callGoogle(messages)
     } else if (provider === 'groq') {
-      if (!hasGroq) throw new Error('GROQ_API_KEY is not configured.')
-      result = await callGroq(messages)
-    } else if (hasGroq) {
+      if (!hasGroq) throw new Error('Groq chat key is not configured.')
       result = await callGroq(messages)
     } else if (hasGoogle) {
       result = await callGoogle(messages)
+    } else if (hasGroq) {
+      result = await callGroq(messages)
     } else {
       return sendJson(res, 500, {
-        error: 'AI API key is not configured. Add GROQ_API_KEY or GOOGLE_API_KEY in Vercel environment variables.'
+        error: 'AI chat key is not configured. Add a Google key in Vercel environment variables.'
       })
     }
 

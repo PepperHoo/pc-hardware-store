@@ -1,8 +1,8 @@
-const DEFAULT_GROQ_MODEL = 'llama-3.1-8b-instant'
+const DEFAULT_GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 const DEFAULT_GOOGLE_MODEL = 'gemini-2.5-flash'
 
 const SYSTEM_PROMPT = `
-You are a PC component compatibility recommendation API for an online PC hardware store.
+You are a PC component compatibility recommendation assistant for an online PC hardware store.
 You receive the store's real product catalog and the customer's currently selected parts.
 Recommend only products from the provided catalog. Never invent product IDs.
 Prioritize a complete, functioning PC build: CPU socket and motherboard platform, RAM generation, GPU fit, PSU wattage, storage support, cooler suitability, case clearance, and balanced performance.
@@ -48,11 +48,11 @@ function normalizeProducts(products) {
   return products
     .map((product) => ({
       id: sanitizeText(product?.id, 80),
-      name: sanitizeText(product?.name, 180),
+      name: sanitizeText(product?.name, 140),
       category: normalizeCategory(product?.category),
       price: Number(product?.price || 0),
       stock: Number(product?.stock ?? 0),
-      description: sanitizeText(product?.description || product?.details, 360)
+      description: sanitizeText(product?.description || product?.details, 160)
     }))
     .filter((product) => product.id && product.name && product.category)
     .slice(0, 120)
@@ -101,7 +101,7 @@ function buildPrompt({ products, categories, selectedParts }) {
   }))
 
   return JSON.stringify({
-    task: 'Return AI API recommendations for remaining PC build components.',
+    task: 'Return smart recommendations for remaining PC build components.',
     expectedOutputShape: {
       items: [
         {
@@ -166,7 +166,7 @@ function extractJson(text) {
   const value = String(text || '').trim()
 
   if (!value) {
-    throw new Error('AI recommendation API returned an empty response.')
+    throw new Error('Recommendation service returned an empty response.')
   }
 
   const unfenced = value
@@ -190,7 +190,7 @@ function extractJson(text) {
     }
   }
 
-  throw new Error('AI recommendation API returned invalid JSON.')
+  throw new Error('Recommendation service returned invalid JSON.')
 }
 
 function getGeminiText(data) {
@@ -258,7 +258,7 @@ function validateAiResult(raw, { categories, catalogById, selectedParts }) {
 
 async function callGroq(prompt) {
   const apiKey = process.env.GROQ_API_KEY
-  const model = process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL
+  const model = process.env.PC_RECOMMENDATION_GROQ_MODEL || DEFAULT_GROQ_MODEL
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -269,7 +269,7 @@ async function callGroq(prompt) {
     body: JSON.stringify({
       model,
       temperature: 0.15,
-      max_tokens: 3000,
+      max_tokens: 1200,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -281,6 +281,19 @@ async function callGroq(prompt) {
   const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
+    const retryAfter = Math.ceil(Number(response.headers.get('retry-after') || 0))
+
+    if (response.status === 429) {
+      const error = new Error(
+        retryAfter > 0
+          ? `Smart recommendations are refreshing too quickly. Retrying in ${retryAfter} seconds.`
+          : 'Smart recommendations are refreshing too quickly. Please try again shortly.'
+      )
+      error.status = 429
+      error.retryAfter = retryAfter
+      throw error
+    }
+
     throw new Error(data?.error?.message || `Groq recommendation request failed with status ${response.status}`)
   }
 
@@ -382,7 +395,7 @@ async function repairGoogleJson({ endpoint, model, prompt, rawText, categories }
   try {
     return extractJson(repairedText)
   } catch {
-    throw new Error(`AI recommendation API returned invalid JSON from ${model}.`)
+    throw new Error(`Recommendation service returned invalid JSON from ${model}.`)
   }
 }
 
@@ -422,8 +435,34 @@ async function retryGoogleJson({ endpoint, model, prompt, rawText, categories })
   try {
     return extractJson(getGeminiText(data))
   } catch {
-    throw new Error(`AI recommendation API returned invalid JSON from ${model}.`)
+    throw new Error(`Recommendation service returned invalid JSON from ${model}.`)
   }
+}
+
+function isQuotaError(error) {
+  return /quota|rate limit|rate-limit|429|exceeded/i.test(String(error?.message || ''))
+}
+
+async function callPreferredProvider({ provider, hasGroq, hasGoogle, prompt, categories }) {
+  if (provider === 'google') {
+    if (!hasGoogle) throw new Error('Google key is not configured.')
+
+    try {
+      return await callGoogle(prompt, categories)
+    } catch (error) {
+      if (hasGroq && isQuotaError(error)) {
+        return callGroq(prompt)
+      }
+      if (isQuotaError(error)) {
+        throw new Error('Google quota exceeded. Switch the recommendation provider to Groq or wait for the quota reset.')
+      }
+      throw error
+    }
+  }
+
+  if (!hasGroq) throw new Error('Groq key is not configured.')
+
+  return callGroq(prompt)
 }
 
 export default async function handler(req, res) {
@@ -451,44 +490,29 @@ export default async function handler(req, res) {
     }
 
     if (Object.keys(selectedParts).length === 0) {
-      return sendJson(res, 400, { error: 'Select at least one component before requesting AI recommendations.' })
+      return sendJson(res, 400, { error: 'Select at least one component before requesting smart recommendations.' })
     }
 
     const prompt = buildPrompt({ products, categories, selectedParts })
 
-    const provider = String(process.env.AI_PROVIDER || '').toLowerCase()
+    const provider = String(process.env.PC_RECOMMENDATION_PROVIDER || 'groq').toLowerCase()
     const hasGroq = Boolean(process.env.GROQ_API_KEY)
     const hasGoogle = Boolean(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY)
 
-    let result
-
-    if (provider === 'google') {
-      if (!hasGoogle) throw new Error('GOOGLE_API_KEY or GEMINI_API_KEY is not configured.')
-      result = await callGoogle(prompt, categories)
-    } else if (provider === 'groq') {
-      if (!hasGroq) throw new Error('GROQ_API_KEY is not configured.')
-      result = await callGroq(prompt)
-    } else if (hasGroq) {
-      result = await callGroq(prompt)
-    } else if (hasGoogle) {
-      result = await callGoogle(prompt, categories)
-    } else {
-      return sendJson(res, 500, {
-        error: 'Recommendation API key is not configured. Add GROQ_API_KEY or GOOGLE_API_KEY in Vercel environment variables.'
-      })
-    }
+    const result = await callPreferredProvider({ provider, hasGroq, hasGoogle, prompt, categories })
 
     const validated = validateAiResult(result.raw, { categories, catalogById, selectedParts })
 
     return sendJson(res, 200, {
       provider: result.provider,
       model: result.model,
-      source: 'real-ai-api',
+      source: 'smart-recommendation',
       ...validated
     })
   } catch (error) {
-    return sendJson(res, 500, {
-      error: error?.message || 'PC recommendation API request failed.'
+    return sendJson(res, error?.status || 500, {
+      error: error?.message || 'PC recommendation request failed.',
+      retryAfter: error?.retryAfter || undefined
     })
   }
 }

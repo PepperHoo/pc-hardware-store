@@ -10,8 +10,29 @@ const myRating   = ref(0)
 const myComment  = ref('')
 const hoverStar  = ref(0)
 const submitted  = ref(false)
+const reviewNotice = ref('')
+const databaseReady = ref(true)
 
 const user = JSON.parse(localStorage.getItem('user') || 'null')
+
+function sortReviewsList(list) {
+  return [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+}
+
+function isReviewsTableMissing(error) {
+  return /PGRST205|schema cache|Could not find the table|public\.reviews/i.test(String(error?.message || ''))
+}
+
+function buildReviewPayload() {
+  return {
+    product_id: props.productId,
+    user_email: user.email,
+    username: user.username || user.email,
+    rating: myRating.value,
+    comment: myComment.value.trim(),
+    created_at: new Date().toISOString()
+  }
+}
 
 const avgRating = computed(() => {
   if (!reviews.value.length) return 0
@@ -27,12 +48,23 @@ const ratingCounts = computed(() => {
 async function loadReviews() {
   try {
     loading.value = true
+    databaseReady.value = true
+    reviewNotice.value = ''
     const { getWhere } = await import('../lib/api.js')
-    reviews.value = await getWhere('reviews', 'product_id', props.productId)
-    reviews.value.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+    reviews.value = sortReviewsList(await getWhere('reviews', 'product_id', props.productId))
     // Check if user already reviewed
     if (user) submitted.value = reviews.value.some(r => r.user_email === user.email)
-  } catch (e) { console.error(e) }
+  } catch (e) {
+    console.error(e)
+    reviews.value = []
+    submitted.value = false
+    if (isReviewsTableMissing(e)) {
+      databaseReady.value = false
+      reviewNotice.value = 'Review database is not ready. Create the Supabase reviews table before submitting reviews.'
+    } else {
+      reviewNotice.value = 'Could not load reviews from the database. Please try again later.'
+    }
+  }
   finally { loading.value = false }
 }
 
@@ -40,24 +72,26 @@ async function submitReview() {
   if (!user)            return alert('Please login to leave a review.')
   if (!myRating.value)  return alert('Please select a star rating.')
   if (!myComment.value.trim()) return alert('Please write a comment.')
+  if (!databaseReady.value) return alert('Review database is not ready. Create the Supabase reviews table first.')
+  const payload = buildReviewPayload()
   try {
     submitting.value = true
+    reviewNotice.value = ''
     const { create } = await import('../lib/api.js')
-    await create('reviews', {
-      product_id:  props.productId,
-      user_email:  user.email,
-      username:    user.username || user.email,
-      rating:      myRating.value,
-      comment:     myComment.value.trim(),
-      created_at:  new Date().toISOString()
-    })
+    await create('reviews', payload)
     submitted.value  = true
     myComment.value  = ''
     myRating.value   = 0
     loadReviews()
   } catch (e) {
     console.error(e)
-    alert('Failed to submit review. Please try again.')
+    if (isReviewsTableMissing(e)) {
+      databaseReady.value = false
+      reviewNotice.value = 'Review database is not ready. Create the Supabase reviews table before submitting reviews.'
+      return
+    }
+    reviewNotice.value = 'Failed to submit review to the database. Check the reviews table policy and try again.'
+    alert('Failed to submit review. Check the Supabase reviews table policy and try again.')
   } finally { submitting.value = false }
 }
 
@@ -74,6 +108,7 @@ onMounted(loadReviews)
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5l2 4.5h4.5L12 9l1.5 4.5L9 11l-4.5 2.5L6 9 2.5 6H7z" stroke="#f59e0b" stroke-width="1.5" stroke-linejoin="round"/></svg>
       Customer Reviews
     </h2>
+    <p v-if="reviewNotice" class="review-notice">{{ reviewNotice }}</p>
 
     <!-- Summary -->
     <div class="review-summary glass">
@@ -94,7 +129,7 @@ onMounted(loadReviews)
     </div>
 
     <!-- Write Review -->
-    <div v-if="user && !submitted" class="write-review glass">
+    <div v-if="user && !submitted && databaseReady" class="write-review glass">
       <h3 class="wr-title">Write a Review</h3>
       <!-- Star picker -->
       <div class="star-picker">
@@ -105,9 +140,13 @@ onMounted(loadReviews)
         >★</button>
       </div>
       <textarea v-model="myComment" placeholder="Share your experience with this product…" class="review-textarea" rows="4" />
-      <button class="submit-btn" @click="submitReview" :disabled="submitting">
+      <button class="submit-btn" @click="submitReview" :disabled="submitting || !databaseReady">
         {{ submitting ? 'Submitting…' : 'Submit Review' }}
       </button>
+    </div>
+
+    <div v-else-if="!databaseReady" class="login-prompt glass">
+      <p>Reviews can only be saved after the database table is created.</p>
     </div>
 
     <div v-else-if="!user" class="login-prompt glass">
@@ -121,6 +160,7 @@ onMounted(loadReviews)
     <!-- List -->
     <div class="reviews-list">
       <div v-if="loading" class="reviews-loading">Loading reviews…</div>
+      <div v-else-if="!databaseReady" class="reviews-empty">Reviews are unavailable until the database table is ready.</div>
       <div v-else-if="reviews.length === 0" class="reviews-empty">No reviews yet. Be the first!</div>
       <div v-else v-for="r in reviews" :key="r.id" class="review-card glass">
         <div class="rc-header">
@@ -142,6 +182,16 @@ onMounted(loadReviews)
 <style scoped>
 .reviews-section { margin-top: 60px; }
 .reviews-title { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800; color: #f1f5f9; margin-bottom: 24px; letter-spacing: 0.04em; }
+.review-notice {
+  margin: -10px 0 18px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(96,165,250,0.24);
+  background: rgba(37,99,235,0.08);
+  color: #93c5fd;
+  font-size: 12px;
+  line-height: 1.5;
+}
 
 /* Summary */
 .review-summary { display: flex; gap: 32px; padding: 24px 28px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 24px; flex-wrap: wrap; }
