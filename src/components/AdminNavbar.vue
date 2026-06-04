@@ -128,7 +128,6 @@ onMounted(() => {
       <div class="admin-currency-wrap">
         <button class="admin-currency-btn" type="button" @click="showCurrency = !showCurrency" :title="`Currency: ${currency.current}`">
           <span class="currency-symbol">{{ currency.symbol }}</span>
-          <span class="currency-code">{{ currency.current }}</span>
         </button>
         <div v-if="showCurrency" class="admin-currency-menu">
           <button
@@ -262,8 +261,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  width: 100%;
+  width: 46px;
   min-height: 34px;
   padding: 7px 10px;
   border-radius: 12px;
@@ -284,17 +282,15 @@ onMounted(() => {
 
 .currency-symbol {
   color: #60a5fa;
-}
-
-.currency-code {
-  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .admin-currency-menu {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  min-width: 180px;
+  min-width: 164px;
   padding: 6px;
   border-radius: 12px;
   border: 1px solid rgba(96,165,250,0.20);
@@ -316,6 +312,12 @@ onMounted(() => {
   color: #cbd5e1;
   font-size: 12px;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-currency-option span,
+.admin-currency-option strong {
+  flex-shrink: 0;
 }
 
 .admin-currency-option:hover,
@@ -707,10 +709,6 @@ onMounted(() => {
 
   .admin-currency-menu {
     right: -46px;
-  }
-
-  .currency-code {
-    display: none;
   }
 
   .theme-toggle span:first-child {

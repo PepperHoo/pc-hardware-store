@@ -741,7 +741,9 @@ onMounted(async () => {
 :global(:root[data-theme="light"]) .page-title,
 :global(:root[data-theme="light"]) .p-name,
 :global(:root[data-theme="light"]) .qty-val {
-  color: #172033 !important;
+  color: #0f172a !important;
+  opacity: 1 !important;
+  font-weight: 800;
 }
 
 :global(:root[data-theme="light"]) .result-count,

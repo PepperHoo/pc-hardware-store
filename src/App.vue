@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AiChatWidget from './components/AiChatWidget.vue'
 import CompareBar from './components/CompareBar.vue'
@@ -16,9 +16,13 @@ onMounted(() => {
   const theme = localStorage.getItem('theme') || 'dark'
   document.documentElement.setAttribute('data-theme', theme)
 
-  currency.fetchRates()
+  currency.startLiveUpdates()
   const user = JSON.parse(localStorage.getItem('user') || 'null')
   if (user?.email) wishlist.load(user.email)
+})
+
+onBeforeUnmount(() => {
+  currency.stopLiveUpdates()
 })
 </script>
 

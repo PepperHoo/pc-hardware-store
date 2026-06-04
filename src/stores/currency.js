@@ -1,49 +1,86 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+function loadStoredLiveRates() {
+  try {
+    return JSON.parse(localStorage.getItem('liveFxRates') || 'null')
+  } catch {
+    localStorage.removeItem('liveFxRates')
+    return null
+  }
+}
+
 export const useCurrencyStore = defineStore('currency', () => {
   const currencies = ['MYR', 'YEN', 'WON', 'USD', 'SGD', 'EUR']
-  const symbols = { MYR: 'RM', YEN: 'YEN', WON: 'WON', USD: '$', SGD: 'S$', EUR: 'EUR' }
+  const symbols = { MYR: 'RM', YEN: '\u00A5', WON: '\u20A9', USD: '$', SGD: 'S$', EUR: '\u20AC' }
   const storedCurrency = localStorage.getItem('currency')
+  const storedLiveRates = loadStoredLiveRates()
 
   const current  = ref(currencies.includes(storedCurrency) ? storedCurrency : 'MYR')
-  const rates    = ref({ MYR: 1, YEN: 33, WON: 290, USD: 0.21, SGD: 0.29, EUR: 0.20 })
+  const rates    = ref(storedLiveRates?.rates || { MYR: 1, YEN: 33, WON: 290, USD: 0.21, SGD: 0.29, EUR: 0.20 })
   const loading  = ref(false)
   const lastFetch = ref(null)
+  const lastUpdated = ref(storedLiveRates?.updatedAt || null)
+  const provider = ref(storedLiveRates?.provider || '')
+  const isLive = ref(Boolean(storedLiveRates?.live))
+  const error = ref('')
+  let refreshTimer = null
 
   const symbol = computed(() => symbols[current.value] || current.value)
   const rate   = computed(() => rates.value[current.value] || 1)
 
-  async function fetchRates() {
-    if (lastFetch.value && Date.now() - lastFetch.value < 600_000) return
+  async function fetchRates({ force = false } = {}) {
+    if (loading.value) return
+    if (!force && lastFetch.value && Date.now() - lastFetch.value < 30_000) return
 
     try {
       loading.value = true
-      const res  = await fetch('https://open.er-api.com/v6/latest/MYR')
+      error.value = ''
+      const res = await fetch('/api/exchange-rates')
       const data = await res.json()
 
-      if (data.rates) {
-        rates.value = {
-          MYR: 1,
-          YEN: data.rates.JPY || rates.value.YEN,
-          WON: data.rates.KRW || rates.value.WON,
-          USD: data.rates.USD || rates.value.USD,
-          SGD: data.rates.SGD || rates.value.SGD,
-          EUR: data.rates.EUR || rates.value.EUR,
-        }
-        lastFetch.value = Date.now()
-      }
+      if (!res.ok) throw new Error(data.error || 'Unable to fetch live currency pricing.')
+      if (!data.rates) throw new Error('Live currency provider returned no rates.')
+
+      rates.value = data.rates
+      lastUpdated.value = data.updatedAt || new Date().toISOString()
+      provider.value = data.provider || 'Live market feed'
+      isLive.value = Boolean(data.live && !data.stale)
+      error.value = data.warning || ''
+      lastFetch.value = Date.now()
+
+      localStorage.setItem('liveFxRates', JSON.stringify({
+        rates: rates.value,
+        updatedAt: lastUpdated.value,
+        provider: provider.value,
+        live: isLive.value
+      }))
     } catch (e) {
-      console.warn('Currency fetch failed, using fallback rates', e)
+      error.value = e?.message || 'Unable to refresh live currency pricing.'
+      isLive.value = false
+      console.warn('Live currency fetch failed, using the last successful rates', e)
     } finally {
+      lastFetch.value = Date.now()
       loading.value = false
     }
+  }
+
+  function startLiveUpdates() {
+    if (refreshTimer) return
+    fetchRates({ force: true })
+    refreshTimer = setInterval(() => fetchRates({ force: true }), 60_000)
+  }
+
+  function stopLiveUpdates() {
+    clearInterval(refreshTimer)
+    refreshTimer = null
   }
 
   function setCurrency(code) {
     const next = currencies.includes(code) ? code : 'MYR'
     current.value = next
     localStorage.setItem('currency', next)
+    fetchRates()
   }
 
   function format(myrPrice) {
@@ -51,5 +88,22 @@ export const useCurrencyStore = defineStore('currency', () => {
     return `${symbol.value} ${converted}`
   }
 
-  return { current, rates, loading, currencies, symbols, symbol, rate, fetchRates, setCurrency, format }
+  return {
+    current,
+    rates,
+    loading,
+    lastUpdated,
+    provider,
+    isLive,
+    error,
+    currencies,
+    symbols,
+    symbol,
+    rate,
+    fetchRates,
+    startLiveUpdates,
+    stopLiveUpdates,
+    setCurrency,
+    format
+  }
 })

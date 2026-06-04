@@ -10,7 +10,14 @@ const currency = useCurrencyStore()
 const user = ref(JSON.parse(localStorage.getItem('user')))
 const orders = ref([])
 const loading = ref(true)
-const profileImage = ref(localStorage.getItem('profileImage') || '')
+
+function getProfileImageKey() {
+  const identity = user.value?.id || user.value?.email
+  return identity ? `profileImage:${String(identity).trim().toLowerCase()}` : ''
+}
+
+const profileImageKey = getProfileImageKey()
+const profileImage = ref(profileImageKey ? localStorage.getItem(profileImageKey) || '' : '')
 const address    = ref(localStorage.getItem('defaultAddress') || 'Kuching, Sarawak')
 const birthday   = ref(localStorage.getItem('birthday') || '')
 const apartment  = ref(localStorage.getItem('apartment') || '')
@@ -58,7 +65,11 @@ function handleProfileUpload(e) {
   const file = e.target.files[0]
   if (!file) return
   const reader = new FileReader()
-  reader.onload = () => { profileImage.value = reader.result; localStorage.setItem('profileImage', reader.result) }
+  reader.onload = () => {
+    profileImage.value = reader.result
+    const key = getProfileImageKey()
+    if (key) localStorage.setItem(key, reader.result)
+  }
   reader.readAsDataURL(file)
 }
 

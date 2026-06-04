@@ -7,7 +7,14 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const toastRef = ref(null)
 const user = ref(JSON.parse(localStorage.getItem('user')))
-const profileImage = ref(localStorage.getItem('adminProfileImage') || '')
+
+function getProfileImageKey() {
+  const identity = user.value?.id || user.value?.email
+  return identity ? `profileImage:${String(identity).trim().toLowerCase()}` : ''
+}
+
+const profileImageKey = getProfileImageKey()
+const profileImage = ref(profileImageKey ? localStorage.getItem(profileImageKey) || '' : '')
 const editName  = ref('')
 const editEmail = ref('')
 const editPhone = ref('')
@@ -24,7 +31,12 @@ function syncForm() {
 function handleProfileUpload(e) {
   const file = e.target.files[0]; if (!file) return
   const reader = new FileReader()
-  reader.onload = () => { profileImage.value = reader.result; localStorage.setItem('adminProfileImage', reader.result); toastRef.value.showToastMessage('Profile photo updated', 'success') }
+  reader.onload = () => {
+    profileImage.value = reader.result
+    const key = getProfileImageKey()
+    if (key) localStorage.setItem(key, reader.result)
+    toastRef.value.showToastMessage('Profile photo updated', 'success')
+  }
   reader.readAsDataURL(file)
 }
 

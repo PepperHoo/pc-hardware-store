@@ -309,6 +309,13 @@ function checkout() {
 .trust-row { display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
 .trust-item { font-size: 11px; color: #334155; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
 
+/* Light mode */
+:global(:root[data-theme="light"]) .qty-num {
+  color: #0f172a !important;
+  opacity: 1 !important;
+  font-weight: 800;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .cart-layout { grid-template-columns: 1fr; }

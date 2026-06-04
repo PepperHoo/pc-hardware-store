@@ -25,6 +25,22 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+## Live Currency Pricing
+
+The website converts MYR product prices using live forex snapshots from Twelve Data.
+Add the following environment variable in Vercel and redeploy:
+
+```text
+TWELVE_DATA_API_KEY=your_twelve_data_api_key
+```
+
+The API key is used only by `/api/exchange-rates` and is never exposed to the browser.
+The website refreshes rates every minute and keeps the last successful live rates if the
+provider is temporarily unavailable.
+
+The request contains five forex symbols. Check that your Twelve Data plan has enough API
+credits for your expected traffic and refresh frequency.
+
 ### Compile and Hot-Reload for Development
 
 ```sh

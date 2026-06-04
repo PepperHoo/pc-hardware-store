@@ -523,16 +523,16 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   position: absolute; top: 48px; right: 0;
   background: #0d1526; border: 1px solid rgba(255,255,255,0.08);
   border-radius: 14px; overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 9999; min-width: 100px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 9999; min-width: 148px;
 }
 .currency-opt {
   display: flex; align-items: center; gap: 8px;
   width: 100%; padding: 10px 14px;
   background: none; border: none; cursor: pointer; text-align: left;
-  transition: background 0.15s; color: #94a3b8;
+  transition: background 0.15s; color: #94a3b8; white-space: nowrap;
 }
 .currency-opt:hover, .currency-opt.active { background: rgba(59,130,246,0.12); color: #93c5fd; }
-.opt-sym { font-weight: 800; font-size: 14px; width: 20px; }
+.opt-sym { font-weight: 800; font-size: 14px; width: 28px; flex-shrink: 0; }
 .opt-code { font-size: 12px; font-weight: 600; }
 
 /* Transitions */
