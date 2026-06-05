@@ -7,7 +7,6 @@ If the user asks for support outside PC hardware or store guidance, answer brief
 `.trim()
 
 const DEFAULT_GROQ_MODEL = 'llama-3.1-8b-instant'
-const DEFAULT_GOOGLE_MODEL = 'gemini-2.5-flash'
 
 function sendJson(res, status, payload) {
   res.status(status).json(payload)
@@ -49,8 +48,8 @@ async function readBody(req) {
 }
 
 async function callGroq(messages) {
-  const apiKey = process.env.GROQ_API_KEY
-  const model = process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL
+  const apiKey = process.env.CHAT_GROQ_API_KEY || process.env.GROQ_API_KEY
+  const model = process.env.CHAT_GROQ_MODEL || process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -82,46 +81,6 @@ async function callGroq(messages) {
   }
 }
 
-async function callGoogle(messages) {
-  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
-  const model = process.env.GOOGLE_AI_MODEL || process.env.GEMINI_MODEL || DEFAULT_GOOGLE_MODEL
-
-  const contents = messages.map((message) => ({
-    role: message.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: message.content }]
-  }))
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.35,
-          maxOutputTokens: 650
-        }
-      })
-    }
-  )
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `Google AI request failed with status ${response.status}`)
-  }
-
-  return {
-    provider: 'google',
-    model,
-    reply: sanitizeText(data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n'), 4000)
-  }
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -144,27 +103,15 @@ export default async function handler(req, res) {
       return sendJson(res, 400, { error: 'Please send at least one user message.' })
     }
 
-    const provider = String(process.env.CHAT_PROVIDER || 'google').toLowerCase()
-    const hasGroq = Boolean(process.env.GROQ_API_KEY)
-    const hasGoogle = Boolean(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY)
+    const hasGroq = Boolean(process.env.CHAT_GROQ_API_KEY || process.env.GROQ_API_KEY)
 
-    let result
-
-    if (provider === 'google') {
-      if (!hasGoogle) throw new Error('Google chat key is not configured.')
-      result = await callGoogle(messages)
-    } else if (provider === 'groq') {
-      if (!hasGroq) throw new Error('Groq chat key is not configured.')
-      result = await callGroq(messages)
-    } else if (hasGoogle) {
-      result = await callGoogle(messages)
-    } else if (hasGroq) {
-      result = await callGroq(messages)
-    } else {
+    if (!hasGroq) {
       return sendJson(res, 500, {
-        error: 'AI chat key is not configured. Add a Google key in Vercel environment variables.'
+        error: 'AI chat key is not configured. Add CHAT_GROQ_API_KEY or GROQ_API_KEY in Vercel environment variables.'
       })
     }
+
+    const result = await callGroq(messages)
 
     if (!result.reply) {
       return sendJson(res, 502, { error: 'The AI provider returned an empty response.' })
