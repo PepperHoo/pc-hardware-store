@@ -13,7 +13,6 @@ const currency = useCurrencyStore()
 useScrollAnimation()
 
 const loading        = ref(true)
-const bannerImages   = ref([])
 const hotSelling     = ref([])
 const latestProducts = ref([])
 const allProducts    = ref([])
@@ -43,7 +42,6 @@ onMounted(async () => {
     allProducts.value = products
     if (hpData?.[0]) {
       const hp = hpData[0]
-      bannerImages.value   = hp.banners        || []
       hotSelling.value     = hp.hotSelling     || []
       latestProducts.value = hp.latestProducts || []
     }
@@ -66,7 +64,6 @@ onBeforeUnmount(() => {
     <!-- ══ HERO ══════════════════════════════════════════════════════════ -->
     <section class="hero">
       <div class="hero-bg" :style="{ transform: `translateY(${heroOffset}px)` }">
-        <img v-if="bannerImages[0]" :src="bannerImages[0]" class="hero-bg-img" alt="" />
         <div class="hero-bg-gradient" />
       </div>
       <div class="orb orb-1" />
