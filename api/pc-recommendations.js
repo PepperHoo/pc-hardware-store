@@ -1,5 +1,4 @@
 const DEFAULT_GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
-const DEFAULT_GOOGLE_MODEL = 'gemini-2.5-flash'
 
 const SYSTEM_PROMPT = `
 You are a PC component compatibility recommendation assistant for an online PC hardware store.
@@ -128,40 +127,6 @@ function buildPrompt({ products, categories, selectedParts }) {
   })
 }
 
-function buildGeminiResponseSchema(categories) {
-  return {
-    type: 'object',
-    properties: {
-      items: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            category: {
-              type: 'string',
-              enum: categories.map((category) => category.key)
-            },
-            productIds: {
-              type: 'array',
-              items: { type: 'string' },
-              maxItems: 3
-            },
-            reasons: {
-              type: 'array',
-              items: { type: 'string' },
-              maxItems: 3
-            }
-          },
-          required: ['category', 'productIds', 'reasons'],
-          additionalProperties: false
-        }
-      }
-    },
-    required: ['items'],
-    additionalProperties: false
-  }
-}
-
 function extractJson(text) {
   const value = String(text || '').trim()
 
@@ -191,14 +156,6 @@ function extractJson(text) {
   }
 
   throw new Error('Recommendation service returned invalid JSON.')
-}
-
-function getGeminiText(data) {
-  return (data?.candidates || [])
-    .flatMap((candidate) => candidate?.content?.parts || [])
-    .map((part) => part?.text || '')
-    .filter(Boolean)
-    .join('\n')
 }
 
 function validateAiResult(raw, { categories, catalogById, selectedParts }) {
@@ -304,162 +261,7 @@ async function callGroq(prompt) {
   }
 }
 
-async function callGoogle(prompt, categories) {
-  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
-  const model = process.env.GOOGLE_AI_MODEL || process.env.GEMINI_MODEL || DEFAULT_GOOGLE_MODEL
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
-  const generationConfig = {
-    temperature: 0.15,
-    maxOutputTokens: 3000,
-    responseMimeType: 'application/json',
-    responseJsonSchema: buildGeminiResponseSchema(categories)
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }]
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }]
-        }
-      ],
-      generationConfig
-    })
-  })
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `Google recommendation request failed with status ${response.status}`)
-  }
-
-  const rawText = getGeminiText(data)
-  let raw
-
-  try {
-    raw = extractJson(rawText)
-  } catch {
-    try {
-      raw = await repairGoogleJson({ endpoint, model, prompt, rawText, categories })
-    } catch {
-      raw = await retryGoogleJson({ endpoint, model, prompt, rawText, categories })
-    }
-  }
-
-  return {
-    provider: 'google',
-    model,
-    raw
-  }
-}
-
-async function repairGoogleJson({ endpoint, model, prompt, rawText, categories }) {
-  const repairPrompt = JSON.stringify({
-    task: 'Repair the previous AI response into valid JSON only.',
-    originalRequest: JSON.parse(prompt),
-    previousResponse: String(rawText || '').slice(0, 12000),
-    requiredOutput: buildGeminiResponseSchema(categories)
-  })
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: repairPrompt }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0,
-        maxOutputTokens: 3000,
-        responseMimeType: 'application/json',
-        responseJsonSchema: buildGeminiResponseSchema(categories)
-      }
-    })
-  })
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `Google JSON repair request failed with status ${response.status}`)
-  }
-
-  const repairedText = getGeminiText(data)
-  try {
-    return extractJson(repairedText)
-  } catch {
-    throw new Error(`Recommendation service returned invalid JSON from ${model}.`)
-  }
-}
-
-async function retryGoogleJson({ endpoint, model, prompt, rawText, categories }) {
-  const retryPrompt = JSON.stringify({
-    task: 'Return only one valid JSON object for PC part recommendations. No markdown, no explanation.',
-    shape: { items: [{ category: 'category_key', productIds: ['catalog_id'], reasons: ['short reason'] }] },
-    allowedCategories: categories.map((category) => category.key),
-    originalRequest: JSON.parse(prompt),
-    previousInvalidResponse: String(rawText || '').slice(0, 6000)
-  })
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: retryPrompt }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0,
-        maxOutputTokens: 2200,
-        responseMimeType: 'application/json'
-      }
-    })
-  })
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `Google JSON retry request failed with status ${response.status}`)
-  }
-
-  try {
-    return extractJson(getGeminiText(data))
-  } catch {
-    throw new Error(`Recommendation service returned invalid JSON from ${model}.`)
-  }
-}
-
-function isQuotaError(error) {
-  return /quota|rate limit|rate-limit|429|exceeded/i.test(String(error?.message || ''))
-}
-
-async function callPreferredProvider({ provider, hasGroq, hasGoogle, prompt, categories }) {
-  if (provider === 'google') {
-    if (!hasGoogle) throw new Error('Google key is not configured.')
-
-    try {
-      return await callGoogle(prompt, categories)
-    } catch (error) {
-      if (hasGroq && isQuotaError(error)) {
-        return callGroq(prompt)
-      }
-      if (isQuotaError(error)) {
-        throw new Error('Google quota exceeded. Switch the recommendation provider to Groq or wait for the quota reset.')
-      }
-      throw error
-    }
-  }
-
+async function callPreferredProvider({ hasGroq, prompt }) {
   if (!hasGroq) throw new Error('Groq key is not configured.')
 
   return callGroq(prompt)
@@ -495,11 +297,9 @@ export default async function handler(req, res) {
 
     const prompt = buildPrompt({ products, categories, selectedParts })
 
-    const provider = String(process.env.PC_RECOMMENDATION_PROVIDER || 'groq').toLowerCase()
     const hasGroq = Boolean(process.env.GROQ_API_KEY)
-    const hasGoogle = Boolean(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY)
 
-    const result = await callPreferredProvider({ provider, hasGroq, hasGoogle, prompt, categories })
+    const result = await callPreferredProvider({ hasGroq, prompt })
 
     const validated = validateAiResult(result.raw, { categories, catalogById, selectedParts })
 
