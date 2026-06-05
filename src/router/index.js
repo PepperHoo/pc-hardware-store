@@ -21,14 +21,15 @@ import AdminProfileView   from '../views/AdminProfileView.vue'
 import CheckoutView       from '../views/CheckoutView.vue'
 import OrdersView         from '../views/OrdersView.vue'
 import PcBuilderView      from '../views/PcBuilderView.vue'
+import { clearSessionUser, getSessionUser } from '../lib/session.js'
 
 const routes = [
   // ── Public ──────────────────────────────────────────────────
-  { path: '/',                    component: HomeView },
-  { path: '/products',            component: ProductsView },
-  { path: '/products/:category',  component: ProductsView },
-  { path: '/product/:id',         component: ProductDetailView },
-  { path: '/pc-builder',          component: PcBuilderView },
+  { path: '/',                    component: HomeView,          meta: { requiresAuth: true } },
+  { path: '/products',            component: ProductsView,      meta: { requiresAuth: true } },
+  { path: '/products/:category',  component: ProductsView,      meta: { requiresAuth: true } },
+  { path: '/product/:id',         component: ProductDetailView, meta: { requiresAuth: true } },
+  { path: '/pc-builder',          component: PcBuilderView,     meta: { requiresAuth: true } },
   { path: '/login',               component: LoginView,    meta: { guestOnly: true } },
   { path: '/register',            component: RegisterView, meta: { guestOnly: true } },
   { path: '/forgot-password',     component: ForgotPasswordView },
@@ -56,12 +57,9 @@ const routes = [
 ]
 
 function getStoredUser() {
-  try {
-    return JSON.parse(localStorage.getItem('user') || 'null')
-  } catch {
-    localStorage.removeItem('user')
-    return null
-  }
+  const user = getSessionUser()
+  if (!user) clearSessionUser()
+  return user
 }
 
 function getRole(user) {

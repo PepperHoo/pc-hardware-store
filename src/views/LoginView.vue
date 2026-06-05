@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
 import { useWishlistStore } from '../stores/wishlist'
+import { setSessionUser } from '../lib/session.js'
 
 const router = useRouter()
 const cart = useCartStore()
@@ -34,7 +35,7 @@ async function login() {
       ...user,
       role: String(user.role || 'user').trim().toLowerCase()
     }
-    localStorage.setItem('user', JSON.stringify(normalizedUser))
+    setSessionUser(normalizedUser)
     if (normalizedUser.role === 'admin') {
       cart.reset()
       wishlist.reset()
@@ -82,6 +83,26 @@ async function login() {
         <span class="kicker" style="display:block;text-align:center;margin-bottom:16px;">Welcome Back</span>
         <h1 class="auth-title">Sign <span class="grad-text">In</span></h1>
         <p class="auth-sub">Login to continue shopping the best PC hardware.</p>
+
+        <div class="demo-accounts" aria-label="Demo login accounts">
+          <div class="demo-account">
+            <p class="demo-title">Demo - User</p>
+            <div class="demo-values">
+              <code>demo@gmail.com</code>
+              <span>/</span>
+              <code>demo123</code>
+            </div>
+          </div>
+
+          <div class="demo-account">
+            <p class="demo-title">Demo - Admin</p>
+            <div class="demo-values">
+              <code>admin@gmail.com</code>
+              <span>/</span>
+              <code>123456</code>
+            </div>
+          </div>
+        </div>
 
         <!-- Email -->
         <div class="field-group">
@@ -196,6 +217,46 @@ async function login() {
 }
 .auth-sub { text-align: center; color: #475569; font-size: 14px; margin: 0 0 32px; line-height: 1.6; }
 
+.demo-accounts {
+  display: grid;
+  gap: 12px;
+  margin: -12px 0 28px;
+}
+
+.demo-account {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(15,23,42,0.78);
+  border: 1px solid rgba(148,163,184,0.16);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.demo-title {
+  margin: 0 0 8px;
+  color: #93a4bd;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.demo-values {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.demo-values code {
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(239,68,68,0.14);
+  color: #f87171;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 /* Fields */
 .field-group { margin-bottom: 20px; }
 .field-label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.04em; }
@@ -244,5 +305,25 @@ async function login() {
 @media (max-width: 520px) {
   .auth-card { padding: 32px 24px; }
   .auth-title { font-size: 28px; }
+  .demo-account { padding: 12px; }
+  .demo-values code { font-size: 11px; }
+}
+
+:global(:root[data-theme="light"]) .demo-account {
+  background: rgba(255,255,255,0.86);
+  border-color: rgba(15,23,42,0.12);
+}
+
+:global(:root[data-theme="light"]) .demo-title {
+  color: #64748b;
+}
+
+:global(:root[data-theme="light"]) .demo-values {
+  color: #94a3b8;
+}
+
+:global(:root[data-theme="light"]) .demo-values code {
+  background: rgba(239,68,68,0.10);
+  color: #ef4444;
 }
 </style>

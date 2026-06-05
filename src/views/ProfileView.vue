@@ -6,12 +6,13 @@ import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
 import { useWishlistStore } from '../stores/wishlist'
+import { clearSessionUser, getSessionUser, setSessionUser } from '../lib/session.js'
 
 const router = useRouter()
 const cart = useCartStore()
 const currency = useCurrencyStore()
 const wishlist = useWishlistStore()
-const user = ref(JSON.parse(localStorage.getItem('user')))
+const user = ref(getSessionUser())
 const orders = ref([])
 const loading = ref(true)
 
@@ -60,7 +61,7 @@ function formatMoney(value) {
 }
 
 function logout() {
-  localStorage.removeItem('user')
+  clearSessionUser()
   cart.reset()
   wishlist.reset()
   user.value = null
@@ -90,7 +91,7 @@ function saveProfile() {
   user.value.email    = editEmail.value
   birthday.value      = editBirthday.value
   localStorage.setItem('birthday', editBirthday.value)
-  localStorage.setItem('user', JSON.stringify(user.value))
+  setSessionUser(user.value)
   showProfileModal.value = false
 }
 

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useCartStore }     from '../stores/cart'
 import { useWishlistStore } from '../stores/wishlist'
 import { useCurrencyStore } from '../stores/currency'
+import { getSessionUser } from '../lib/session.js'
 
 const router   = useRouter()
 const cart     = useCartStore()
@@ -18,7 +19,7 @@ const scrolled      = ref(false)
 const products      = ref([])
 const showCurrency  = ref(false)
 
-const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+const user = ref(getSessionUser())
 const isDark = ref(localStorage.getItem('theme') !== 'light')
 
 const profilePath = computed(() => user.value ? '/profile' : '/login')

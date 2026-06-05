@@ -12,6 +12,7 @@ import { useCompareStore }     from '../stores/compare'
 import { useCurrencyStore }    from '../stores/currency'
 import { useCardTilt }         from '../composables/useCardTilt'
 import { useRecentlyViewed }   from '../composables/useRecentlyViewed'
+import { getSessionUser }      from '../lib/session.js'
 
 const route    = useRoute()
 const router   = useRouter()
@@ -30,7 +31,7 @@ const quantity     = ref(1)
 const imgZoomed    = ref(false)
 const recentlyViewed = ref([])
 
-const user = JSON.parse(localStorage.getItem('user') || 'null')
+const user = getSessionUser()
 
 const isWishlisted = computed(() => product.value ? wishlist.isWishlisted(product.value.id) : false)
 const isCompared   = computed(() => product.value ? compare.isAdded(product.value.id) : false)

@@ -10,6 +10,7 @@ import { useWishlistStore } from '../stores/wishlist'
 import { useCompareStore }  from '../stores/compare'
 import { useCurrencyStore } from '../stores/currency'
 import { useCardTilt } from '../composables/useCardTilt'
+import { getSessionUser } from '../lib/session.js'
 
 const route    = useRoute()
 const router   = useRouter()
@@ -19,7 +20,7 @@ const compare  = useCompareStore()
 const currency = useCurrencyStore()
 const tilt     = useCardTilt(7)
 const toastRef = ref(null)
-const user     = JSON.parse(localStorage.getItem('user') || 'null')
+const user     = getSessionUser()
 
 const products         = ref([])
 const loading          = ref(true)

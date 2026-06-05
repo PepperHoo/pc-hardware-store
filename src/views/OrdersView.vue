@@ -4,10 +4,11 @@ import Footer from '../components/Footer.vue'
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCurrencyStore } from '../stores/currency'
+import { getSessionUser } from '../lib/session.js'
 
 const router = useRouter()
 const currency = useCurrencyStore()
-const user   = ref(JSON.parse(localStorage.getItem('user')))
+const user   = ref(getSessionUser())
 const orders = ref([])
 const loading = ref(true)
 const printableOrder = ref(null)

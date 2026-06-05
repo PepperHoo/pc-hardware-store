@@ -5,12 +5,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
 import { useWishlistStore } from '../stores/wishlist'
+import { clearSessionUser, getSessionUser, setSessionUser } from '../lib/session.js'
 
 const router = useRouter()
 const cart = useCartStore()
 const wishlist = useWishlistStore()
 const toastRef = ref(null)
-const user = ref(JSON.parse(localStorage.getItem('user')))
+const user = ref(getSessionUser())
 
 function getProfileImageKey() {
   const identity = user.value?.id || user.value?.email
@@ -61,7 +62,7 @@ async function saveProfile() {
       await update('users', updatedUser.id, dbUser)
     }
     user.value = updatedUser
-    localStorage.setItem('user', JSON.stringify(updatedUser))
+    setSessionUser(updatedUser)
     localStorage.setItem('adminPhone', editPhone.value)
     localStorage.setItem('adminTitle', editTitle.value)
     toastRef.value.showToastMessage('Profile saved!', 'success')
@@ -72,7 +73,7 @@ async function saveProfile() {
 }
 
 function logout() {
-  localStorage.removeItem('user')
+  clearSessionUser()
   cart.reset()
   wishlist.reset()
   router.push('/login')

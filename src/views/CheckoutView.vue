@@ -6,6 +6,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore }     from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
+import { getSessionUser } from '../lib/session.js'
 
 const router   = useRouter()
 const cart     = useCartStore()
@@ -41,7 +42,7 @@ async function placeOrder() {
     toastRef.value.showToastMessage('Your cart is empty', 'error')
     return
   }
-  const user = JSON.parse(localStorage.getItem('user'))
+  const user = getSessionUser()
   const order = {
     userEmail:       user?.email ?? '',
     recipientName:   recipientName.value,

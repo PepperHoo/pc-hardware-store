@@ -6,12 +6,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
+import { getSessionUser } from '../lib/session.js'
 
 const router = useRouter()
 const cart   = useCartStore()
 const currency = useCurrencyStore()
 const toastRef = ref(null)
-const user   = ref(JSON.parse(localStorage.getItem('user')))
+const user   = ref(getSessionUser())
 const checkingOut = ref(false)
 const shippingCost = 10
 

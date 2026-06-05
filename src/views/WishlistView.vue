@@ -6,13 +6,14 @@ import { useRouter } from 'vue-router'
 import { useWishlistStore } from '../stores/wishlist'
 import { useCartStore } from '../stores/cart'
 import { useCurrencyStore } from '../stores/currency'
+import { getSessionUser } from '../lib/session.js'
 
 const router   = useRouter()
 const wishlist = useWishlistStore()
 const cart     = useCartStore()
 const currency = useCurrencyStore()
 
-const user = JSON.parse(localStorage.getItem('user') || 'null')
+const user = getSessionUser()
 
 function addToCart(product) {
   cart.addToCart(product)

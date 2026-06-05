@@ -1,9 +1,10 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { getSessionUser } from '../lib/session.js'
 
 const router = useRouter()
-const user   = computed(() => JSON.parse(localStorage.getItem('user')))
+const user   = computed(() => getSessionUser())
 const year   = new Date().getFullYear()
 
 const categories = [

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCurrencyStore } from '../stores/currency'
+import { getSessionUser } from '../lib/session.js'
 
 const route  = useRoute()
 const router = useRouter()
@@ -50,12 +51,7 @@ function selectCurrency(code) {
 }
 
 function getStoredUser() {
-  try {
-    return JSON.parse(localStorage.getItem('user') || 'null')
-  } catch {
-    localStorage.removeItem('user')
-    return null
-  }
+  return getSessionUser()
 }
 
 function goAdminProfile() {

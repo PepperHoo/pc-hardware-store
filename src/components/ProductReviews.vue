@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { getSessionUser } from '../lib/session.js'
 
 const props = defineProps({ productId: { type: String, required: true } })
 
@@ -13,7 +14,7 @@ const submitted  = ref(false)
 const reviewNotice = ref('')
 const databaseReady = ref(true)
 
-const user = JSON.parse(localStorage.getItem('user') || 'null')
+const user = getSessionUser()
 
 function sortReviewsList(list) {
   return [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))

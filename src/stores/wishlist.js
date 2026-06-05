@@ -1,13 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getWhere, removeWhereMany, upsert } from '../lib/api.js'
+import { getSessionUserEmail } from '../lib/session.js'
 
 function getStoredUserEmail() {
-  try {
-    return JSON.parse(localStorage.getItem('user') || 'null')?.email || ''
-  } catch {
-    return ''
-  }
+  return getSessionUserEmail()
 }
 
 function productSnapshot(product) {
