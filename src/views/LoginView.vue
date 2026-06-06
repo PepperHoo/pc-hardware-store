@@ -226,16 +226,18 @@ async function login() {
 .demo-account {
   padding: 14px 16px;
   border-radius: 14px;
-  background: rgba(15,23,42,0.78);
-  border: 1px solid rgba(148,163,184,0.16);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  background: rgba(15,23,42,0.82);
+  border: 1px solid rgba(148,163,184,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 24px rgba(2,6,23,0.18);
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
 }
 
 .demo-title {
   margin: 0 0 8px;
-  color: #93a4bd;
+  color: #cbd5e1;
   font-size: 13px;
   font-weight: 800;
+  transition: color 0.25s;
 }
 
 .demo-values {
@@ -245,16 +247,18 @@ async function login() {
   gap: 6px;
   color: #94a3b8;
   font-size: 12px;
+  transition: color 0.25s;
 }
 
 .demo-values code {
   padding: 4px 7px;
   border-radius: 6px;
-  background: rgba(239,68,68,0.14);
-  color: #f87171;
+  background: rgba(59,130,246,0.14);
+  color: #93c5fd;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
   font-weight: 800;
+  transition: background 0.25s, color 0.25s;
 }
 
 /* Fields */
@@ -309,21 +313,27 @@ async function login() {
   .demo-values code { font-size: 11px; }
 }
 
+:global([data-theme="light"]) .demo-account,
 :global(:root[data-theme="light"]) .demo-account {
-  background: rgba(255,255,255,0.86);
-  border-color: rgba(15,23,42,0.12);
+  background: rgba(255,255,255,0.92) !important;
+  border-color: rgba(37,99,235,0.16) !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.86) !important;
 }
 
+:global([data-theme="light"]) .demo-title,
 :global(:root[data-theme="light"]) .demo-title {
-  color: #64748b;
+  color: #334155 !important;
 }
 
+:global([data-theme="light"]) .demo-values,
 :global(:root[data-theme="light"]) .demo-values {
-  color: #94a3b8;
+  color: #64748b !important;
 }
 
+:global([data-theme="light"]) .demo-values code,
 :global(:root[data-theme="light"]) .demo-values code {
-  background: rgba(239,68,68,0.10);
-  color: #ef4444;
+  background: rgba(37,99,235,0.10) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(37,99,235,0.14) !important;
 }
 </style>
