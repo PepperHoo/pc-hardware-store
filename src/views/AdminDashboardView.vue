@@ -221,10 +221,6 @@ watch(() => currencyStore.current, () => {
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 6h7M4 9h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
               View Orders
             </router-link>
-            <router-link to="/admin/homepage" class="qa-btn qa-secondary">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M1 7L7.5 1 14 7v7H9V9H6v5H1V7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-              Edit Homepage
-            </router-link>
           </div>
         </div>
 

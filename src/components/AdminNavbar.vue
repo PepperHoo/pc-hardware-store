@@ -26,11 +26,7 @@ const navItems = [
   {
     to: '/admin/users', label: 'Users', exact: false,
     icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 16c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
-  },
-  {
-    to: '/admin/homepage', label: 'Homepage', exact: false,
-    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 8l7-6 7 6v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 17V10h6v7" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`
-  },
+  }
 ]
 
 function isActive(item) {

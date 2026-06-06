@@ -13,7 +13,7 @@ const currency = useCurrencyStore()
 useScrollAnimation()
 
 const loading        = ref(true)
-const hotSelling     = ref([])
+const topSellingProducts = ref([])
 const latestProducts = ref([])
 const allProducts    = ref([])
 const heroOffset     = ref(0)
@@ -30,21 +30,86 @@ const categories = [
 ]
 
 const featuredProducts = computed(() =>
-  allProducts.value.filter(p => ['gpu', 'processor', 'ram'].includes(p.category)).slice(0, 6)
+  allProducts.value.filter(p => ['gpu', 'processor', 'ram'].includes(p.category)).slice(0, 5)
 )
+
+function getOrderItems(order) {
+  if (Array.isArray(order?.items)) return order.items
+  if (typeof order?.items === 'string') {
+    try {
+      const parsed = JSON.parse(order.items)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+function getItemQuantity(item) {
+  const quantity = Number(item?.quantity ?? item?.qty ?? 1)
+  return Number.isFinite(quantity) && quantity > 0 ? quantity : 1
+}
+
+function getProductTime(product, index = 0) {
+  const rawDate = product?.created_at || product?.createdAt || product?.date || product?.updated_at || product?.updatedAt
+  const parsedDate = rawDate ? new Date(rawDate).getTime() : 0
+  if (Number.isFinite(parsedDate) && parsedDate > 0) return parsedDate
+
+  const idPrefix = String(product?.id || '').match(/^[a-z0-9]{8}/i)?.[0]
+  const parsedId = idPrefix ? parseInt(idPrefix, 36) : 0
+  if (Number.isFinite(parsedId) && parsedId > 1000000000000) return parsedId
+
+  return index
+}
+
+function buildTopSellingProducts(products, orders) {
+  const productById = new Map(products.map(product => [String(product.id), product]))
+  const productByName = new Map(products.map(product => [String(product.name || '').trim().toLowerCase(), product]))
+  const soldByProductId = new Map()
+
+  orders.forEach(order => {
+    getOrderItems(order).forEach(item => {
+      const product =
+        productById.get(String(item?.id ?? item?.product_id ?? item?.productId ?? '')) ||
+        productByName.get(String(item?.name || '').trim().toLowerCase())
+
+      if (!product?.id) return
+
+      const key = String(product.id)
+      soldByProductId.set(key, (soldByProductId.get(key) || 0) + getItemQuantity(item))
+    })
+  })
+
+  return products
+    .map((product, index) => ({
+      ...product,
+      soldQuantity: soldByProductId.get(String(product.id)) || 0,
+      _sortTime: getProductTime(product, index)
+    }))
+    .filter(product => product.soldQuantity > 0)
+    .sort((a, b) => (b.soldQuantity - a.soldQuantity) || (b._sortTime - a._sortTime))
+    .slice(0, 5)
+    .map(({ _sortTime, ...product }) => product)
+}
+
+function buildLatestProducts(products) {
+  return products
+    .map((product, index) => ({ ...product, _sortTime: getProductTime(product, index) }))
+    .sort((a, b) => b._sortTime - a._sortTime)
+    .slice(0, 5)
+    .map(({ _sortTime, ...product }) => product)
+}
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
   currency.fetchRates()
   try {
     const { getAll } = await import('../lib/api.js')
-    const [hpData, products] = await Promise.all([getAll('homepage'), getAll('products')])
+    const [products, orders] = await Promise.all([getAll('products'), getAll('orders')])
     allProducts.value = products
-    if (hpData?.[0]) {
-      const hp = hpData[0]
-      hotSelling.value     = hp.hotSelling     || []
-      latestProducts.value = hp.latestProducts || []
-    }
+    topSellingProducts.value = buildTopSellingProducts(products, orders)
+    latestProducts.value = buildLatestProducts(products)
   } catch (e) {
     console.error(e)
   } finally {
@@ -142,16 +207,16 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- ══ HOT SELLING ════════════════════════════════════════════════════ -->
-    <section class="home-section" v-if="hotSelling.length">
+    <section class="home-section" v-if="topSellingProducts.length">
       <div class="section-inner">
         <div class="section-head reveal">
-          <span class="kicker">Trending Now</span>
-          <h2 class="section-title">Hot Selling</h2>
+          <span class="kicker">Auto Ranking</span>
+          <h2 class="section-title">Top 5 Selling Products</h2>
           <button class="section-link" @click="router.push('/products')">View all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
         <div class="products-grid">
           <div
-            v-for="(product, i) in hotSelling.slice(0, 6)" :key="product.id || i"
+            v-for="(product, i) in topSellingProducts" :key="product.id || i"
             class="product-card tilt-card reveal" :class="`stagger-${(i % 3) + 1}`"
             @mousemove="tilt.onMove" @mouseleave="tilt.onLeave"
             @click="router.push(`/product/${product.id}`)"
@@ -160,6 +225,7 @@ onBeforeUnmount(() => {
             <div class="product-img-wrap"><img :src="product.image" :alt="product.name" class="product-img" /></div>
             <div class="product-body">
               <span class="product-tag">{{ product.category }}</span>
+              <span class="sold-badge">{{ product.soldQuantity }} sold</span>
               <h3 class="product-name">{{ product.name }}</h3>
               <div class="product-footer">
                 <span class="product-price">{{ currency.format(product.price) }}</span>
@@ -232,12 +298,12 @@ onBeforeUnmount(() => {
       <div class="section-inner">
         <div class="section-head reveal">
           <span class="kicker">Just Arrived</span>
-          <h2 class="section-title">Latest Products</h2>
+          <h2 class="section-title">Latest 5 Products</h2>
           <button class="section-link" @click="router.push('/products')">View all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
         <div class="products-grid">
           <div
-            v-for="(product, i) in latestProducts.slice(0, 6)" :key="product.id || i"
+            v-for="(product, i) in latestProducts" :key="product.id || i"
             class="product-card tilt-card reveal" :class="`stagger-${(i % 3) + 1}`"
             @mousemove="tilt.onMove" @mouseleave="tilt.onLeave"
             @click="router.push(`/product/${product.id}`)"
@@ -457,6 +523,18 @@ onBeforeUnmount(() => {
   background: rgba(59,130,246,0.12); color: #60a5fa;
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.08em; margin-bottom: 10px;
+}
+.sold-badge {
+  display: inline-block;
+  margin-left: 8px;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(245,158,11,0.12);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 .product-name {
   font-size: 14px; font-weight: 700; color: #e2e8f0;
@@ -712,6 +790,10 @@ onBeforeUnmount(() => {
 :global(:root[data-theme="light"]) .product-name { color: #0f172a !important; }
 :global(:root[data-theme="light"]) .product-price { color: #1d4ed8 !important; }
 :global(:root[data-theme="light"]) .product-tag { color: #2563eb !important; }
+:global(:root[data-theme="light"]) .sold-badge {
+  background: rgba(217,119,6,0.12) !important;
+  color: #b45309 !important;
+}
 :global(:root[data-theme="light"]) .product-img-wrap {
   background: radial-gradient(circle, rgba(37,99,235,0.07), rgba(240,244,248,0.8) 70%) !important;
 }
